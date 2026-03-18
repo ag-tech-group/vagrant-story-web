@@ -16,6 +16,8 @@ interface AuthContextValue {
   isLoading: boolean
   email: string | null
   userId: string | null
+  displayName: string | null
+  avatarUrl: string | null
   login: (email: string) => void
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
@@ -31,12 +33,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.getItem(EMAIL_KEY)
   )
   const [userId, setUserId] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   const clearState = useCallback(() => {
     localStorage.removeItem(EMAIL_KEY)
     setIsAuthenticated(false)
     setEmail(null)
     setUserId(null)
+    setDisplayName(null)
+    setAvatarUrl(null)
     queryClient.clear()
   }, [queryClient])
 
@@ -57,12 +63,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const user = await api
-        .get("auth/me")
-        .json<{ id: string; email: string }>()
+      const user = await api.get("auth/me").json<{
+        id: string
+        email: string
+        display_name: string | null
+        avatar_url: string | null
+      }>()
       setIsAuthenticated(true)
       setEmail(user.email)
       setUserId(user.id)
+      setDisplayName(user.display_name)
+      setAvatarUrl(user.avatar_url)
       localStorage.setItem(EMAIL_KEY, user.email)
     } catch {
       clearState()
@@ -87,11 +98,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       email,
       userId,
+      displayName,
+      avatarUrl,
       login,
       logout,
       checkAuth,
     }),
-    [isAuthenticated, isLoading, email, userId, login, logout, checkAuth]
+    [
+      isAuthenticated,
+      isLoading,
+      email,
+      userId,
+      displayName,
+      avatarUrl,
+      login,
+      logout,
+      checkAuth,
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

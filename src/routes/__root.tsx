@@ -5,10 +5,20 @@ import {
   Link,
   Outlet,
 } from "@tanstack/react-router"
+import { ChevronDown, ExternalLink, LogOut } from "lucide-react"
 import { Toaster } from "sonner"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { RootErrorComponent } from "@/components/error-boundary"
 import { NotFound } from "@/components/not-found"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
 
 const TanStackRouterDevtools = import.meta.env.PROD
@@ -26,6 +36,8 @@ interface RouterContext {
     isLoading: boolean
     email: string | null
     userId: string | null
+    displayName: string | null
+    avatarUrl: string | null
     login: (email: string) => void
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
@@ -77,22 +89,46 @@ function RootComponent() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             {auth.isAuthenticated ? (
-              <button
-                onClick={() => auth.logout()}
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                {auth.email}
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="hover:bg-accent flex items-center gap-2 rounded-md px-2 py-1 transition-colors">
+                    <UserAvatar size="sm" />
+                    <span className="text-muted-foreground hidden text-sm sm:inline">
+                      {auth.displayName ?? auth.email}
+                    </span>
+                    <ChevronDown className="text-muted-foreground size-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <a href={`${AUTH_URL}/profile`}>
+                      <ExternalLink className="size-4" />
+                      Profile
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await auth.logout()
+                      window.location.reload()
+                    }}
+                  >
+                    <LogOut className="size-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <a
-                href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL)}`}
-                className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-              >
-                Sign in
-              </a>
+              <Button variant="outline" size="sm" asChild>
+                <a
+                  href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL)}`}
+                >
+                  Sign in
+                </a>
+              </Button>
             )}
           </div>
         </div>
