@@ -1,6 +1,7 @@
 import ky, { type Options } from "ky"
 
-export const baseUrl = import.meta.env.VITE_API_URL || "/api"
+export const baseUrl =
+  import.meta.env.VITE_AUTH_API_URL || "https://auth-api.criticalbit.gg"
 
 // Callback for handling 401 responses - set this from your auth provider/router
 export let onUnauthorized: (() => void) | null = null
