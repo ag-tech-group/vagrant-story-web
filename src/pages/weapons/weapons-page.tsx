@@ -16,7 +16,7 @@ const columns: ColumnDef<Weapon>[] = [
     ),
   },
   { accessorKey: "blade_type", header: "Type" },
-  { accessorKey: "damage_type", header: "Damage" },
+  { accessorKey: "damage_type", header: "Damage Type" },
   {
     accessorKey: "str",
     header: "STR",

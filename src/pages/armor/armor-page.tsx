@@ -31,7 +31,7 @@ const columns: ColumnDef<Armor>[] = [
     header: "AGI",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
-  { accessorKey: "gem_slots", header: "Gems" },
+  { accessorKey: "gem_slots", header: "Gem Slots" },
 ]
 
 export function ArmorPage() {

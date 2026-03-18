@@ -54,7 +54,7 @@ export function DataTable<T>({
         onChange={(e) => setGlobalFilter(e.target.value)}
         className="max-w-sm"
       />
-      <div className="rounded-md border">
+      <div className="max-h-[70vh] overflow-auto overscroll-contain rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (

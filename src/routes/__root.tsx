@@ -75,12 +75,6 @@ function RootComponent() {
                   {link.label}
                 </Link>
               ))}
-              <a
-                href="/crafting"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Crafting
-              </a>
             </div>
           </div>
           <div className="flex items-center gap-3">

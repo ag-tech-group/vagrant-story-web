@@ -37,20 +37,6 @@ export function HomePage() {
           Community game database and crafting tools for the classic PlayStation
           RPG. Browse weapons, armor, materials, and more.
         </p>
-        <div className="mt-4 flex gap-3">
-          <a
-            href="/weapons"
-            className="bg-primary text-primary-foreground rounded-lg px-5 py-2.5 text-sm font-medium transition-colors"
-          >
-            Browse Database
-          </a>
-          <a
-            href="/crafting"
-            className="border-border bg-card hover:bg-accent rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors"
-          >
-            Crafting Calculator
-          </a>
-        </div>
       </section>
 
       <div className="mx-auto w-full max-w-6xl space-y-12 px-6 pb-16">
@@ -109,10 +95,10 @@ export function HomePage() {
           <p>
             Public API available at{" "}
             <a
-              href="https://vagrant-story-api.criticalbit.gg"
+              href="https://vagrant-story-api.criticalbit.gg/docs"
               className="text-primary hover:underline"
             >
-              vagrant-story-api.criticalbit.gg
+              vagrant-story-api.criticalbit.gg/docs
             </a>
           </p>
         </section>

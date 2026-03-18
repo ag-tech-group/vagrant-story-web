@@ -1,17 +1,25 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
+import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/data-table"
-import { gameApi, fmt, type Consumable } from "@/lib/game-api"
+import { gameApi, type Consumable } from "@/lib/game-api"
+
+interface Effect {
+  type: string
+  value: number
+  target: string
+  modifier: string
+}
 
 const columns: ColumnDef<Consumable>[] = [
   {
-    accessorKey: "field_name",
+    accessorKey: "name",
     header: "Name",
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
         <div className="bg-muted size-10 shrink-0 rounded" />
-        <span className="font-medium">{fmt(row.original.field_name)}</span>
+        <span className="font-medium">{row.original.name}</span>
       </div>
     ),
   },
@@ -19,14 +27,18 @@ const columns: ColumnDef<Consumable>[] = [
     id: "effects",
     header: "Effects",
     cell: ({ row }) => {
-      const effects = row.original.effects
-      if (!effects) {
+      const effects = row.original.effects as Effect[] | null | undefined
+      if (!effects || !Array.isArray(effects) || effects.length === 0) {
         return <span className="text-muted-foreground">-</span>
       }
       return (
-        <span className="text-muted-foreground text-xs">
-          {JSON.stringify(effects)}
-        </span>
+        <div className="flex flex-wrap gap-1">
+          {effects.map((e, i) => (
+            <Badge key={i} variant="secondary" className="text-xs">
+              {e.modifier} {e.value > 0 ? `+${e.value}` : e.value}
+            </Badge>
+          ))}
+        </div>
       )
     },
     enableSorting: false,
@@ -40,7 +52,7 @@ export function ConsumablesPage() {
   })
 
   const enriched = useMemo(
-    () => data.map((c) => ({ ...c, _display: fmt(c.field_name) })),
+    () => data.map((c) => ({ ...c, _display: c.name })),
     [data]
   )
 
