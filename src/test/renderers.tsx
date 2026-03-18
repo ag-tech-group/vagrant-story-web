@@ -21,6 +21,8 @@ interface RenderWithFileRoutesOptions extends Omit<RenderOptions, "wrapper"> {
       isLoading: boolean
       email: string | null
       userId: string | null
+      displayName: string | null
+      avatarUrl: string | null
       login: (email: string) => void
       logout: () => Promise<void>
       checkAuth: () => Promise<void>
@@ -33,6 +35,8 @@ const defaultAuth = {
   isLoading: false,
   email: "test@example.com",
   userId: "test-user-id",
+  displayName: "Test User",
+  avatarUrl: null,
   login: () => {},
   logout: async () => {},
   checkAuth: async () => {},
