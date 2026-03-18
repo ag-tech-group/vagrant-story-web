@@ -18,4 +18,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    port: 5174,
+    proxy: {
+      "/api": {
+        target: "https://vagrant-story-api.criticalbit.gg",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+      "/auth-api": {
+        target: "https://auth-api.criticalbit.gg",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/auth-api/, ""),
+      },
+    },
+  },
 })

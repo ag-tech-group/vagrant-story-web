@@ -7,19 +7,21 @@ import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { toast } from "sonner"
+// @ts-expect-error -- fontsource CSS-only imports have no type declarations
+import "@fontsource-variable/geist"
+// @ts-expect-error -- fontsource CSS-only imports have no type declarations
+import "@fontsource-variable/cinzel"
 import { ThemeProvider } from "./components/theme-provider"
 import "./index.css"
-import { AnalyticsProvider } from "./lib/analytics"
 import { getErrorMessage } from "./lib/api-errors"
 import { AuthProvider, useAuth } from "./lib/auth"
-import { FeatureFlagProvider } from "./lib/feature-flags"
 import { routeTree } from "./routeTree.gen"
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 10,
       refetchOnWindowFocus: false,
     },
   },
@@ -65,13 +67,9 @@ function App() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="app_theme">
+      <ThemeProvider defaultTheme="dark" storageKey="criticalbit_theme">
         <AuthProvider>
-          <AnalyticsProvider>
-            <FeatureFlagProvider>
-              <App />
-            </FeatureFlagProvider>
-          </AnalyticsProvider>
+          <App />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

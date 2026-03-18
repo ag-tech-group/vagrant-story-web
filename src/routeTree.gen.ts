@@ -9,8 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WeaponsRouteImport } from './routes/weapons'
+import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as GripsRouteImport } from './routes/grips'
+import { Route as GemsRouteImport } from './routes/gems'
+import { Route as ConsumablesRouteImport } from './routes/consumables'
+import { Route as ArmorRouteImport } from './routes/armor'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WeaponsRoute = WeaponsRouteImport.update({
+  id: '/weapons',
+  path: '/weapons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsRoute = MaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GripsRoute = GripsRouteImport.update({
+  id: '/grips',
+  path: '/grips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GemsRoute = GemsRouteImport.update({
+  id: '/gems',
+  path: '/gems',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumablesRoute = ConsumablesRouteImport.update({
+  id: '/consumables',
+  path: '/consumables',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArmorRoute = ArmorRouteImport.update({
+  id: '/armor',
+  path: '/armor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +55,116 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/armor': typeof ArmorRoute
+  '/consumables': typeof ConsumablesRoute
+  '/gems': typeof GemsRoute
+  '/grips': typeof GripsRoute
+  '/materials': typeof MaterialsRoute
+  '/weapons': typeof WeaponsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/armor': typeof ArmorRoute
+  '/consumables': typeof ConsumablesRoute
+  '/gems': typeof GemsRoute
+  '/grips': typeof GripsRoute
+  '/materials': typeof MaterialsRoute
+  '/weapons': typeof WeaponsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/armor': typeof ArmorRoute
+  '/consumables': typeof ConsumablesRoute
+  '/gems': typeof GemsRoute
+  '/grips': typeof GripsRoute
+  '/materials': typeof MaterialsRoute
+  '/weapons': typeof WeaponsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/armor'
+    | '/consumables'
+    | '/gems'
+    | '/grips'
+    | '/materials'
+    | '/weapons'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/armor'
+    | '/consumables'
+    | '/gems'
+    | '/grips'
+    | '/materials'
+    | '/weapons'
+  id:
+    | '__root__'
+    | '/'
+    | '/armor'
+    | '/consumables'
+    | '/gems'
+    | '/grips'
+    | '/materials'
+    | '/weapons'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArmorRoute: typeof ArmorRoute
+  ConsumablesRoute: typeof ConsumablesRoute
+  GemsRoute: typeof GemsRoute
+  GripsRoute: typeof GripsRoute
+  MaterialsRoute: typeof MaterialsRoute
+  WeaponsRoute: typeof WeaponsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/weapons': {
+      id: '/weapons'
+      path: '/weapons'
+      fullPath: '/weapons'
+      preLoaderRoute: typeof WeaponsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials': {
+      id: '/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grips': {
+      id: '/grips'
+      path: '/grips'
+      fullPath: '/grips'
+      preLoaderRoute: typeof GripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gems': {
+      id: '/gems'
+      path: '/gems'
+      fullPath: '/gems'
+      preLoaderRoute: typeof GemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumables': {
+      id: '/consumables'
+      path: '/consumables'
+      fullPath: '/consumables'
+      preLoaderRoute: typeof ConsumablesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/armor': {
+      id: '/armor'
+      path: '/armor'
+      fullPath: '/armor'
+      preLoaderRoute: typeof ArmorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +177,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArmorRoute: ArmorRoute,
+  ConsumablesRoute: ConsumablesRoute,
+  GemsRoute: GemsRoute,
+  GripsRoute: GripsRoute,
+  MaterialsRoute: MaterialsRoute,
+  WeaponsRoute: WeaponsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
