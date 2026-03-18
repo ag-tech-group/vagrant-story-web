@@ -12,6 +12,16 @@ interface Effect {
   modifier: string
 }
 
+function formatEffect(e: Effect): string | null {
+  const val = e.value
+  // Broken C# parse artifacts
+  if (typeof val === "string") return `${e.modifier} Random`
+  // 32767 = max int16, means full restore
+  if (val === 32767) return `${e.modifier} Full`
+  if (val === 0) return null
+  return `${e.modifier} ${val > 0 ? `+${val}` : val}`
+}
+
 const columns: ColumnDef<Consumable>[] = [
   {
     accessorKey: "name",
@@ -33,11 +43,15 @@ const columns: ColumnDef<Consumable>[] = [
       }
       return (
         <div className="flex flex-wrap gap-1">
-          {effects.map((e, i) => (
-            <Badge key={i} variant="secondary" className="text-xs">
-              {e.modifier} {e.value > 0 ? `+${e.value}` : e.value}
-            </Badge>
-          ))}
+          {effects.map((e, i) => {
+            const label = formatEffect(e)
+            if (!label) return null
+            return (
+              <Badge key={i} variant="secondary" className="text-xs">
+                {label}
+              </Badge>
+            )
+          })}
         </div>
       )
     },
