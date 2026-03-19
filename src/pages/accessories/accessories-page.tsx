@@ -15,6 +15,21 @@ const columns: ColumnDef<Armor>[] = [
       </div>
     ),
   },
+  {
+    accessorKey: "str",
+    header: "STR",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "int",
+    header: "INT",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "agi",
+    header: "AGI",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
 ]
 
 export function AccessoriesPage() {
@@ -42,5 +57,14 @@ export function AccessoriesPage() {
         params: { id: String(row.original.id) },
       })}
     />
+  )
+}
+
+function StatCell({ value }: { value: number }) {
+  if (value === 0) return <span className="text-muted-foreground">0</span>
+  return (
+    <span className={value > 0 ? "text-green-400" : "text-red-400"}>
+      {value > 0 ? `+${value}` : value}
+    </span>
   )
 }

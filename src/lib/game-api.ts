@@ -29,6 +29,22 @@ export interface Armor {
   int: number
   agi: number
   gem_slots: number
+  human: number
+  beast: number
+  undead: number
+  phantom: number
+  dragon: number
+  evil: number
+  fire: number
+  water: number
+  wind: number
+  earth: number
+  light: number
+  dark: number
+  blunt: number
+  edged: number
+  piercing: number
+  physical: number
 }
 
 export interface Material {

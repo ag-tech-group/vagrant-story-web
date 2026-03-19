@@ -19,8 +19,6 @@ function AccessoryDetail() {
   const item = armor.find((a) => a.id === Number(id))
   if (!item) return null
 
-  const hasStats = item.str !== 0 || item.int !== 0 || item.agi !== 0
-
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
       <CardContent className="pt-6">
@@ -44,14 +42,38 @@ function AccessoryDetail() {
               <p className="text-muted-foreground mt-0.5 text-sm">Accessory</p>
             </div>
           </div>
-          <div className="flex flex-1 flex-col items-center justify-center gap-3">
-            {hasStats && (
-              <div className="flex flex-wrap justify-center gap-2">
-                <StatBox label="STR" value={item.str} />
-                <StatBox label="INT" value={item.int} />
-                <StatBox label="AGI" value={item.agi} />
-              </div>
-            )}
+          <div className="flex flex-1 flex-col items-center gap-3">
+            {/* Core stats */}
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <StatBox label="STR" value={item.str} />
+              <StatBox label="INT" value={item.int} />
+              <StatBox label="AGI" value={item.agi} />
+            </div>
+            {/* Damage type resistances */}
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <StatBox label="Blunt" value={item.blunt} />
+              <StatBox label="Edged" value={item.edged} />
+              <StatBox label="Piercing" value={item.piercing} />
+              <StatBox label="Physical" value={item.physical} />
+            </div>
+            {/* Class affinities */}
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <StatBox label="Hum" value={item.human} />
+              <StatBox label="Bst" value={item.beast} />
+              <StatBox label="Und" value={item.undead} />
+              <StatBox label="Phm" value={item.phantom} />
+              <StatBox label="Drg" value={item.dragon} />
+              <StatBox label="Evl" value={item.evil} />
+            </div>
+            {/* Elemental affinities */}
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <StatBox label="Fir" value={item.fire} />
+              <StatBox label="Wat" value={item.water} />
+              <StatBox label="Wnd" value={item.wind} />
+              <StatBox label="Ear" value={item.earth} />
+              <StatBox label="Lit" value={item.light} />
+              <StatBox label="Drk" value={item.dark} />
+            </div>
           </div>
         </div>
       </CardContent>
@@ -61,8 +83,8 @@ function AccessoryDetail() {
 
 function StatBox({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-muted/50 flex min-w-12 flex-col items-center rounded px-2.5 py-1.5">
-      <span className="text-muted-foreground text-xs">{label}</span>
+    <div className="bg-muted/50 flex min-w-10 flex-col items-center rounded px-1.5 py-1">
+      <span className="text-muted-foreground text-[11px]">{label}</span>
       <span
         className={cn(
           "text-sm font-medium",
