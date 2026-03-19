@@ -22,6 +22,7 @@ const ICON_MAP: Record<string, string> = {
   // Others
   Gem: "Gem",
   Grip: "Grip",
+  Consumable: "Consumable",
 }
 
 interface ItemIconProps {
@@ -32,7 +33,7 @@ interface ItemIconProps {
 
 export function ItemIcon({ type, size = "md", className }: ItemIconProps) {
   const icon = type ? ICON_MAP[type] : undefined
-  const src = icon ? `/images/icons/${icon}.png` : undefined
+  const src = icon ? `/images/icons/${icon}.svg` : undefined
 
   const sizeClass = {
     sm: "size-6",
@@ -50,7 +51,7 @@ export function ItemIcon({ type, size = "md", className }: ItemIconProps) {
     <img
       src={src}
       alt={type ?? ""}
-      className={cn("shrink-0 rounded object-cover", sizeClass, className)}
+      className={cn("shrink-0 rounded-full", sizeClass, className)}
     />
   )
 }
