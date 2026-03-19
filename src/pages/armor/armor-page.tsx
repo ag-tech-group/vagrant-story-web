@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
-import { DataTable } from "@/components/data-table"
+import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { gameApi, fmt, type Armor } from "@/lib/game-api"
 
 const columns: ColumnDef<Armor>[] = [
@@ -15,7 +15,7 @@ const columns: ColumnDef<Armor>[] = [
       </div>
     ),
   },
-  { accessorKey: "armor_type", header: "Type" },
+  { accessorKey: "armor_type", header: "Type", filterFn: "equals" },
   {
     accessorKey: "str",
     header: "STR",
@@ -40,10 +40,20 @@ export function ArmorPage() {
     queryFn: gameApi.armor,
   })
 
-  const enriched = useMemo(
-    () => data.map((a) => ({ ...a, _display: fmt(a.field_name) })),
+  const filtered = useMemo(
+    () => data.filter((a) => a.armor_type !== "Accessory"),
     [data]
   )
+
+  const enriched = useMemo(
+    () => filtered.map((a) => ({ ...a, _display: fmt(a.field_name) })),
+    [filtered]
+  )
+
+  const typeFilters = useMemo<ColumnFilter[]>(() => {
+    const types = [...new Set(data.map((a) => a.armor_type))].sort()
+    return [{ column: "armor_type", label: "Type", options: types }]
+  }, [data])
 
   return (
     <DataTable
@@ -51,6 +61,7 @@ export function ArmorPage() {
       columns={columns}
       searchPlaceholder="Search armor..."
       isLoading={isLoading}
+      filters={typeFilters}
       getRowLink={(row) => ({
         to: "/armor/$id",
         params: { id: String(row.original.id) },

@@ -2,12 +2,13 @@ import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import {
   flexRender,
-  getCoreRowModel,
   getFilteredRowModel,
+  getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type ColumnFiltersState,
   type Row,
   type SortingState,
 } from "@tanstack/react-table"
@@ -38,6 +39,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+export interface ColumnFilter {
+  column: string
+  label: string
+  options: string[]
+}
+
 interface DataTableProps<T> {
   data: T[]
   columns: ColumnDef<T>[]
@@ -45,6 +52,7 @@ interface DataTableProps<T> {
   isLoading?: boolean
   getRowLink?: (row: Row<T>) => { to: string; params: Record<string, string> }
   pageSize?: number
+  filters?: ColumnFilter[]
 }
 
 export function DataTable<T>({
@@ -54,16 +62,19 @@ export function DataTable<T>({
   isLoading,
   getRowLink,
   pageSize = 10,
+  filters,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter },
+    state: { sorting, globalFilter, columnFilters },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -77,15 +88,49 @@ export function DataTable<T>({
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder={searchPlaceholder}
-        value={globalFilter}
-        onChange={(e) => {
-          setGlobalFilter(e.target.value)
-          table.setPageIndex(0)
-        }}
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder={searchPlaceholder}
+          value={globalFilter}
+          onChange={(e) => {
+            setGlobalFilter(e.target.value)
+            table.setPageIndex(0)
+          }}
+          className="max-w-sm"
+        />
+        {filters?.map((f) => (
+          <Select
+            key={f.column}
+            value={
+              (columnFilters.find((cf) => cf.id === f.column)
+                ?.value as string) ?? "__all__"
+            }
+            onValueChange={(v) => {
+              setColumnFilters((prev) =>
+                v === "__all__"
+                  ? prev.filter((cf) => cf.id !== f.column)
+                  : [
+                      ...prev.filter((cf) => cf.id !== f.column),
+                      { id: f.column, value: v },
+                    ]
+              )
+              table.setPageIndex(0)
+            }}
+          >
+            <SelectTrigger className="h-9 w-40">
+              <SelectValue placeholder={f.label} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All {f.label}</SelectItem>
+              {f.options.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ))}
+      </div>
       <div className="overflow-x-auto rounded-md border">
         <Table className="table-fixed">
           <TableHeader>

@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
-import { DataTable } from "@/components/data-table"
+import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { gameApi, fmt, type Weapon } from "@/lib/game-api"
 
 const columns: ColumnDef<Weapon>[] = [
@@ -15,7 +15,7 @@ const columns: ColumnDef<Weapon>[] = [
       </div>
     ),
   },
-  { accessorKey: "blade_type", header: "Type" },
+  { accessorKey: "blade_type", header: "Type", filterFn: "equals" },
   { accessorKey: "damage_type", header: "Damage Type" },
   {
     accessorKey: "str",
@@ -48,12 +48,18 @@ export function WeaponsPage() {
     [data]
   )
 
+  const typeFilters = useMemo<ColumnFilter[]>(() => {
+    const types = [...new Set(data.map((w) => w.blade_type))].sort()
+    return [{ column: "blade_type", label: "Type", options: types }]
+  }, [data])
+
   return (
     <DataTable
       data={enriched}
       columns={columns}
       searchPlaceholder="Search weapons..."
       isLoading={isLoading}
+      filters={typeFilters}
       getRowLink={(row) => ({
         to: "/weapons/$id",
         params: { id: String(row.original.id) },

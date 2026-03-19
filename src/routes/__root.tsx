@@ -54,6 +54,7 @@ const SITE_URL = "https://vagrant-story.criticalbit.gg"
 const ITEM_LINKS = [
   { to: "/weapons" as const, label: "Weapons" },
   { to: "/armor" as const, label: "Armor" },
+  { to: "/accessories" as const, label: "Accessories" },
   { to: "/materials" as const, label: "Materials" },
   { to: "/gems" as const, label: "Gems" },
   { to: "/grips" as const, label: "Grips" },
