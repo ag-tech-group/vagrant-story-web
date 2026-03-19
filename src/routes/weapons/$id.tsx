@@ -5,6 +5,7 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { MaterialSelect } from "@/components/material-select"
 import { StatDisplay } from "@/components/stat-display"
+import { ItemIcon } from "@/components/item-icon"
 import { gameApi, fmt } from "@/lib/game-api"
 import { computeEffectiveStats, type ItemStats } from "@/lib/item-stats"
 
@@ -77,9 +78,11 @@ function WeaponDetail() {
         <div className="flex gap-6">
           {/* Left: image, name, type, material */}
           <div className="flex flex-col items-center gap-3">
-            <div className="bg-muted flex size-32 shrink-0 items-center justify-center rounded-lg">
-              <span className="text-muted-foreground text-xs">Image</span>
-            </div>
+            <ItemIcon
+              type={weapon.blade_type}
+              size="lg"
+              className="rounded-lg"
+            />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
                 {fmt(weapon.field_name)}

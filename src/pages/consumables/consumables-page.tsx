@@ -2,6 +2,7 @@ import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
+import { ItemIcon } from "@/components/item-icon"
 import { DataTable } from "@/components/data-table"
 import { gameApi, type Consumable } from "@/lib/game-api"
 
@@ -28,7 +29,7 @@ const columns: ColumnDef<Consumable>[] = [
     header: "Name",
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
-        <div className="bg-muted size-10 shrink-0 rounded" />
+        <ItemIcon type="Gem" />
         <span className="font-medium">{row.original.name}</span>
       </div>
     ),

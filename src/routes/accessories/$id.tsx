@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { ItemIcon } from "@/components/item-icon"
 import { gameApi, fmt } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
 
@@ -32,9 +33,7 @@ function AccessoryDetail() {
         </div>
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-3">
-            <div className="bg-muted flex size-32 shrink-0 items-center justify-center rounded-lg">
-              <span className="text-muted-foreground text-xs">Image</span>
-            </div>
+            <ItemIcon type={"Accessory"} size="lg" className="rounded-lg" />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
                 {fmt(item.field_name)}

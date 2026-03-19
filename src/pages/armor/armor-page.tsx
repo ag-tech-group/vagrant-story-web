@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
+import { ItemIcon } from "@/components/item-icon"
 import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { gameApi, fmt, type Armor } from "@/lib/game-api"
 
@@ -10,7 +11,7 @@ const columns: ColumnDef<Armor>[] = [
     header: "Name",
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
-        <div className="bg-muted size-10 shrink-0 rounded" />
+        <ItemIcon type={row.original.armor_type} />
         <span className="font-medium">{fmt(row.original.field_name)}</span>
       </div>
     ),

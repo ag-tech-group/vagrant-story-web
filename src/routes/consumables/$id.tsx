@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { ItemIcon } from "@/components/item-icon"
 import { gameApi } from "@/lib/game-api"
 
 export const Route = createFileRoute("/consumables/$id")({
@@ -49,9 +50,7 @@ function ConsumableDetail() {
         </div>
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-3">
-            <div className="bg-muted flex size-32 shrink-0 items-center justify-center rounded-lg">
-              <span className="text-muted-foreground text-xs">Image</span>
-            </div>
+            <ItemIcon type={"Gem"} size="lg" className="rounded-lg" />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
                 {item.name}

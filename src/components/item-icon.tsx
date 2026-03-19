@@ -1,0 +1,56 @@
+import { cn } from "@/lib/utils"
+
+const ICON_MAP: Record<string, string> = {
+  // Weapon blade types (API blade_type values)
+  Dagger: "Dagger",
+  Sword: "Sword",
+  "Great Sword": "Great_Sword",
+  Axe: "Axe",
+  Mace: "Mace",
+  Staff: "Staff",
+  "Heavy Mace": "Heavy_Mace",
+  "Great Axe": "Great_Axe",
+  Polearm: "Polearm",
+  Crossbow: "Polearm",
+  // Armor types
+  Helm: "Helm",
+  Body: "Body",
+  Leg: "Leg",
+  Arm: "Arm",
+  Shield: "Shield",
+  Accessory: "Accessory",
+  // Others
+  Gem: "Gem",
+  Grip: "Grip",
+}
+
+interface ItemIconProps {
+  type?: string
+  size?: "sm" | "md" | "lg"
+  className?: string
+}
+
+export function ItemIcon({ type, size = "md", className }: ItemIconProps) {
+  const icon = type ? ICON_MAP[type] : undefined
+  const src = icon ? `/images/icons/${icon}.png` : undefined
+
+  const sizeClass = {
+    sm: "size-6",
+    md: "size-10",
+    lg: "size-32",
+  }[size]
+
+  if (!src) {
+    return (
+      <div className={cn("bg-muted shrink-0 rounded", sizeClass, className)} />
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={type ?? ""}
+      className={cn("shrink-0 rounded object-cover", sizeClass, className)}
+    />
+  )
+}
