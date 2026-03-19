@@ -31,19 +31,15 @@ export function GemsPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 lg:p-10">
-      <div>
-        <h1 className="text-3xl tracking-wide sm:text-4xl">Gems</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Gems can be attached to equipment with gem slots
-        </p>
-      </div>
-      <DataTable
-        data={enriched}
-        columns={columns}
-        searchPlaceholder="Search gems..."
-        isLoading={isLoading}
-      />
-    </div>
+    <DataTable
+      data={enriched}
+      columns={columns}
+      searchPlaceholder="Search gems..."
+      isLoading={isLoading}
+      getRowLink={(row) => ({
+        to: "/gems/$id",
+        params: { id: String(row.original.id) },
+      })}
+    />
   )
 }

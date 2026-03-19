@@ -46,20 +46,16 @@ export function ArmorPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 lg:p-10">
-      <div>
-        <h1 className="text-3xl tracking-wide sm:text-4xl">Armor</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          All {data.length} armor pieces in Vagrant Story
-        </p>
-      </div>
-      <DataTable
-        data={enriched}
-        columns={columns}
-        searchPlaceholder="Search armor..."
-        isLoading={isLoading}
-      />
-    </div>
+    <DataTable
+      data={enriched}
+      columns={columns}
+      searchPlaceholder="Search armor..."
+      isLoading={isLoading}
+      getRowLink={(row) => ({
+        to: "/armor/$id",
+        params: { id: String(row.original.id) },
+      })}
+    />
   )
 }
 

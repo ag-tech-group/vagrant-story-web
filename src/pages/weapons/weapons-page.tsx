@@ -49,20 +49,16 @@ export function WeaponsPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 lg:p-10">
-      <div>
-        <h1 className="text-3xl tracking-wide sm:text-4xl">Weapons</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          All {data.length} blades in Vagrant Story
-        </p>
-      </div>
-      <DataTable
-        data={enriched}
-        columns={columns}
-        searchPlaceholder="Search weapons..."
-        isLoading={isLoading}
-      />
-    </div>
+    <DataTable
+      data={enriched}
+      columns={columns}
+      searchPlaceholder="Search weapons..."
+      isLoading={isLoading}
+      getRowLink={(row) => ({
+        to: "/weapons/$id",
+        params: { id: String(row.original.id) },
+      })}
+    />
   )
 }
 

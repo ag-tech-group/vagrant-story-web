@@ -9,22 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WeaponsRouteImport } from './routes/weapons'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as MaterialGridRouteImport } from './routes/material-grid'
-import { Route as GripsRouteImport } from './routes/grips'
-import { Route as GemsRouteImport } from './routes/gems'
-import { Route as ConsumablesRouteImport } from './routes/consumables'
-import { Route as ArmorRouteImport } from './routes/armor'
 import { Route as SplatRouteImport } from './routes/$'
+import { Route as WeaponsRouteRouteImport } from './routes/weapons/route'
+import { Route as GripsRouteRouteImport } from './routes/grips/route'
+import { Route as GemsRouteRouteImport } from './routes/gems/route'
+import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
+import { Route as ArmorRouteRouteImport } from './routes/armor/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WeaponsIndexRouteImport } from './routes/weapons/index'
+import { Route as GripsIndexRouteImport } from './routes/grips/index'
+import { Route as GemsIndexRouteImport } from './routes/gems/index'
 import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
+import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
+import { Route as ArmorIndexRouteImport } from './routes/armor/index'
+import { Route as WeaponsIdRouteImport } from './routes/weapons/$id'
+import { Route as GripsIdRouteImport } from './routes/grips/$id'
+import { Route as GemsIdRouteImport } from './routes/gems/$id'
+import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
+import { Route as ArmorIdRouteImport } from './routes/armor/$id'
 
-const WeaponsRoute = WeaponsRouteImport.update({
-  id: '/weapons',
-  path: '/weapons',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MaterialsRoute = MaterialsRouteImport.update({
   id: '/materials',
   path: '/materials',
@@ -35,29 +40,34 @@ const MaterialGridRoute = MaterialGridRouteImport.update({
   path: '/material-grid',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GripsRoute = GripsRouteImport.update({
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WeaponsRouteRoute = WeaponsRouteRouteImport.update({
+  id: '/weapons',
+  path: '/weapons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GripsRouteRoute = GripsRouteRouteImport.update({
   id: '/grips',
   path: '/grips',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GemsRoute = GemsRouteImport.update({
+const GemsRouteRoute = GemsRouteRouteImport.update({
   id: '/gems',
   path: '/gems',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConsumablesRoute = ConsumablesRouteImport.update({
+const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
   id: '/consumables',
   path: '/consumables',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ArmorRoute = ArmorRouteImport.update({
+const ArmorRouteRoute = ArmorRouteRouteImport.update({
   id: '/armor',
   path: '/armor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SplatRoute = SplatRouteImport.update({
-  id: '/$',
-  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -65,110 +75,203 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WeaponsIndexRoute = WeaponsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WeaponsRouteRoute,
+} as any)
+const GripsIndexRoute = GripsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GripsRouteRoute,
+} as any)
+const GemsIndexRoute = GemsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GemsRouteRoute,
+} as any)
 const CraftingIndexRoute = CraftingIndexRouteImport.update({
   id: '/crafting/',
   path: '/crafting/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsumablesIndexRoute = ConsumablesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsumablesRouteRoute,
+} as any)
+const ArmorIndexRoute = ArmorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ArmorRouteRoute,
+} as any)
+const WeaponsIdRoute = WeaponsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => WeaponsRouteRoute,
+} as any)
+const GripsIdRoute = GripsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GripsRouteRoute,
+} as any)
+const GemsIdRoute = GemsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GemsRouteRoute,
+} as any)
+const ConsumablesIdRoute = ConsumablesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ConsumablesRouteRoute,
+} as any)
+const ArmorIdRoute = ArmorIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ArmorRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/armor': typeof ArmorRouteRouteWithChildren
+  '/consumables': typeof ConsumablesRouteRouteWithChildren
+  '/gems': typeof GemsRouteRouteWithChildren
+  '/grips': typeof GripsRouteRouteWithChildren
+  '/weapons': typeof WeaponsRouteRouteWithChildren
   '/$': typeof SplatRoute
-  '/armor': typeof ArmorRoute
-  '/consumables': typeof ConsumablesRoute
-  '/gems': typeof GemsRoute
-  '/grips': typeof GripsRoute
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
-  '/weapons': typeof WeaponsRoute
+  '/armor/$id': typeof ArmorIdRoute
+  '/consumables/$id': typeof ConsumablesIdRoute
+  '/gems/$id': typeof GemsIdRoute
+  '/grips/$id': typeof GripsIdRoute
+  '/weapons/$id': typeof WeaponsIdRoute
+  '/armor/': typeof ArmorIndexRoute
+  '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
+  '/gems/': typeof GemsIndexRoute
+  '/grips/': typeof GripsIndexRoute
+  '/weapons/': typeof WeaponsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/armor': typeof ArmorRoute
-  '/consumables': typeof ConsumablesRoute
-  '/gems': typeof GemsRoute
-  '/grips': typeof GripsRoute
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
-  '/weapons': typeof WeaponsRoute
+  '/armor/$id': typeof ArmorIdRoute
+  '/consumables/$id': typeof ConsumablesIdRoute
+  '/gems/$id': typeof GemsIdRoute
+  '/grips/$id': typeof GripsIdRoute
+  '/weapons/$id': typeof WeaponsIdRoute
+  '/armor': typeof ArmorIndexRoute
+  '/consumables': typeof ConsumablesIndexRoute
   '/crafting': typeof CraftingIndexRoute
+  '/gems': typeof GemsIndexRoute
+  '/grips': typeof GripsIndexRoute
+  '/weapons': typeof WeaponsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/armor': typeof ArmorRouteRouteWithChildren
+  '/consumables': typeof ConsumablesRouteRouteWithChildren
+  '/gems': typeof GemsRouteRouteWithChildren
+  '/grips': typeof GripsRouteRouteWithChildren
+  '/weapons': typeof WeaponsRouteRouteWithChildren
   '/$': typeof SplatRoute
-  '/armor': typeof ArmorRoute
-  '/consumables': typeof ConsumablesRoute
-  '/gems': typeof GemsRoute
-  '/grips': typeof GripsRoute
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
-  '/weapons': typeof WeaponsRoute
+  '/armor/$id': typeof ArmorIdRoute
+  '/consumables/$id': typeof ConsumablesIdRoute
+  '/gems/$id': typeof GemsIdRoute
+  '/grips/$id': typeof GripsIdRoute
+  '/weapons/$id': typeof WeaponsIdRoute
+  '/armor/': typeof ArmorIndexRoute
+  '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
+  '/gems/': typeof GemsIndexRoute
+  '/grips/': typeof GripsIndexRoute
+  '/weapons/': typeof WeaponsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/$'
     | '/armor'
     | '/consumables'
     | '/gems'
     | '/grips'
+    | '/weapons'
+    | '/$'
     | '/material-grid'
     | '/materials'
-    | '/weapons'
+    | '/armor/$id'
+    | '/consumables/$id'
+    | '/gems/$id'
+    | '/grips/$id'
+    | '/weapons/$id'
+    | '/armor/'
+    | '/consumables/'
     | '/crafting/'
+    | '/gems/'
+    | '/grips/'
+    | '/weapons/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$'
-    | '/armor'
-    | '/consumables'
-    | '/gems'
-    | '/grips'
     | '/material-grid'
     | '/materials'
-    | '/weapons'
+    | '/armor/$id'
+    | '/consumables/$id'
+    | '/gems/$id'
+    | '/grips/$id'
+    | '/weapons/$id'
+    | '/armor'
+    | '/consumables'
     | '/crafting'
+    | '/gems'
+    | '/grips'
+    | '/weapons'
   id:
     | '__root__'
     | '/'
-    | '/$'
     | '/armor'
     | '/consumables'
     | '/gems'
     | '/grips'
+    | '/weapons'
+    | '/$'
     | '/material-grid'
     | '/materials'
-    | '/weapons'
+    | '/armor/$id'
+    | '/consumables/$id'
+    | '/gems/$id'
+    | '/grips/$id'
+    | '/weapons/$id'
+    | '/armor/'
+    | '/consumables/'
     | '/crafting/'
+    | '/gems/'
+    | '/grips/'
+    | '/weapons/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
+  ConsumablesRouteRoute: typeof ConsumablesRouteRouteWithChildren
+  GemsRouteRoute: typeof GemsRouteRouteWithChildren
+  GripsRouteRoute: typeof GripsRouteRouteWithChildren
+  WeaponsRouteRoute: typeof WeaponsRouteRouteWithChildren
   SplatRoute: typeof SplatRoute
-  ArmorRoute: typeof ArmorRoute
-  ConsumablesRoute: typeof ConsumablesRoute
-  GemsRoute: typeof GemsRoute
-  GripsRoute: typeof GripsRoute
   MaterialGridRoute: typeof MaterialGridRoute
   MaterialsRoute: typeof MaterialsRoute
-  WeaponsRoute: typeof WeaponsRoute
   CraftingIndexRoute: typeof CraftingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/weapons': {
-      id: '/weapons'
-      path: '/weapons'
-      fullPath: '/weapons'
-      preLoaderRoute: typeof WeaponsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/materials': {
       id: '/materials'
       path: '/materials'
@@ -183,39 +286,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaterialGridRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/weapons': {
+      id: '/weapons'
+      path: '/weapons'
+      fullPath: '/weapons'
+      preLoaderRoute: typeof WeaponsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/grips': {
       id: '/grips'
       path: '/grips'
       fullPath: '/grips'
-      preLoaderRoute: typeof GripsRouteImport
+      preLoaderRoute: typeof GripsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gems': {
       id: '/gems'
       path: '/gems'
       fullPath: '/gems'
-      preLoaderRoute: typeof GemsRouteImport
+      preLoaderRoute: typeof GemsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consumables': {
       id: '/consumables'
       path: '/consumables'
       fullPath: '/consumables'
-      preLoaderRoute: typeof ConsumablesRouteImport
+      preLoaderRoute: typeof ConsumablesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/armor': {
       id: '/armor'
       path: '/armor'
       fullPath: '/armor'
-      preLoaderRoute: typeof ArmorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$': {
-      id: '/$'
-      path: '/$'
-      fullPath: '/$'
-      preLoaderRoute: typeof SplatRouteImport
+      preLoaderRoute: typeof ArmorRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -225,6 +335,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/weapons/': {
+      id: '/weapons/'
+      path: '/'
+      fullPath: '/weapons/'
+      preLoaderRoute: typeof WeaponsIndexRouteImport
+      parentRoute: typeof WeaponsRouteRoute
+    }
+    '/grips/': {
+      id: '/grips/'
+      path: '/'
+      fullPath: '/grips/'
+      preLoaderRoute: typeof GripsIndexRouteImport
+      parentRoute: typeof GripsRouteRoute
+    }
+    '/gems/': {
+      id: '/gems/'
+      path: '/'
+      fullPath: '/gems/'
+      preLoaderRoute: typeof GemsIndexRouteImport
+      parentRoute: typeof GemsRouteRoute
+    }
     '/crafting/': {
       id: '/crafting/'
       path: '/crafting'
@@ -232,19 +363,137 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CraftingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/consumables/': {
+      id: '/consumables/'
+      path: '/'
+      fullPath: '/consumables/'
+      preLoaderRoute: typeof ConsumablesIndexRouteImport
+      parentRoute: typeof ConsumablesRouteRoute
+    }
+    '/armor/': {
+      id: '/armor/'
+      path: '/'
+      fullPath: '/armor/'
+      preLoaderRoute: typeof ArmorIndexRouteImport
+      parentRoute: typeof ArmorRouteRoute
+    }
+    '/weapons/$id': {
+      id: '/weapons/$id'
+      path: '/$id'
+      fullPath: '/weapons/$id'
+      preLoaderRoute: typeof WeaponsIdRouteImport
+      parentRoute: typeof WeaponsRouteRoute
+    }
+    '/grips/$id': {
+      id: '/grips/$id'
+      path: '/$id'
+      fullPath: '/grips/$id'
+      preLoaderRoute: typeof GripsIdRouteImport
+      parentRoute: typeof GripsRouteRoute
+    }
+    '/gems/$id': {
+      id: '/gems/$id'
+      path: '/$id'
+      fullPath: '/gems/$id'
+      preLoaderRoute: typeof GemsIdRouteImport
+      parentRoute: typeof GemsRouteRoute
+    }
+    '/consumables/$id': {
+      id: '/consumables/$id'
+      path: '/$id'
+      fullPath: '/consumables/$id'
+      preLoaderRoute: typeof ConsumablesIdRouteImport
+      parentRoute: typeof ConsumablesRouteRoute
+    }
+    '/armor/$id': {
+      id: '/armor/$id'
+      path: '/$id'
+      fullPath: '/armor/$id'
+      preLoaderRoute: typeof ArmorIdRouteImport
+      parentRoute: typeof ArmorRouteRoute
+    }
   }
 }
 
+interface ArmorRouteRouteChildren {
+  ArmorIdRoute: typeof ArmorIdRoute
+  ArmorIndexRoute: typeof ArmorIndexRoute
+}
+
+const ArmorRouteRouteChildren: ArmorRouteRouteChildren = {
+  ArmorIdRoute: ArmorIdRoute,
+  ArmorIndexRoute: ArmorIndexRoute,
+}
+
+const ArmorRouteRouteWithChildren = ArmorRouteRoute._addFileChildren(
+  ArmorRouteRouteChildren,
+)
+
+interface ConsumablesRouteRouteChildren {
+  ConsumablesIdRoute: typeof ConsumablesIdRoute
+  ConsumablesIndexRoute: typeof ConsumablesIndexRoute
+}
+
+const ConsumablesRouteRouteChildren: ConsumablesRouteRouteChildren = {
+  ConsumablesIdRoute: ConsumablesIdRoute,
+  ConsumablesIndexRoute: ConsumablesIndexRoute,
+}
+
+const ConsumablesRouteRouteWithChildren =
+  ConsumablesRouteRoute._addFileChildren(ConsumablesRouteRouteChildren)
+
+interface GemsRouteRouteChildren {
+  GemsIdRoute: typeof GemsIdRoute
+  GemsIndexRoute: typeof GemsIndexRoute
+}
+
+const GemsRouteRouteChildren: GemsRouteRouteChildren = {
+  GemsIdRoute: GemsIdRoute,
+  GemsIndexRoute: GemsIndexRoute,
+}
+
+const GemsRouteRouteWithChildren = GemsRouteRoute._addFileChildren(
+  GemsRouteRouteChildren,
+)
+
+interface GripsRouteRouteChildren {
+  GripsIdRoute: typeof GripsIdRoute
+  GripsIndexRoute: typeof GripsIndexRoute
+}
+
+const GripsRouteRouteChildren: GripsRouteRouteChildren = {
+  GripsIdRoute: GripsIdRoute,
+  GripsIndexRoute: GripsIndexRoute,
+}
+
+const GripsRouteRouteWithChildren = GripsRouteRoute._addFileChildren(
+  GripsRouteRouteChildren,
+)
+
+interface WeaponsRouteRouteChildren {
+  WeaponsIdRoute: typeof WeaponsIdRoute
+  WeaponsIndexRoute: typeof WeaponsIndexRoute
+}
+
+const WeaponsRouteRouteChildren: WeaponsRouteRouteChildren = {
+  WeaponsIdRoute: WeaponsIdRoute,
+  WeaponsIndexRoute: WeaponsIndexRoute,
+}
+
+const WeaponsRouteRouteWithChildren = WeaponsRouteRoute._addFileChildren(
+  WeaponsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArmorRouteRoute: ArmorRouteRouteWithChildren,
+  ConsumablesRouteRoute: ConsumablesRouteRouteWithChildren,
+  GemsRouteRoute: GemsRouteRouteWithChildren,
+  GripsRouteRoute: GripsRouteRouteWithChildren,
+  WeaponsRouteRoute: WeaponsRouteRouteWithChildren,
   SplatRoute: SplatRoute,
-  ArmorRoute: ArmorRoute,
-  ConsumablesRoute: ConsumablesRoute,
-  GemsRoute: GemsRoute,
-  GripsRoute: GripsRoute,
   MaterialGridRoute: MaterialGridRoute,
   MaterialsRoute: MaterialsRoute,
-  WeaponsRoute: WeaponsRoute,
   CraftingIndexRoute: CraftingIndexRoute,
 }
 export const routeTree = rootRouteImport
