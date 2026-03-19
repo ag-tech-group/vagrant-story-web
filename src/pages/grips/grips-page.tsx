@@ -61,20 +61,16 @@ export function GripsPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 lg:p-10">
-      <div>
-        <h1 className="text-3xl tracking-wide sm:text-4xl">Grips</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Grips modify weapon stats and can be swapped between weapons
-        </p>
-      </div>
-      <DataTable
-        data={enriched}
-        columns={columns}
-        searchPlaceholder="Search grips..."
-        isLoading={isLoading}
-      />
-    </div>
+    <DataTable
+      data={enriched}
+      columns={columns}
+      searchPlaceholder="Search grips..."
+      isLoading={isLoading}
+      getRowLink={(row) => ({
+        to: "/grips/$id",
+        params: { id: String(row.original.id) },
+      })}
+    />
   )
 }
 
