@@ -9,8 +9,6 @@ import { createRoot } from "react-dom/client"
 import { toast } from "sonner"
 // @ts-expect-error -- fontsource CSS-only imports have no type declarations
 import "@fontsource-variable/geist"
-// @ts-expect-error -- fontsource CSS-only imports have no type declarations
-import "@fontsource-variable/cinzel"
 import { ThemeProvider } from "./components/theme-provider"
 import "./index.css"
 import { getErrorMessage } from "./lib/api-errors"

@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { RootErrorComponent } from "@/components/error-boundary"
-import { NotFound } from "@/components/not-found"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
@@ -46,15 +45,13 @@ interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
-  notFoundComponent: NotFound,
   errorComponent: RootErrorComponent,
 })
 
 const AUTH_URL = "https://auth.criticalbit.gg"
 const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
-const NAV_LINKS = [
-  { to: "/" as const, label: "Home" },
+const ITEM_LINKS = [
   { to: "/weapons" as const, label: "Weapons" },
   { to: "/armor" as const, label: "Armor" },
   { to: "/materials" as const, label: "Materials" },
@@ -78,15 +75,31 @@ function RootComponent() {
               Vagrant Story
             </Link>
             <div className="hidden items-center gap-4 text-sm md:flex">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                  Items
+                  <ChevronDown className="size-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {ITEM_LINKS.map((link) => (
+                    <DropdownMenuItem key={link.to} asChild>
+                      <Link to={link.to}>{link.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Link
+                to="/crafting"
+                className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
+              >
+                Crafting
+              </Link>
+              <Link
+                to="/material-grid"
+                className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
+              >
+                Material Grid
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">
