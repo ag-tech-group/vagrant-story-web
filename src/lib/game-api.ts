@@ -85,6 +85,29 @@ export interface Consumable {
   effects?: unknown
 }
 
+export interface CraftingRecipe {
+  id: number
+  category: string
+  sub_category: string
+  input_1: string
+  input_2: string
+  result: string
+  tier_change: number
+  has_swap: boolean
+}
+
+export interface MaterialRecipe {
+  id: number
+  category: string
+  sub_category: string
+  input_1: string
+  input_2: string
+  material_1: string
+  material_2: string
+  result_material: string
+  tier_change: number
+}
+
 async function fetchApi<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`)
   if (!res.ok) throw new Error(`API error: ${res.status}`)
@@ -100,6 +123,14 @@ export const gameApi = {
   gems: () => fetchApi<Gem[]>("/gems?limit=200"),
   grips: () => fetchApi<Grip[]>("/grips?limit=200"),
   consumables: () => fetchApi<Consumable[]>("/consumables?limit=200"),
+  craftingRecipes: (params?: string) =>
+    fetchApi<CraftingRecipe[]>(
+      `/crafting-recipes${params ? `?${params}` : "?limit=200"}`
+    ),
+  materialRecipes: (params?: string) =>
+    fetchApi<MaterialRecipe[]>(
+      `/crafting-recipes/materials${params ? `?${params}` : "?limit=200"}`
+    ),
 }
 
 export function fmt(s: string) {
