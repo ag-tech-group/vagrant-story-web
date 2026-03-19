@@ -16,13 +16,12 @@ export const Route = createFileRoute("/weapons/$id")({
 const WEAPON_HANDS: Record<string, string> = {
   Dagger: "1H",
   Sword: "1H",
-  Axe: "1H",
-  Mace: "1H",
+  "Axe / Mace": "1H",
   "Great Sword": "2H",
   "Great Axe": "2H",
+  Staff: "2H",
   "Heavy Mace": "2H",
   Polearm: "2H",
-  Staff: "2H",
   Crossbow: "2H",
 }
 

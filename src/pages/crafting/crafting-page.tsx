@@ -49,13 +49,12 @@ const TYPE_LABELS: Record<string, string> = {
 const WEAPON_HANDS: Record<string, string> = {
   Dagger: "1H",
   Sword: "1H",
-  Axe: "1H",
-  Mace: "1H",
+  "Axe / Mace": "1H",
   "Great Sword": "2H",
   "Great Axe": "2H",
+  Staff: "2H",
   "Heavy Mace": "2H",
   Polearm: "2H",
-  Staff: "2H",
   Crossbow: "2H",
 }
 
@@ -83,15 +82,10 @@ const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const ARMOR_MATS = ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const SHIELD_MATS = ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 
-// The API blade_type values don't match the material recipe type categories.
-// This maps API blade_type → material recipe input type.
+// Maps API blade_type → material recipe input type.
+// Only needed for types where the names differ.
 const MATERIAL_TYPE_MAP: Record<string, string> = {
-  Axe: "AxeMace",
-  "Great Axe": "Staff",
-  "Heavy Mace": "Polearm",
-  Mace: "Great Axe",
-  Polearm: "Crossbow",
-  Staff: "Heavy Mace",
+  "Axe / Mace": "AxeMace",
 }
 
 function toMaterialType(apiType: string): string {
