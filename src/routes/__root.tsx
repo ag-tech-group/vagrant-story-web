@@ -146,8 +146,16 @@ function RootComponent() {
           </div>
         </div>
       </nav>
-      <div className="flex min-h-screen flex-col pt-14">
-        <div className="flex flex-1 flex-col">
+      <div className="relative flex min-h-screen flex-col pt-14">
+        <div
+          className="pointer-events-none fixed inset-0 z-0 bg-center bg-no-repeat opacity-[0.04]"
+          style={{
+            backgroundImage: "url(/rood-inverse.svg)",
+            backgroundSize: "auto 80vh",
+            filter: "brightness(0) invert(1)",
+          }}
+        />
+        <div className="relative z-10 flex flex-1 flex-col">
           <Outlet />
         </div>
         <footer className="border-border/50 border-t px-4 py-3">
