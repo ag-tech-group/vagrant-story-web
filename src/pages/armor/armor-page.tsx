@@ -51,9 +51,9 @@ export function ArmorPage() {
   )
 
   const typeFilters = useMemo<ColumnFilter[]>(() => {
-    const types = [...new Set(data.map((a) => a.armor_type))].sort()
+    const types = [...new Set(filtered.map((a) => a.armor_type))].sort()
     return [{ column: "armor_type", label: "Type", options: types }]
-  }, [data])
+  }, [filtered])
 
   return (
     <DataTable
