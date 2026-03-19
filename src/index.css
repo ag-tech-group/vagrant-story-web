@@ -3,10 +3,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Geist Pixel Line";
+  src: url("/fonts/GeistPixel-Line.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── Light mode ────────────────────────────────────────── */
 :root {
   --radius: 0.625rem;
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: "Geist Pixel Line", monospace;
 
   --background: oklch(0.97 0.01 230);
   --foreground: oklch(0.22 0.02 260);
@@ -80,6 +89,7 @@
 
 @theme inline {
   --font-sans: var(--font-sans);
+  --font-pixel: var(--font-pixel);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -125,5 +135,14 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-pixel);
   }
 }
