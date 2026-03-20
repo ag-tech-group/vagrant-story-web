@@ -42,22 +42,22 @@ const columns: ColumnDef<Armor>[] = [
   },
   {
     accessorKey: "blunt",
-    header: "Blunt",
+    header: "Blt",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
   {
     accessorKey: "edged",
-    header: "Edged",
+    header: "Edg",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
   {
     accessorKey: "piercing",
-    header: "Pierce",
+    header: "Prc",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
   {
     accessorKey: "physical",
-    header: "Phys",
+    header: "Phy",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
   {

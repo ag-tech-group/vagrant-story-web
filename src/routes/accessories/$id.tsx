@@ -48,12 +48,12 @@ function AccessoryDetail() {
               <StatBox label="INT" value={item.int} />
               <StatBox label="AGI" value={item.agi} />
             </div>
-            {/* Damage type resistances */}
+            {/* Damage type affinities */}
             <div className="flex flex-wrap justify-center gap-1.5">
-              <StatBox label="Blunt" value={item.blunt} />
-              <StatBox label="Edged" value={item.edged} />
-              <StatBox label="Piercing" value={item.piercing} />
-              <StatBox label="Physical" value={item.physical} />
+              <StatBox label="Blt" value={item.blunt} />
+              <StatBox label="Edg" value={item.edged} />
+              <StatBox label="Prc" value={item.piercing} />
+              <StatBox label="Phy" value={item.physical} />
             </div>
             {/* Class affinities */}
             <div className="flex flex-wrap justify-center gap-1.5">
