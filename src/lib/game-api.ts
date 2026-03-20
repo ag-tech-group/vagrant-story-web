@@ -154,6 +154,17 @@ export interface Sigil {
   door_unlocks: string
 }
 
+export interface Grimoire {
+  id: number
+  name: string
+  spell_name: string
+  area: string
+  room: string
+  source: string
+  drop_rate: string
+  repeatable: boolean
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -196,6 +207,7 @@ export const gameApi = {
   spell: (id: number) => fetchApi<Spell>(`/spells/${id}`),
   keys: () => fetchApi<Key[]>("/keys?limit=200"),
   sigils: () => fetchApi<Sigil[]>("/sigils?limit=200"),
+  grimoires: () => fetchApi<Grimoire[]>("/grimoires?limit=500"),
   craftingRecipes: (params?: string) =>
     fetchApi<CraftingRecipe[]>(
       `/crafting-recipes${params ? `?${params}` : "?limit=200"}`
