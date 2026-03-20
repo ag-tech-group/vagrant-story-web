@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
+import { SpellCategoryBadge } from "@/components/stat-display"
 import { gameApi, type Grimoire } from "@/lib/game-api"
 
 export const Route = createFileRoute("/spells/$id")({
@@ -47,9 +48,9 @@ function SpellDetail() {
               <h2 className="text-2xl font-medium tracking-wide">
                 {spell.name}
               </h2>
-              <p className="text-muted-foreground mt-0.5 text-sm">
-                {spell.category} Spell
-              </p>
+              <div className="mt-1">
+                <SpellCategoryBadge category={spell.category} />
+              </div>
             </div>
           </div>
           <div className="flex flex-1 flex-col gap-4">

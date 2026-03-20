@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { type ColumnDef } from "@tanstack/react-table"
 import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { ItemIcon } from "@/components/item-icon"
+import { SpellCategoryBadge } from "@/components/stat-display"
 import { gameApi, type Spell, type Grimoire } from "@/lib/game-api"
 
 export function SpellsPage() {
@@ -41,7 +42,7 @@ export function SpellsPage() {
         header: "Category",
         filterFn: "equals",
         cell: ({ getValue }) => (
-          <span className="text-sm">{getValue<string>()}</span>
+          <SpellCategoryBadge category={getValue<string>()} />
         ),
       },
       {

@@ -59,29 +59,30 @@ export function GrimoiresPage() {
         },
       },
       {
-        accessorKey: "area",
+        accessorKey: "areas",
         header: "Area",
         cell: ({ getValue }) => (
           <span className="text-sm">{getValue<string>()}</span>
         ),
+        enableSorting: false,
       },
       {
-        accessorKey: "source",
+        accessorKey: "sources",
         header: "Source",
         cell: ({ getValue }) => (
           <span className="text-muted-foreground text-sm">
             {getValue<string>()}
           </span>
         ),
+        enableSorting: false,
       },
       {
-        accessorKey: "drop_rate",
+        accessorKey: "drop_rates",
         header: "Rate",
-        cell: ({ getValue }) => {
-          const v = getValue<string>()
-          if (!v) return <span className="text-muted-foreground">Once</span>
-          return <span className="text-sm">{v}</span>
-        },
+        cell: ({ getValue }) => (
+          <span className="text-sm">{getValue<string>()}</span>
+        ),
+        enableSorting: false,
       },
     ],
     [spellMap]

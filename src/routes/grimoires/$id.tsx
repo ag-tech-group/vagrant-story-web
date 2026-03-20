@@ -12,9 +12,9 @@ export const Route = createFileRoute("/grimoires/$id")({
 
 function GrimoireDetail() {
   const { id } = Route.useParams()
-  const { data: grimoires = [] } = useQuery({
-    queryKey: ["grimoires"],
-    queryFn: gameApi.grimoires,
+  const { data: item } = useQuery({
+    queryKey: ["grimoire", id],
+    queryFn: () => gameApi.grimoire(Number(id)),
   })
 
   const { data: spells = [] } = useQuery({
@@ -22,7 +22,6 @@ function GrimoireDetail() {
     queryFn: gameApi.spells,
   })
 
-  const item = grimoires.find((g) => g.id === Number(id))
   if (!item) return null
 
   const linkedSpell = spells.find((s: Spell) => s.name === item.spell_name)

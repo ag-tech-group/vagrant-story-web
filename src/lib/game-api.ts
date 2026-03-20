@@ -165,6 +165,16 @@ export interface Grimoire {
   id: number
   name: string
   spell_name: string
+  areas: string
+  sources: string
+  drop_rates: string
+  repeatable: boolean
+}
+
+export interface GrimoireDetail {
+  id: number
+  name: string
+  spell_name: string
   area: string
   room: string
   source: string
@@ -223,6 +233,7 @@ export const gameApi = {
   keys: () => fetchApi<Key[]>("/keys?limit=200"),
   sigils: () => fetchApi<Sigil[]>("/sigils?limit=200"),
   grimoires: () => fetchApi<Grimoire[]>("/grimoires?limit=500"),
+  grimoire: (id: number) => fetchApi<GrimoireDetail>(`/grimoires/${id}`),
   workshops: () => fetchApi<Workshop[]>("/workshops?limit=200"),
   craftingRecipes: (params?: string) =>
     fetchApi<CraftingRecipe[]>(
