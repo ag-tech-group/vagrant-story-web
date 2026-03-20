@@ -13,6 +13,7 @@ import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as MaterialGridRouteImport } from './routes/material-grid'
 import { Route as WeaponsRouteRouteImport } from './routes/weapons/route'
 import { Route as SpellsRouteRouteImport } from './routes/spells/route'
+import { Route as SigilsRouteRouteImport } from './routes/sigils/route'
 import { Route as KeysRouteRouteImport } from './routes/keys/route'
 import { Route as GripsRouteRouteImport } from './routes/grips/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
@@ -22,6 +23,7 @@ import { Route as AccessoriesRouteRouteImport } from './routes/accessories/route
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WeaponsIndexRouteImport } from './routes/weapons/index'
 import { Route as SpellsIndexRouteImport } from './routes/spells/index'
+import { Route as SigilsIndexRouteImport } from './routes/sigils/index'
 import { Route as KeysIndexRouteImport } from './routes/keys/index'
 import { Route as GripsIndexRouteImport } from './routes/grips/index'
 import { Route as GemsIndexRouteImport } from './routes/gems/index'
@@ -31,6 +33,7 @@ import { Route as ArmorIndexRouteImport } from './routes/armor/index'
 import { Route as AccessoriesIndexRouteImport } from './routes/accessories/index'
 import { Route as WeaponsIdRouteImport } from './routes/weapons/$id'
 import { Route as SpellsIdRouteImport } from './routes/spells/$id'
+import { Route as SigilsIdRouteImport } from './routes/sigils/$id'
 import { Route as KeysIdRouteImport } from './routes/keys/$id'
 import { Route as GripsIdRouteImport } from './routes/grips/$id'
 import { Route as GemsIdRouteImport } from './routes/gems/$id'
@@ -56,6 +59,11 @@ const WeaponsRouteRoute = WeaponsRouteRouteImport.update({
 const SpellsRouteRoute = SpellsRouteRouteImport.update({
   id: '/spells',
   path: '/spells',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigilsRouteRoute = SigilsRouteRouteImport.update({
+  id: '/sigils',
+  path: '/sigils',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KeysRouteRoute = KeysRouteRouteImport.update({
@@ -103,6 +111,11 @@ const SpellsIndexRoute = SpellsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SpellsRouteRoute,
 } as any)
+const SigilsIndexRoute = SigilsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SigilsRouteRoute,
+} as any)
 const KeysIndexRoute = KeysIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -148,6 +161,11 @@ const SpellsIdRoute = SpellsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => SpellsRouteRoute,
 } as any)
+const SigilsIdRoute = SigilsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SigilsRouteRoute,
+} as any)
 const KeysIdRoute = KeysIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -187,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/gems': typeof GemsRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
   '/keys': typeof KeysRouteRouteWithChildren
+  '/sigils': typeof SigilsRouteRouteWithChildren
   '/spells': typeof SpellsRouteRouteWithChildren
   '/weapons': typeof WeaponsRouteRouteWithChildren
   '/material-grid': typeof MaterialGridRoute
@@ -197,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/gems/$id': typeof GemsIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/keys/$id': typeof KeysIdRoute
+  '/sigils/$id': typeof SigilsIdRoute
   '/spells/$id': typeof SpellsIdRoute
   '/weapons/$id': typeof WeaponsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
@@ -206,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/gems/': typeof GemsIndexRoute
   '/grips/': typeof GripsIndexRoute
   '/keys/': typeof KeysIndexRoute
+  '/sigils/': typeof SigilsIndexRoute
   '/spells/': typeof SpellsIndexRoute
   '/weapons/': typeof WeaponsIndexRoute
 }
@@ -219,6 +240,7 @@ export interface FileRoutesByTo {
   '/gems/$id': typeof GemsIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/keys/$id': typeof KeysIdRoute
+  '/sigils/$id': typeof SigilsIdRoute
   '/spells/$id': typeof SpellsIdRoute
   '/weapons/$id': typeof WeaponsIdRoute
   '/accessories': typeof AccessoriesIndexRoute
@@ -228,6 +250,7 @@ export interface FileRoutesByTo {
   '/gems': typeof GemsIndexRoute
   '/grips': typeof GripsIndexRoute
   '/keys': typeof KeysIndexRoute
+  '/sigils': typeof SigilsIndexRoute
   '/spells': typeof SpellsIndexRoute
   '/weapons': typeof WeaponsIndexRoute
 }
@@ -240,6 +263,7 @@ export interface FileRoutesById {
   '/gems': typeof GemsRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
   '/keys': typeof KeysRouteRouteWithChildren
+  '/sigils': typeof SigilsRouteRouteWithChildren
   '/spells': typeof SpellsRouteRouteWithChildren
   '/weapons': typeof WeaponsRouteRouteWithChildren
   '/material-grid': typeof MaterialGridRoute
@@ -250,6 +274,7 @@ export interface FileRoutesById {
   '/gems/$id': typeof GemsIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/keys/$id': typeof KeysIdRoute
+  '/sigils/$id': typeof SigilsIdRoute
   '/spells/$id': typeof SpellsIdRoute
   '/weapons/$id': typeof WeaponsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
@@ -259,6 +284,7 @@ export interface FileRoutesById {
   '/gems/': typeof GemsIndexRoute
   '/grips/': typeof GripsIndexRoute
   '/keys/': typeof KeysIndexRoute
+  '/sigils/': typeof SigilsIndexRoute
   '/spells/': typeof SpellsIndexRoute
   '/weapons/': typeof WeaponsIndexRoute
 }
@@ -272,6 +298,7 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grips'
     | '/keys'
+    | '/sigils'
     | '/spells'
     | '/weapons'
     | '/material-grid'
@@ -282,6 +309,7 @@ export interface FileRouteTypes {
     | '/gems/$id'
     | '/grips/$id'
     | '/keys/$id'
+    | '/sigils/$id'
     | '/spells/$id'
     | '/weapons/$id'
     | '/accessories/'
@@ -291,6 +319,7 @@ export interface FileRouteTypes {
     | '/gems/'
     | '/grips/'
     | '/keys/'
+    | '/sigils/'
     | '/spells/'
     | '/weapons/'
   fileRoutesByTo: FileRoutesByTo
@@ -304,6 +333,7 @@ export interface FileRouteTypes {
     | '/gems/$id'
     | '/grips/$id'
     | '/keys/$id'
+    | '/sigils/$id'
     | '/spells/$id'
     | '/weapons/$id'
     | '/accessories'
@@ -313,6 +343,7 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grips'
     | '/keys'
+    | '/sigils'
     | '/spells'
     | '/weapons'
   id:
@@ -324,6 +355,7 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grips'
     | '/keys'
+    | '/sigils'
     | '/spells'
     | '/weapons'
     | '/material-grid'
@@ -334,6 +366,7 @@ export interface FileRouteTypes {
     | '/gems/$id'
     | '/grips/$id'
     | '/keys/$id'
+    | '/sigils/$id'
     | '/spells/$id'
     | '/weapons/$id'
     | '/accessories/'
@@ -343,6 +376,7 @@ export interface FileRouteTypes {
     | '/gems/'
     | '/grips/'
     | '/keys/'
+    | '/sigils/'
     | '/spells/'
     | '/weapons/'
   fileRoutesById: FileRoutesById
@@ -355,6 +389,7 @@ export interface RootRouteChildren {
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
   GripsRouteRoute: typeof GripsRouteRouteWithChildren
   KeysRouteRoute: typeof KeysRouteRouteWithChildren
+  SigilsRouteRoute: typeof SigilsRouteRouteWithChildren
   SpellsRouteRoute: typeof SpellsRouteRouteWithChildren
   WeaponsRouteRoute: typeof WeaponsRouteRouteWithChildren
   MaterialGridRoute: typeof MaterialGridRoute
@@ -390,6 +425,13 @@ declare module '@tanstack/react-router' {
       path: '/spells'
       fullPath: '/spells'
       preLoaderRoute: typeof SpellsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sigils': {
+      id: '/sigils'
+      path: '/sigils'
+      fullPath: '/sigils'
+      preLoaderRoute: typeof SigilsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/keys': {
@@ -455,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpellsIndexRouteImport
       parentRoute: typeof SpellsRouteRoute
     }
+    '/sigils/': {
+      id: '/sigils/'
+      path: '/'
+      fullPath: '/sigils/'
+      preLoaderRoute: typeof SigilsIndexRouteImport
+      parentRoute: typeof SigilsRouteRoute
+    }
     '/keys/': {
       id: '/keys/'
       path: '/'
@@ -517,6 +566,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/spells/$id'
       preLoaderRoute: typeof SpellsIdRouteImport
       parentRoute: typeof SpellsRouteRoute
+    }
+    '/sigils/$id': {
+      id: '/sigils/$id'
+      path: '/$id'
+      fullPath: '/sigils/$id'
+      preLoaderRoute: typeof SigilsIdRouteImport
+      parentRoute: typeof SigilsRouteRoute
     }
     '/keys/$id': {
       id: '/keys/$id'
@@ -645,6 +701,20 @@ const KeysRouteRouteWithChildren = KeysRouteRoute._addFileChildren(
   KeysRouteRouteChildren,
 )
 
+interface SigilsRouteRouteChildren {
+  SigilsIdRoute: typeof SigilsIdRoute
+  SigilsIndexRoute: typeof SigilsIndexRoute
+}
+
+const SigilsRouteRouteChildren: SigilsRouteRouteChildren = {
+  SigilsIdRoute: SigilsIdRoute,
+  SigilsIndexRoute: SigilsIndexRoute,
+}
+
+const SigilsRouteRouteWithChildren = SigilsRouteRoute._addFileChildren(
+  SigilsRouteRouteChildren,
+)
+
 interface SpellsRouteRouteChildren {
   SpellsIdRoute: typeof SpellsIdRoute
   SpellsIndexRoute: typeof SpellsIndexRoute
@@ -681,6 +751,7 @@ const rootRouteChildren: RootRouteChildren = {
   GemsRouteRoute: GemsRouteRouteWithChildren,
   GripsRouteRoute: GripsRouteRouteWithChildren,
   KeysRouteRoute: KeysRouteRouteWithChildren,
+  SigilsRouteRoute: SigilsRouteRouteWithChildren,
   SpellsRouteRoute: SpellsRouteRouteWithChildren,
   WeaponsRouteRoute: WeaponsRouteRouteWithChildren,
   MaterialGridRoute: MaterialGridRoute,
