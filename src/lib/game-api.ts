@@ -54,6 +54,15 @@ export interface Material {
   str_modifier: number
   int_modifier: number
   agi_modifier: number
+  blade_str: number
+  blade_int: number
+  blade_agi: number
+  shield_str: number
+  shield_int: number
+  shield_agi: number
+  armor_str: number
+  armor_int: number
+  armor_agi: number
   human: number
   beast: number
   undead: number

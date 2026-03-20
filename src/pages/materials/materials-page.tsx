@@ -59,8 +59,22 @@ export function MaterialsPage() {
   )
 }
 
+function hasNonZero(a: number, b: number, c: number) {
+  return a !== 0 || b !== 0 || c !== 0
+}
+
 function MaterialCard({ material: m }: { material: Material }) {
   const categories = MATERIAL_CATEGORIES[m.name]
+  const showBlade =
+    categories?.includes("Blades") &&
+    hasNonZero(m.blade_str, m.blade_int, m.blade_agi)
+  const showShield =
+    categories?.includes("Shields") &&
+    hasNonZero(m.shield_str, m.shield_int, m.shield_agi)
+  const showArmor =
+    categories?.includes("Armor") &&
+    hasNonZero(m.armor_str, m.armor_int, m.armor_agi)
+  const hasOffsets = showBlade || showShield || showArmor
 
   return (
     <div className="border-border/50 bg-card space-y-2 rounded-lg border p-3">
@@ -75,11 +89,40 @@ function MaterialCard({ material: m }: { material: Material }) {
         </p>
       )}
 
-      <div className="flex gap-3">
-        <Stat label="STR" value={m.str_modifier} />
-        <Stat label="INT" value={m.int_modifier} />
-        <Stat label="AGI" value={m.agi_modifier} />
-      </div>
+      {hasOffsets ? (
+        <div className="space-y-1.5">
+          {showBlade && (
+            <OffsetRow
+              label="Blade"
+              str={m.blade_str}
+              int={m.blade_int}
+              agi={m.blade_agi}
+            />
+          )}
+          {showShield && (
+            <OffsetRow
+              label="Shield"
+              str={m.shield_str}
+              int={m.shield_int}
+              agi={m.shield_agi}
+            />
+          )}
+          {showArmor && (
+            <OffsetRow
+              label="Armor"
+              str={m.armor_str}
+              int={m.armor_int}
+              agi={m.armor_agi}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <Stat label="STR" value={m.str_modifier} />
+          <Stat label="INT" value={m.int_modifier} />
+          <Stat label="AGI" value={m.agi_modifier} />
+        </div>
+      )}
 
       <div className="grid grid-cols-6 gap-1">
         {CREATURE_TYPES.map((type) => (
@@ -91,6 +134,31 @@ function MaterialCard({ material: m }: { material: Material }) {
         {ELEMENT_TYPES.map((type) => (
           <Stat key={type} label={type} value={m[type] as number} small />
         ))}
+      </div>
+    </div>
+  )
+}
+
+function OffsetRow({
+  label,
+  str,
+  int: intVal,
+  agi,
+}: {
+  label: string
+  str: number
+  int: number
+  agi: number
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-muted-foreground w-12 shrink-0 text-[11px]">
+        {label}
+      </span>
+      <div className="flex flex-1 gap-2">
+        <Stat label="STR" value={str} />
+        <Stat label="INT" value={intVal} />
+        <Stat label="AGI" value={agi} />
       </div>
     </div>
   )
