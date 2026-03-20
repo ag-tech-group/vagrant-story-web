@@ -125,6 +125,17 @@ export interface Consumable {
   effects?: unknown
 }
 
+export interface Spell {
+  id: number
+  name: string
+  category: string
+  mp_cost: string
+  targeting: string
+  affinity: string
+  effect: string
+  grimoire: string
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -163,6 +174,8 @@ export const gameApi = {
   gems: () => fetchApi<Gem[]>("/gems?limit=200"),
   grips: () => fetchApi<Grip[]>("/grips?limit=200"),
   consumables: () => fetchApi<Consumable[]>("/consumables?limit=200"),
+  spells: () => fetchApi<Spell[]>("/spells?limit=200"),
+  spell: (id: number) => fetchApi<Spell>(`/spells/${id}`),
   craftingRecipes: (params?: string) =>
     fetchApi<CraftingRecipe[]>(
       `/crafting-recipes${params ? `?${params}` : "?limit=200"}`

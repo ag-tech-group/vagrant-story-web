@@ -26,6 +26,11 @@ const ICON_MAP: Record<string, string> = {
   Grip: "Grip",
   Consumable: "Consumable",
   Material: "Material",
+  Spell: "Gem",
+  Key: "Consumable",
+  Sigil: "Consumable",
+  Grimoire: "Consumable",
+  Workshop: "Material",
 }
 
 interface ItemIconProps {
