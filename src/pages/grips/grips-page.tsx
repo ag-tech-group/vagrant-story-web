@@ -1,9 +1,18 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
+import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { ItemIcon } from "@/components/item-icon"
-import { DataTable } from "@/components/data-table"
 import { gameApi, fmt, type Grip } from "@/lib/game-api"
+
+function StatCell({ value }: { value: number }) {
+  if (value === 0) return <span className="text-muted-foreground">0</span>
+  return (
+    <span className={value > 0 ? "text-green-400" : "text-red-400"}>
+      {value > 0 ? `+${value}` : value}
+    </span>
+  )
+}
 
 const columns: ColumnDef<Grip>[] = [
   {
@@ -16,7 +25,21 @@ const columns: ColumnDef<Grip>[] = [
       </div>
     ),
   },
-  { accessorKey: "grip_type", header: "Type" },
+  {
+    accessorKey: "grip_type",
+    header: "Type",
+    filterFn: "equals",
+  },
+  {
+    accessorKey: "compatible_weapons",
+    header: "Compatible",
+    cell: ({ getValue }) => (
+      <span className="text-muted-foreground text-xs">
+        {getValue<string>() || "-"}
+      </span>
+    ),
+    enableSorting: false,
+  },
   {
     accessorKey: "str",
     header: "STR",
@@ -33,20 +56,23 @@ const columns: ColumnDef<Grip>[] = [
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
   {
-    accessorKey: "dp",
-    header: "DP",
-    cell: ({ getValue }) => {
-      const v = getValue<number | undefined>()
-      return v != null ? v : <span className="text-muted-foreground">-</span>
-    },
+    accessorKey: "blunt",
+    header: "Blt",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
   {
-    accessorKey: "pp",
-    header: "PP",
-    cell: ({ getValue }) => {
-      const v = getValue<number | undefined>()
-      return v != null ? v : <span className="text-muted-foreground">-</span>
-    },
+    accessorKey: "edged",
+    header: "Edg",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "piercing",
+    header: "Prc",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "gem_slots",
+    header: "Gems",
   },
 ]
 
@@ -61,25 +87,24 @@ export function GripsPage() {
     [data]
   )
 
+  const typeFilters = useMemo<ColumnFilter[]>(() => {
+    const types = [
+      ...new Set(data.map((g) => g.grip_type).filter(Boolean)),
+    ].sort()
+    return [{ column: "grip_type", label: "Type", options: types }]
+  }, [data])
+
   return (
     <DataTable
       data={enriched}
       columns={columns}
       searchPlaceholder="Search grips..."
       isLoading={isLoading}
+      filters={typeFilters}
       getRowLink={(row) => ({
         to: "/grips/$id",
         params: { id: String(row.original.id) },
       })}
     />
-  )
-}
-
-function StatCell({ value }: { value: number }) {
-  if (value === 0) return <span className="text-muted-foreground">0</span>
-  return (
-    <span className={value > 0 ? "text-green-400" : "text-red-400"}>
-      {value > 0 ? `+${value}` : value}
-    </span>
   )
 }
