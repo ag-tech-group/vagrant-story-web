@@ -84,7 +84,6 @@ const ARMOR_MATS = ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const SHIELD_MATS = ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 
 // Maps API blade_type → material recipe input type.
-// Only needed for types where the names differ.
 const MATERIAL_TYPE_MAP: Record<string, string> = {
   "Axe / Mace": "AxeMace",
 }

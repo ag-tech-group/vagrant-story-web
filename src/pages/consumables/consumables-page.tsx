@@ -1,27 +1,9 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
-import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
 import { DataTable } from "@/components/data-table"
 import { gameApi, type Consumable } from "@/lib/game-api"
-
-interface Effect {
-  type: string
-  value: number
-  target: string
-  modifier: string
-}
-
-function formatEffect(e: Effect): string | null {
-  const val = e.value
-  // Broken C# parse artifacts
-  if (typeof val === "string") return `${e.modifier} Random`
-  // 32767 = max int16, means full restore
-  if (val === 32767) return `${e.modifier} Full`
-  if (val === 0) return null
-  return `${e.modifier} ${val > 0 ? `+${val}` : val}`
-}
 
 const columns: ColumnDef<Consumable>[] = [
   {
@@ -35,26 +17,12 @@ const columns: ColumnDef<Consumable>[] = [
     ),
   },
   {
-    id: "effects",
-    header: "Effects",
+    accessorKey: "description",
+    header: "Effect",
     cell: ({ row }) => {
-      const effects = row.original.effects as Effect[] | null | undefined
-      if (!effects || !Array.isArray(effects) || effects.length === 0) {
-        return <span className="text-muted-foreground">-</span>
-      }
-      return (
-        <div className="flex flex-wrap gap-1">
-          {effects.map((e, i) => {
-            const label = formatEffect(e)
-            if (!label) return null
-            return (
-              <Badge key={i} variant="secondary" className="text-xs">
-                {label}
-              </Badge>
-            )
-          })}
-        </div>
-      )
+      const desc = row.original.description
+      if (!desc) return <span className="text-muted-foreground">-</span>
+      return <span className="text-sm">{desc}</span>
     },
     enableSorting: false,
   },
