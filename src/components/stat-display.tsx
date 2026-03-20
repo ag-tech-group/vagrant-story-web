@@ -1,10 +1,23 @@
 import type { EffectiveStats, ItemStats } from "@/lib/item-stats"
 import { cn } from "@/lib/utils"
 
-export const DMG_TYPE_COLORS: Record<string, string> = {
+const DMG_TYPE_COLORS: Record<string, string> = {
   Edged: "bg-slate-500/60 text-slate-100 border-slate-400/50",
   Blunt: "bg-amber-700/60 text-amber-100 border-amber-600/50",
   Piercing: "bg-sky-600/60 text-sky-100 border-sky-500/50",
+}
+
+export function DamageTypeBadge({ type }: { type: string }) {
+  return (
+    <span
+      className={cn(
+        "rounded border px-1.5 py-0.5 text-[11px] leading-tight font-medium",
+        DMG_TYPE_COLORS[type] ?? "bg-muted"
+      )}
+    >
+      {type}
+    </span>
+  )
 }
 
 interface StatDisplayProps {
@@ -25,14 +38,7 @@ export function StatDisplay({
       {/* Damage type badge */}
       {stats.damage_type && (
         <div>
-          <span
-            className={cn(
-              "rounded border px-1.5 py-0.5 text-[11px] leading-tight font-medium",
-              DMG_TYPE_COLORS[stats.damage_type] ?? "bg-muted"
-            )}
-          >
-            {stats.damage_type}
-          </span>
+          <DamageTypeBadge type={stats.damage_type} />
         </div>
       )}
 

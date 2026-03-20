@@ -25,6 +25,7 @@ const ICON_MAP: Record<string, string> = {
   Gem: "Gem",
   Grip: "Grip",
   Consumable: "Consumable",
+  Material: "Material",
 }
 
 interface ItemIconProps {
