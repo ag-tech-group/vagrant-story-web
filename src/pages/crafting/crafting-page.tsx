@@ -47,7 +47,7 @@ const TYPE_LABELS: Record<string, string> = {
   AxeMace: "Axe / Mace",
 }
 
-const WEAPON_HANDS: Record<string, string> = {
+const BLADE_HANDS: Record<string, string> = {
   Dagger: "1H",
   Sword: "1H",
   "Axe / Mace": "1H",
@@ -65,7 +65,7 @@ function typeLabel(type: string) {
 
 function typeLabelWithHands(type: string) {
   const label = TYPE_LABELS[type] ?? type
-  const hands = WEAPON_HANDS[type]
+  const hands = BLADE_HANDS[type]
   return hands ? `${label} · ${hands}` : label
 }
 
@@ -143,9 +143,9 @@ export function CraftingPage() {
   const setReverseCategoryFilter = (v: string) =>
     updateSearch({ rcat: v === "all" ? undefined : v })
 
-  const { data: weapons = [] } = useQuery({
-    queryKey: ["weapons"],
-    queryFn: gameApi.weapons,
+  const { data: blades = [] } = useQuery({
+    queryKey: ["blades"],
+    queryFn: gameApi.blades,
   })
   const { data: armor = [] } = useQuery({
     queryKey: ["armor"],
@@ -173,7 +173,7 @@ export function CraftingPage() {
       { name: string; type: string; gameId: number }[]
     >()
 
-    for (const w of weapons) {
+    for (const w of blades) {
       const type = w.blade_type
       if (!byType.has(type)) byType.set(type, [])
       byType
@@ -204,11 +204,11 @@ export function CraftingPage() {
     }
 
     return { allItems: items, itemLevelMap: levelMap }
-  }, [weapons, armor])
+  }, [blades, armor])
 
   const itemStatsMap = useMemo(() => {
     const map = new Map<string, ItemStats>()
-    for (const w of weapons) {
+    for (const w of blades) {
       map.set(fmt(w.field_name), {
         str: w.str,
         int: w.int,
@@ -239,7 +239,7 @@ export function CraftingPage() {
       }
     }
     return map
-  }, [weapons, armor, recipes])
+  }, [blades, armor, recipes])
 
   const materialMap = useMemo(() => {
     const map = new Map<string, Material>()
@@ -263,32 +263,32 @@ export function CraftingPage() {
           map.set(name, lcType)
           continue
         }
-        // Shield items aren't in weapons/armor API
+        // Shield items aren't in blades/armor API
         if (r.category === "shield") map.set(name, "Shield")
       }
     }
     return map
   }, [allItems, recipes])
 
-  // Map item name → 1H/2H for weapon badges
+  // Map item name → 1H/2H for blade badges
   const itemHandsMap = useMemo(() => {
     const map = new Map<string, string>()
-    for (const w of weapons) {
-      const hands = WEAPON_HANDS[w.blade_type]
+    for (const w of blades) {
+      const hands = BLADE_HANDS[w.blade_type]
       if (hands) map.set(fmt(w.field_name), hands)
     }
     return map
-  }, [weapons])
+  }, [blades])
 
   // Map item name → equipment category for material filtering
   const equipCategoryMap = useMemo(() => {
     const map = new Map<string, "blade" | "armor" | "shield">()
-    for (const w of weapons) map.set(fmt(w.field_name), "blade")
+    for (const b of blades) map.set(fmt(b.field_name), "blade")
     for (const a of armor) {
       if (a.armor_type === "Shield") map.set(fmt(a.field_name), "shield")
       else map.set(fmt(a.field_name), "armor")
     }
-    // Handle recipe items not in weapons/armor (e.g. shields from crafting)
+    // Handle recipe items not in blades/armor (e.g. shields from crafting)
     for (const r of recipes) {
       for (const name of [r.input_1, r.input_2, r.result]) {
         if (map.has(name)) continue
@@ -296,8 +296,7 @@ export function CraftingPage() {
       }
     }
     return map
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weapons, armor, recipes])
+  }, [blades, armor, recipes])
 
   function getMaterialsForItem(itemName: string | null): string[] {
     if (!itemName) return ALL_MATERIALS
@@ -310,14 +309,14 @@ export function CraftingPage() {
 
   const CATEGORY_OPTIONS = [
     { value: "all", label: "All Equipment" },
-    { value: "weapons", label: "Weapons" },
+    { value: "blades", label: "Blades" },
     { value: "armor", label: "Armor" },
     { value: "shields", label: "Shields" },
   ]
 
   const filteredItems = useMemo(() => {
     if (categoryFilter === "all") return allItems
-    const weaponTypes = new Set(weapons.map((w) => w.blade_type))
+    const bladeTypes = new Set(blades.map((b) => b.blade_type))
     const armorTypes = new Set(
       armor
         .filter(
@@ -326,13 +325,13 @@ export function CraftingPage() {
         .map((a) => a.armor_type)
     )
     return allItems.filter((item) => {
-      if (categoryFilter === "weapons") return weaponTypes.has(item.type)
+      if (categoryFilter === "blades") return bladeTypes.has(item.type)
       if (categoryFilter === "armor") return armorTypes.has(item.type)
       if (categoryFilter === "shields")
         return item.type.toLowerCase() === "shield"
       return true
     })
-  }, [allItems, categoryFilter, weapons, armor])
+  }, [allItems, categoryFilter, blades, armor])
 
   // --- Forward calculator ---
   const results: CraftingRecipe[] = useMemo(() => {
@@ -410,7 +409,7 @@ export function CraftingPage() {
 
   const reverseFilteredItems = useMemo(() => {
     if (reverseCategoryFilter === "all") return resultItems
-    const weaponTypes = new Set(weapons.map((w) => w.blade_type))
+    const bladeTypes = new Set(blades.map((b) => b.blade_type))
     const armorTypes = new Set(
       armor
         .filter(
@@ -419,13 +418,13 @@ export function CraftingPage() {
         .map((a) => a.armor_type)
     )
     return resultItems.filter((item) => {
-      if (reverseCategoryFilter === "weapons") return weaponTypes.has(item.type)
+      if (reverseCategoryFilter === "blades") return bladeTypes.has(item.type)
       if (reverseCategoryFilter === "armor") return armorTypes.has(item.type)
       if (reverseCategoryFilter === "shields")
         return item.type.toLowerCase() === "shield"
       return true
     })
-  }, [resultItems, reverseCategoryFilter, weapons, armor])
+  }, [resultItems, reverseCategoryFilter, blades, armor])
 
   const reverseRows = useMemo(() => {
     if (!targetItem) return []

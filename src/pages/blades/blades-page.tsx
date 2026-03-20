@@ -4,9 +4,9 @@ import { type ColumnDef } from "@tanstack/react-table"
 import { DamageTypeBadge } from "@/components/stat-display"
 import { ItemIcon } from "@/components/item-icon"
 import { DataTable, type ColumnFilter } from "@/components/data-table"
-import { gameApi, fmt, type Weapon } from "@/lib/game-api"
+import { gameApi, fmt, type Blade } from "@/lib/game-api"
 
-const columns: ColumnDef<Weapon>[] = [
+const columns: ColumnDef<Blade>[] = [
   {
     accessorKey: "field_name",
     header: "Name",
@@ -43,19 +43,19 @@ const columns: ColumnDef<Weapon>[] = [
   { accessorKey: "risk", header: "Risk" },
 ]
 
-export function WeaponsPage() {
+export function BladesPage() {
   const { data = [], isLoading } = useQuery({
-    queryKey: ["weapons"],
-    queryFn: gameApi.weapons,
+    queryKey: ["blades"],
+    queryFn: gameApi.blades,
   })
 
   const enriched = useMemo(
-    () => data.map((w) => ({ ...w, _display: fmt(w.field_name) })),
+    () => data.map((b) => ({ ...b, _display: fmt(b.field_name) })),
     [data]
   )
 
   const typeFilters = useMemo<ColumnFilter[]>(() => {
-    const types = [...new Set(data.map((w) => w.blade_type))].sort()
+    const types = [...new Set(data.map((b) => b.blade_type))].sort()
     return [{ column: "blade_type", label: "Type", options: types }]
   }, [data])
 
@@ -63,11 +63,11 @@ export function WeaponsPage() {
     <DataTable
       data={enriched}
       columns={columns}
-      searchPlaceholder="Search weapons..."
+      searchPlaceholder="Search blades..."
       isLoading={isLoading}
       filters={typeFilters}
       getRowLink={(row) => ({
-        to: "/weapons/$id",
+        to: "/blades/$id",
         params: { id: String(row.original.id) },
       })}
     />
