@@ -165,6 +165,14 @@ export interface Grimoire {
   repeatable: boolean
 }
 
+export interface Workshop {
+  id: number
+  name: string
+  area: string
+  available_materials: string
+  description: string
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -208,6 +216,7 @@ export const gameApi = {
   keys: () => fetchApi<Key[]>("/keys?limit=200"),
   sigils: () => fetchApi<Sigil[]>("/sigils?limit=200"),
   grimoires: () => fetchApi<Grimoire[]>("/grimoires?limit=500"),
+  workshops: () => fetchApi<Workshop[]>("/workshops?limit=200"),
   craftingRecipes: (params?: string) =>
     fetchApi<CraftingRecipe[]>(
       `/crafting-recipes${params ? `?${params}` : "?limit=200"}`
