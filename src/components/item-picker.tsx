@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Check, ChevronsUpDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ItemIcon } from "@/components/item-icon"
 import {
   Command,
   CommandEmpty,
@@ -70,7 +71,7 @@ export function ItemPicker({
           >
             {value ? (
               <div className="flex flex-1 items-center gap-2">
-                <div className="bg-muted size-8 shrink-0 rounded" />
+                <ItemIcon type={selectedItem?.type} size="sm" />
                 <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
                   {value}
                 </span>
@@ -129,7 +130,7 @@ export function ItemPicker({
                         setOpen(false)
                       }}
                     >
-                      <div className="bg-muted size-6 rounded" />
+                      <ItemIcon type={item.type} size="sm" />
                       <span className="flex-1">{item.name}</span>
                       <Check
                         className={cn(

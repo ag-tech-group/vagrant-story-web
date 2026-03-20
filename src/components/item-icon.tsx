@@ -6,11 +6,14 @@ const ICON_MAP: Record<string, string> = {
   Sword: "Sword",
   "Great Sword": "Great_Sword",
   "Axe / Mace": "Axe",
+  Axe: "Axe",
   "Great Axe": "Great_Axe",
   Staff: "Staff",
   "Heavy Mace": "Heavy_Mace",
   Polearm: "Polearm",
   Crossbow: "Crossbow",
+  // Legacy API values
+  Mace: "Mace",
   // Armor types
   Helm: "Helm",
   Body: "Body",
@@ -47,10 +50,22 @@ export function ItemIcon({ type, size = "md", className }: ItemIconProps) {
   }
 
   return (
-    <img
-      src={src}
-      alt={type ?? ""}
-      className={cn("shrink-0 rounded-full", sizeClass, className)}
-    />
+    <div
+      className={cn(
+        "bg-primary text-primary-foreground flex shrink-0 items-center justify-center rounded-lg",
+        sizeClass,
+        className
+      )}
+    >
+      <img
+        src={src}
+        alt={type ?? ""}
+        className={cn(
+          size === "sm" && "size-4",
+          size === "md" && "size-7",
+          size === "lg" && "size-24"
+        )}
+      />
+    </div>
   )
 }

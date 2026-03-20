@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { ArrowRight } from "lucide-react"
+import { ItemIcon } from "@/components/item-icon"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   gameApi,
@@ -177,7 +178,7 @@ function PreviewCard({
 function WeaponRow({ weapon }: { weapon: Weapon }) {
   return (
     <div className="flex items-center gap-3 rounded-md border p-2">
-      <div className="bg-muted size-10 shrink-0 rounded" />
+      <ItemIcon type={weapon.blade_type} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{fmt(weapon.field_name)}</p>
         <p className="text-muted-foreground text-xs">
@@ -195,7 +196,7 @@ function WeaponRow({ weapon }: { weapon: Weapon }) {
 function ArmorRow({ armor }: { armor: Armor }) {
   return (
     <div className="flex items-center gap-3 rounded-md border p-2">
-      <div className="bg-muted size-10 shrink-0 rounded" />
+      <ItemIcon type={armor.armor_type} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{fmt(armor.field_name)}</p>
         <p className="text-muted-foreground text-xs">{armor.armor_type}</p>

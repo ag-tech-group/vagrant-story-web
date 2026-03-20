@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { ItemIcon } from "@/components/item-icon"
 import { ItemPicker, type PickerItem } from "@/components/item-picker"
 import { MaterialSelect } from "@/components/material-select"
 import {
@@ -631,7 +632,7 @@ export function CraftingPage() {
                     <div key={r.id} className="space-y-3">
                       {/* Item name — mimics ItemPicker trigger */}
                       <div className="flex min-h-12 items-center gap-2 rounded-md border px-3 py-2">
-                        <div className="bg-muted size-8 shrink-0 rounded" />
+                        <ItemIcon type={resultType} size="sm" />
                         <span className="min-w-0 flex-1 truncate text-sm font-medium">
                           {r.result}
                         </span>
@@ -1102,7 +1103,7 @@ function SlotCell({
   return (
     <div className="inline-flex flex-col items-center">
       <div className="flex items-center gap-2">
-        <div className="bg-muted size-6 shrink-0 rounded" />
+        <ItemIcon type={type ? typeLabel(type) : undefined} size="sm" />
         <span className="font-medium">{name}</span>
         {type && (
           <span className="text-muted-foreground text-xs">

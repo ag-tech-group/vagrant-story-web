@@ -29,7 +29,7 @@ const columns: ColumnDef<Consumable>[] = [
     header: "Name",
     cell: ({ row }) => (
       <div className="flex items-center gap-3">
-        <ItemIcon type="Gem" />
+        <ItemIcon type="Consumable" />
         <span className="font-medium">{row.original.name}</span>
       </div>
     ),
