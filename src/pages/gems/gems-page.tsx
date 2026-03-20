@@ -49,6 +49,36 @@ const columns: ColumnDef<Gem>[] = [
     header: "AGI",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
+  {
+    accessorKey: "human",
+    header: "Hum",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "beast",
+    header: "Bst",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "undead",
+    header: "Und",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "phantom",
+    header: "Phm",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "dragon",
+    header: "Drg",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "evil",
+    header: "Evl",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
 ]
 
 export function GemsPage() {
