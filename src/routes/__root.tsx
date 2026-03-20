@@ -61,6 +61,7 @@ const ITEM_LINKS = [
   { to: "/consumables" as const, label: "Consumables" },
   { to: "/spells" as const, label: "Spells" },
   { to: "/keys" as const, label: "Keys" },
+  { to: "/sigils" as const, label: "Sigils" },
 ]
 
 const NAV_TABS = [
@@ -73,6 +74,7 @@ const NAV_TABS = [
   { to: "/consumables" as const, label: "Consumables" },
   { to: "/spells" as const, label: "Spells" },
   { to: "/keys" as const, label: "Keys" },
+  { to: "/sigils" as const, label: "Sigils" },
   { to: "/crafting" as const, label: "Crafting" },
   { to: "/material-grid" as const, label: "Material Grid" },
 ]
