@@ -131,7 +131,7 @@ export function DataTable<T>({
           </Select>
         ))}
       </div>
-      <div className="max-h-[70vh] overflow-auto rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (

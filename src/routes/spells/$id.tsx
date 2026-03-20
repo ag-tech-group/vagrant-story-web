@@ -4,7 +4,8 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
-import { gameApi } from "@/lib/game-api"
+import { SpellCategoryBadge } from "@/components/stat-display"
+import { gameApi, type Grimoire } from "@/lib/game-api"
 
 export const Route = createFileRoute("/spells/$id")({
   component: SpellDetail,
@@ -17,8 +18,17 @@ function SpellDetail() {
     queryFn: gameApi.spells,
   })
 
+  const { data: grimoires = [] } = useQuery({
+    queryKey: ["grimoires"],
+    queryFn: gameApi.grimoires,
+  })
+
   const spell = spells.find((s) => s.id === Number(id))
   if (!spell) return null
+
+  const linkedGrimoire = grimoires.find(
+    (g: Grimoire) => g.name === spell.grimoire
+  )
 
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
@@ -38,9 +48,9 @@ function SpellDetail() {
               <h2 className="text-2xl font-medium tracking-wide">
                 {spell.name}
               </h2>
-              <p className="text-muted-foreground mt-0.5 text-sm">
-                {spell.category} Spell
-              </p>
+              <div className="mt-1">
+                <SpellCategoryBadge category={spell.category} />
+              </div>
             </div>
           </div>
           <div className="flex flex-1 flex-col gap-4">
@@ -54,7 +64,18 @@ function SpellDetail() {
             <p className="text-sm">{spell.effect}</p>
             {spell.grimoire && (
               <p className="text-muted-foreground text-sm">
-                <span className="font-medium">Grimoire:</span> {spell.grimoire}
+                <span className="font-medium">Grimoire:</span>{" "}
+                {linkedGrimoire ? (
+                  <Link
+                    to="/grimoires/$id"
+                    params={{ id: String(linkedGrimoire.id) }}
+                    className="text-primary hover:underline"
+                  >
+                    Grimoire {spell.grimoire}
+                  </Link>
+                ) : (
+                  <>Grimoire {spell.grimoire}</>
+                )}
               </p>
             )}
           </div>
