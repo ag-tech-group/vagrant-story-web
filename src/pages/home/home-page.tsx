@@ -38,6 +38,10 @@ export function HomePage() {
     queryKey: ["sigils"],
     queryFn: gameApi.sigils,
   })
+  const { data: grimoires = [] } = useQuery({
+    queryKey: ["grimoires"],
+    queryFn: gameApi.grimoires,
+  })
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
@@ -101,6 +105,12 @@ export function HomePage() {
       label: "Sigils",
       icon: "Sigil",
       count: sigils.length,
+    },
+    {
+      to: "/grimoires" as const,
+      label: "Grimoires",
+      icon: "Grimoire",
+      count: grimoires.length,
     },
   ]
 

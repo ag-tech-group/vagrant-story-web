@@ -16,6 +16,7 @@ import { Route as SpellsRouteRouteImport } from './routes/spells/route'
 import { Route as SigilsRouteRouteImport } from './routes/sigils/route'
 import { Route as KeysRouteRouteImport } from './routes/keys/route'
 import { Route as GripsRouteRouteImport } from './routes/grips/route'
+import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
 import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
 import { Route as ArmorRouteRouteImport } from './routes/armor/route'
@@ -26,6 +27,7 @@ import { Route as SpellsIndexRouteImport } from './routes/spells/index'
 import { Route as SigilsIndexRouteImport } from './routes/sigils/index'
 import { Route as KeysIndexRouteImport } from './routes/keys/index'
 import { Route as GripsIndexRouteImport } from './routes/grips/index'
+import { Route as GrimoiresIndexRouteImport } from './routes/grimoires/index'
 import { Route as GemsIndexRouteImport } from './routes/gems/index'
 import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
 import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
@@ -36,6 +38,7 @@ import { Route as SpellsIdRouteImport } from './routes/spells/$id'
 import { Route as SigilsIdRouteImport } from './routes/sigils/$id'
 import { Route as KeysIdRouteImport } from './routes/keys/$id'
 import { Route as GripsIdRouteImport } from './routes/grips/$id'
+import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
 import { Route as GemsIdRouteImport } from './routes/gems/$id'
 import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
 import { Route as ArmorIdRouteImport } from './routes/armor/$id'
@@ -74,6 +77,11 @@ const KeysRouteRoute = KeysRouteRouteImport.update({
 const GripsRouteRoute = GripsRouteRouteImport.update({
   id: '/grips',
   path: '/grips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrimoiresRouteRoute = GrimoiresRouteRouteImport.update({
+  id: '/grimoires',
+  path: '/grimoires',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GemsRouteRoute = GemsRouteRouteImport.update({
@@ -126,6 +134,11 @@ const GripsIndexRoute = GripsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => GripsRouteRoute,
 } as any)
+const GrimoiresIndexRoute = GrimoiresIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GrimoiresRouteRoute,
+} as any)
 const GemsIndexRoute = GemsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -176,6 +189,11 @@ const GripsIdRoute = GripsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => GripsRouteRoute,
 } as any)
+const GrimoiresIdRoute = GrimoiresIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GrimoiresRouteRoute,
+} as any)
 const GemsIdRoute = GemsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -203,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/armor': typeof ArmorRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
+  '/grimoires': typeof GrimoiresRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
   '/keys': typeof KeysRouteRouteWithChildren
   '/sigils': typeof SigilsRouteRouteWithChildren
@@ -214,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/armor/$id': typeof ArmorIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
+  '/grimoires/$id': typeof GrimoiresIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/keys/$id': typeof KeysIdRoute
   '/sigils/$id': typeof SigilsIdRoute
@@ -224,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/gems/': typeof GemsIndexRoute
+  '/grimoires/': typeof GrimoiresIndexRoute
   '/grips/': typeof GripsIndexRoute
   '/keys/': typeof KeysIndexRoute
   '/sigils/': typeof SigilsIndexRoute
@@ -238,6 +259,7 @@ export interface FileRoutesByTo {
   '/armor/$id': typeof ArmorIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
+  '/grimoires/$id': typeof GrimoiresIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/keys/$id': typeof KeysIdRoute
   '/sigils/$id': typeof SigilsIdRoute
@@ -248,6 +270,7 @@ export interface FileRoutesByTo {
   '/consumables': typeof ConsumablesIndexRoute
   '/crafting': typeof CraftingIndexRoute
   '/gems': typeof GemsIndexRoute
+  '/grimoires': typeof GrimoiresIndexRoute
   '/grips': typeof GripsIndexRoute
   '/keys': typeof KeysIndexRoute
   '/sigils': typeof SigilsIndexRoute
@@ -261,6 +284,7 @@ export interface FileRoutesById {
   '/armor': typeof ArmorRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
+  '/grimoires': typeof GrimoiresRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
   '/keys': typeof KeysRouteRouteWithChildren
   '/sigils': typeof SigilsRouteRouteWithChildren
@@ -272,6 +296,7 @@ export interface FileRoutesById {
   '/armor/$id': typeof ArmorIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
+  '/grimoires/$id': typeof GrimoiresIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/keys/$id': typeof KeysIdRoute
   '/sigils/$id': typeof SigilsIdRoute
@@ -282,6 +307,7 @@ export interface FileRoutesById {
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/gems/': typeof GemsIndexRoute
+  '/grimoires/': typeof GrimoiresIndexRoute
   '/grips/': typeof GripsIndexRoute
   '/keys/': typeof KeysIndexRoute
   '/sigils/': typeof SigilsIndexRoute
@@ -296,6 +322,7 @@ export interface FileRouteTypes {
     | '/armor'
     | '/consumables'
     | '/gems'
+    | '/grimoires'
     | '/grips'
     | '/keys'
     | '/sigils'
@@ -307,6 +334,7 @@ export interface FileRouteTypes {
     | '/armor/$id'
     | '/consumables/$id'
     | '/gems/$id'
+    | '/grimoires/$id'
     | '/grips/$id'
     | '/keys/$id'
     | '/sigils/$id'
@@ -317,6 +345,7 @@ export interface FileRouteTypes {
     | '/consumables/'
     | '/crafting/'
     | '/gems/'
+    | '/grimoires/'
     | '/grips/'
     | '/keys/'
     | '/sigils/'
@@ -331,6 +360,7 @@ export interface FileRouteTypes {
     | '/armor/$id'
     | '/consumables/$id'
     | '/gems/$id'
+    | '/grimoires/$id'
     | '/grips/$id'
     | '/keys/$id'
     | '/sigils/$id'
@@ -341,6 +371,7 @@ export interface FileRouteTypes {
     | '/consumables'
     | '/crafting'
     | '/gems'
+    | '/grimoires'
     | '/grips'
     | '/keys'
     | '/sigils'
@@ -353,6 +384,7 @@ export interface FileRouteTypes {
     | '/armor'
     | '/consumables'
     | '/gems'
+    | '/grimoires'
     | '/grips'
     | '/keys'
     | '/sigils'
@@ -364,6 +396,7 @@ export interface FileRouteTypes {
     | '/armor/$id'
     | '/consumables/$id'
     | '/gems/$id'
+    | '/grimoires/$id'
     | '/grips/$id'
     | '/keys/$id'
     | '/sigils/$id'
@@ -374,6 +407,7 @@ export interface FileRouteTypes {
     | '/consumables/'
     | '/crafting/'
     | '/gems/'
+    | '/grimoires/'
     | '/grips/'
     | '/keys/'
     | '/sigils/'
@@ -387,6 +421,7 @@ export interface RootRouteChildren {
   ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
   ConsumablesRouteRoute: typeof ConsumablesRouteRouteWithChildren
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
+  GrimoiresRouteRoute: typeof GrimoiresRouteRouteWithChildren
   GripsRouteRoute: typeof GripsRouteRouteWithChildren
   KeysRouteRoute: typeof KeysRouteRouteWithChildren
   SigilsRouteRoute: typeof SigilsRouteRouteWithChildren
@@ -446,6 +481,13 @@ declare module '@tanstack/react-router' {
       path: '/grips'
       fullPath: '/grips'
       preLoaderRoute: typeof GripsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grimoires': {
+      id: '/grimoires'
+      path: '/grimoires'
+      fullPath: '/grimoires'
+      preLoaderRoute: typeof GrimoiresRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gems': {
@@ -518,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GripsIndexRouteImport
       parentRoute: typeof GripsRouteRoute
     }
+    '/grimoires/': {
+      id: '/grimoires/'
+      path: '/'
+      fullPath: '/grimoires/'
+      preLoaderRoute: typeof GrimoiresIndexRouteImport
+      parentRoute: typeof GrimoiresRouteRoute
+    }
     '/gems/': {
       id: '/gems/'
       path: '/'
@@ -587,6 +636,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/grips/$id'
       preLoaderRoute: typeof GripsIdRouteImport
       parentRoute: typeof GripsRouteRoute
+    }
+    '/grimoires/$id': {
+      id: '/grimoires/$id'
+      path: '/$id'
+      fullPath: '/grimoires/$id'
+      preLoaderRoute: typeof GrimoiresIdRouteImport
+      parentRoute: typeof GrimoiresRouteRoute
     }
     '/gems/$id': {
       id: '/gems/$id'
@@ -673,6 +729,20 @@ const GemsRouteRouteWithChildren = GemsRouteRoute._addFileChildren(
   GemsRouteRouteChildren,
 )
 
+interface GrimoiresRouteRouteChildren {
+  GrimoiresIdRoute: typeof GrimoiresIdRoute
+  GrimoiresIndexRoute: typeof GrimoiresIndexRoute
+}
+
+const GrimoiresRouteRouteChildren: GrimoiresRouteRouteChildren = {
+  GrimoiresIdRoute: GrimoiresIdRoute,
+  GrimoiresIndexRoute: GrimoiresIndexRoute,
+}
+
+const GrimoiresRouteRouteWithChildren = GrimoiresRouteRoute._addFileChildren(
+  GrimoiresRouteRouteChildren,
+)
+
 interface GripsRouteRouteChildren {
   GripsIdRoute: typeof GripsIdRoute
   GripsIndexRoute: typeof GripsIndexRoute
@@ -749,6 +819,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArmorRouteRoute: ArmorRouteRouteWithChildren,
   ConsumablesRouteRoute: ConsumablesRouteRouteWithChildren,
   GemsRouteRoute: GemsRouteRouteWithChildren,
+  GrimoiresRouteRoute: GrimoiresRouteRouteWithChildren,
   GripsRouteRoute: GripsRouteRouteWithChildren,
   KeysRouteRoute: KeysRouteRouteWithChildren,
   SigilsRouteRoute: SigilsRouteRouteWithChildren,
