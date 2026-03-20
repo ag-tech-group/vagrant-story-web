@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
+import { MaterialBadge } from "@/components/stat-display"
 import { gameApi } from "@/lib/game-api"
 
 export const Route = createFileRoute("/workshops/$id")({
@@ -58,9 +58,7 @@ function WorkshopDetail() {
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {materials.map((mat) => (
-                  <Badge key={mat} variant="secondary">
-                    {mat}
-                  </Badge>
+                  <MaterialBadge key={mat} mat={mat} />
                 ))}
               </div>
             </div>

@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
+import { MaterialBadge } from "@/components/stat-display"
 import { gameApi } from "@/lib/game-api"
 
 export function WorkshopsPage() {
@@ -32,9 +32,7 @@ export function WorkshopsPage() {
               <p className="text-muted-foreground text-sm">{ws.area}</p>
               <div className="flex flex-wrap gap-1.5">
                 {ws.available_materials.split(", ").map((mat) => (
-                  <Badge key={mat} variant="secondary" className="text-xs">
-                    {mat}
-                  </Badge>
+                  <MaterialBadge key={mat} mat={mat} />
                 ))}
               </div>
               <p className="text-muted-foreground text-sm">{ws.description}</p>

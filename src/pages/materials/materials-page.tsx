@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { ItemIcon } from "@/components/item-icon"
+import { MaterialBadge } from "@/components/stat-display"
 import { gameApi, type Material } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
 
@@ -65,7 +66,7 @@ function MaterialCard({ material: m }: { material: Material }) {
     <div className="border-border/50 bg-card space-y-2 rounded-lg border p-3">
       <div className="flex items-center gap-2">
         <ItemIcon type="Material" size="sm" />
-        <h3 className="text-sm font-medium">{m.name}</h3>
+        <MaterialBadge mat={m.name} />
       </div>
 
       {categories && (
