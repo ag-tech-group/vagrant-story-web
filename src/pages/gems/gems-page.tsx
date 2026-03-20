@@ -27,7 +27,7 @@ const columns: ColumnDef<Gem>[] = [
   },
   {
     accessorKey: "gem_type",
-    header: "Type",
+    header: "Equip",
     filterFn: "equals",
     cell: ({ getValue }) => {
       const v = getValue<string>()
@@ -79,6 +79,41 @@ const columns: ColumnDef<Gem>[] = [
     header: "Evl",
     cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
   },
+  {
+    accessorKey: "physical",
+    header: "Phy",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "fire",
+    header: "Fir",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "water",
+    header: "Wat",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "wind",
+    header: "Wnd",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "earth",
+    header: "Ear",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "light",
+    header: "Lit",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "dark",
+    header: "Drk",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
 ]
 
 export function GemsPage() {
@@ -96,7 +131,7 @@ export function GemsPage() {
     const types = [
       ...new Set(data.map((g) => g.gem_type).filter(Boolean)),
     ].sort() as string[]
-    return [{ column: "gem_type", label: "Type", options: types }]
+    return [{ column: "gem_type", label: "Equip", options: types }]
   }, [data])
 
   return (
