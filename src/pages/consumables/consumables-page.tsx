@@ -35,6 +35,16 @@ const columns: ColumnDef<Consumable>[] = [
       return <span className="text-muted-foreground text-sm">{v}</span>
     },
   },
+  {
+    accessorKey: "drop_location",
+    header: "Best Drop",
+    cell: ({ getValue }) => {
+      const v = getValue<string>()
+      if (!v) return <span className="text-muted-foreground">-</span>
+      return <span className="text-muted-foreground text-sm">{v}</span>
+    },
+    enableSorting: false,
+  },
 ]
 
 export function ConsumablesPage() {
