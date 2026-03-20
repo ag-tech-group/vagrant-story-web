@@ -7,6 +7,29 @@ const DMG_TYPE_COLORS: Record<string, string> = {
   Piercing: "bg-sky-600/60 text-sky-100 border-sky-500/50",
 }
 
+const MAT_BADGE_COLORS: Record<string, string> = {
+  Wood: "bg-amber-900/60 text-amber-200 border-amber-700/50",
+  Leather: "bg-amber-700/60 text-amber-100 border-amber-600/50",
+  Bronze: "bg-orange-600/60 text-orange-100 border-orange-500/50",
+  Iron: "bg-slate-500/60 text-slate-100 border-slate-400/50",
+  Hagane: "bg-blue-600/60 text-blue-100 border-blue-500/50",
+  Silver: "bg-gray-300/70 text-gray-900 border-gray-400/50",
+  Damascus: "bg-purple-600/60 text-purple-100 border-purple-500/50",
+}
+
+export function MaterialBadge({ mat }: { mat: string }) {
+  return (
+    <span
+      className={cn(
+        "rounded border px-1.5 py-0.5 text-xs font-medium",
+        MAT_BADGE_COLORS[mat] ?? "bg-muted"
+      )}
+    >
+      {mat}
+    </span>
+  )
+}
+
 export function DamageTypeBadge({ type }: { type: string }) {
   return (
     <span
