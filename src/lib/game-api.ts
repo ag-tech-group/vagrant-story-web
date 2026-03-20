@@ -136,6 +136,15 @@ export interface Spell {
   grimoire: string
 }
 
+export interface Key {
+  id: number
+  name: string
+  area: string
+  room: string
+  source: string
+  locations_used: string
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -176,6 +185,7 @@ export const gameApi = {
   consumables: () => fetchApi<Consumable[]>("/consumables?limit=200"),
   spells: () => fetchApi<Spell[]>("/spells?limit=200"),
   spell: (id: number) => fetchApi<Spell>(`/spells/${id}`),
+  keys: () => fetchApi<Key[]>("/keys?limit=200"),
   craftingRecipes: (params?: string) =>
     fetchApi<CraftingRecipe[]>(
       `/crafting-recipes${params ? `?${params}` : "?limit=200"}`
