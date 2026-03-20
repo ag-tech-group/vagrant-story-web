@@ -65,7 +65,7 @@ function MaterialCard({ material: m }: { material: Material }) {
   return (
     <div className="border-border/50 bg-card space-y-2 rounded-lg border p-3">
       <div className="flex items-center gap-2">
-        <ItemIcon type="Material" size="sm" />
+        <ItemIcon type={m.name} size="sm" />
         <MaterialBadge mat={m.name} />
       </div>
 
