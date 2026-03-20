@@ -26,6 +26,10 @@ export function HomePage() {
     queryKey: ["consumables"],
     queryFn: gameApi.consumables,
   })
+  const { data: spells = [] } = useQuery({
+    queryKey: ["spells"],
+    queryFn: gameApi.spells,
+  })
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
@@ -71,6 +75,12 @@ export function HomePage() {
       label: "Consumables",
       icon: "Consumable",
       count: consumables.length,
+    },
+    {
+      to: "/spells" as const,
+      label: "Spells",
+      icon: "Spell",
+      count: spells.length,
     },
   ]
 
