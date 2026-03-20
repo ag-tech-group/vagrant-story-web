@@ -30,6 +30,10 @@ export function HomePage() {
     queryKey: ["spells"],
     queryFn: gameApi.spells,
   })
+  const { data: keys = [] } = useQuery({
+    queryKey: ["keys"],
+    queryFn: gameApi.keys,
+  })
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
@@ -81,6 +85,12 @@ export function HomePage() {
       label: "Spells",
       icon: "Spell",
       count: spells.length,
+    },
+    {
+      to: "/keys" as const,
+      label: "Keys",
+      icon: "Key",
+      count: keys.length,
     },
   ]
 
