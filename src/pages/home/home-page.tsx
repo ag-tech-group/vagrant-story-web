@@ -42,6 +42,10 @@ export function HomePage() {
     queryKey: ["grimoires"],
     queryFn: gameApi.grimoires,
   })
+  const { data: workshops = [] } = useQuery({
+    queryKey: ["workshops"],
+    queryFn: gameApi.workshops,
+  })
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
@@ -111,6 +115,12 @@ export function HomePage() {
       label: "Grimoires",
       icon: "Grimoire",
       count: grimoires.length,
+    },
+    {
+      to: "/workshops" as const,
+      label: "Workshops",
+      icon: "Workshop",
+      count: workshops.length,
     },
   ]
 
