@@ -25,20 +25,20 @@ const ICON_MAP: Record<string, string> = {
   Gem: "Gem",
   Grip: "Grip",
   Consumable: "Consumable",
-  Material: "Material",
+  Material: "Bronze",
   Spell: "Spell",
   Key: "Key",
   Sigil: "Sigil",
   Grimoire: "Grimoire",
   Workshop: "Workshop",
-  // Material types
-  Wood: "Wood",
-  Leather: "Leather",
+  // Material types (all use ingot icon)
+  Wood: "Bronze",
+  Leather: "Bronze",
   Bronze: "Bronze",
-  Iron: "Iron",
-  Hagane: "Hagane",
-  Silver: "Silver",
-  Damascus: "Damascus",
+  Iron: "Bronze",
+  Hagane: "Bronze",
+  Silver: "Bronze",
+  Damascus: "Bronze",
 }
 
 interface ItemIconProps {
