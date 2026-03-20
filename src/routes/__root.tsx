@@ -4,6 +4,7 @@ import {
   createRootRouteWithContext,
   Link,
   Outlet,
+  useMatches,
 } from "@tanstack/react-router"
 import { ChevronDown, ExternalLink, LogOut } from "lucide-react"
 import { Toaster } from "sonner"
@@ -15,10 +16,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { RootErrorComponent } from "@/components/error-boundary"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
+import { cn } from "@/lib/utils"
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
@@ -45,7 +46,6 @@ interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
-  errorComponent: RootErrorComponent,
 })
 
 const AUTH_URL = "https://auth.criticalbit.gg"
@@ -53,16 +53,32 @@ const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
 const ITEM_LINKS = [
   { to: "/weapons" as const, label: "Weapons" },
-  { to: "/armor" as const, label: "Armor" },
-  { to: "/accessories" as const, label: "Accessories" },
-  { to: "/materials" as const, label: "Materials" },
-  { to: "/gems" as const, label: "Gems" },
   { to: "/grips" as const, label: "Grips" },
+  { to: "/armor" as const, label: "Armor" },
+  { to: "/materials" as const, label: "Materials" },
+  { to: "/accessories" as const, label: "Accessories" },
+  { to: "/gems" as const, label: "Gems" },
   { to: "/consumables" as const, label: "Consumables" },
+]
+
+const NAV_TABS = [
+  { to: "/weapons" as const, label: "Weapons" },
+  { to: "/grips" as const, label: "Grips" },
+  { to: "/armor" as const, label: "Armor" },
+  { to: "/materials" as const, label: "Materials" },
+  { to: "/accessories" as const, label: "Accessories" },
+  { to: "/gems" as const, label: "Gems" },
+  { to: "/consumables" as const, label: "Consumables" },
+  { to: "/crafting" as const, label: "Crafting" },
+  { to: "/material-grid" as const, label: "Material Grid" },
 ]
 
 function RootComponent() {
   const auth = useAuth()
+
+  const matches = useMatches()
+  const currentPath = matches[matches.length - 1]?.fullPath ?? "/"
+  const showTabs = currentPath !== "/"
 
   return (
     <>
@@ -146,8 +162,36 @@ function RootComponent() {
             )}
           </div>
         </div>
+        {showTabs && (
+          <div className="border-border/50 flex gap-0 overflow-x-auto border-t px-4">
+            {NAV_TABS.map((tab) => {
+              const isActive =
+                currentPath === tab.to || currentPath.startsWith(tab.to + "/")
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  className={cn(
+                    "text-muted-foreground hover:text-foreground relative shrink-0 px-3 py-2 text-sm transition-colors",
+                    isActive && "text-foreground"
+                  )}
+                >
+                  {tab.label}
+                  {isActive && (
+                    <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </nav>
-      <div className="relative flex min-h-screen flex-col pt-14">
+      <div
+        className={cn(
+          "relative flex min-h-screen flex-col",
+          showTabs ? "pt-[6.25rem]" : "pt-14"
+        )}
+      >
         <div
           className="pointer-events-none fixed inset-0 z-0 bg-center bg-no-repeat opacity-[0.04]"
           style={{

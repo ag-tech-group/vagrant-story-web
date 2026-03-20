@@ -1,7 +1,17 @@
 import { useQuery } from "@tanstack/react-query"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ItemIcon } from "@/components/item-icon"
 import { gameApi, type Material } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
+
+const MATERIAL_CATEGORIES: Record<string, string[]> = {
+  Wood: ["Shields"],
+  Leather: ["Armor"],
+  Bronze: ["Blades", "Armor", "Shields"],
+  Iron: ["Blades", "Armor", "Shields"],
+  Hagane: ["Blades", "Armor", "Shields"],
+  Silver: ["Blades", "Armor", "Shields"],
+  Damascus: ["Blades", "Armor", "Shields"],
+}
 
 const CREATURE_TYPES = [
   "human",
@@ -38,7 +48,7 @@ export function MaterialsPage() {
       {isLoading ? (
         <p className="text-muted-foreground py-8 text-center">Loading...</p>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {materials.map((m) => (
             <MaterialCard key={m.id} material={m} />
           ))}
@@ -49,84 +59,77 @@ export function MaterialsPage() {
 }
 
 function MaterialCard({ material: m }: { material: Material }) {
+  const categories = MATERIAL_CATEGORIES[m.name]
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <span>{m.name}</span>
-          <span className="text-muted-foreground text-sm font-normal">
-            Tier {m.tier}
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Stat modifiers */}
-        <div className="flex gap-6">
-          <StatBadge label="STR" value={m.str_modifier} />
-          <StatBadge label="INT" value={m.int_modifier} />
-          <StatBadge label="AGI" value={m.agi_modifier} />
-        </div>
+    <div className="border-border/50 bg-card space-y-2 rounded-lg border p-3">
+      <div className="flex items-center gap-2">
+        <ItemIcon type="Material" size="sm" />
+        <h3 className="text-sm font-medium">{m.name}</h3>
+      </div>
 
-        {/* Creature resistances */}
-        <div>
-          <p className="text-muted-foreground mb-2 text-xs font-medium">
-            Creature Affinity
-          </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {CREATURE_TYPES.map((type) => (
-              <ResistBadge key={type} label={type} value={m[type] as number} />
-            ))}
-          </div>
-        </div>
+      {categories && (
+        <p className="text-muted-foreground text-[11px]">
+          {categories.join(", ")}
+        </p>
+      )}
 
-        {/* Element resistances */}
-        <div>
-          <p className="text-muted-foreground mb-2 text-xs font-medium">
-            Element Affinity
-          </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {ELEMENT_TYPES.map((type) => (
-              <ResistBadge key={type} label={type} value={m[type] as number} />
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+      <div className="flex gap-3">
+        <Stat label="STR" value={m.str_modifier} />
+        <Stat label="INT" value={m.int_modifier} />
+        <Stat label="AGI" value={m.agi_modifier} />
+      </div>
 
-function StatBadge({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="text-center">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p
-        className={cn(
-          "text-lg font-medium",
-          value > 0 && "text-green-400",
-          value < 0 && "text-red-400",
-          value === 0 && "text-muted-foreground"
-        )}
-      >
-        {value > 0 ? `+${value}` : value}
-      </p>
+      <div className="grid grid-cols-6 gap-1">
+        {CREATURE_TYPES.map((type) => (
+          <Stat key={type} label={type} value={m[type] as number} small />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-6 gap-1">
+        {ELEMENT_TYPES.map((type) => (
+          <Stat key={type} label={type} value={m[type] as number} small />
+        ))}
+      </div>
     </div>
   )
 }
 
-function ResistBadge({ label, value }: { label: string; value: number }) {
+function Stat({
+  label,
+  value,
+  small,
+}: {
+  label: string
+  value: number
+  small?: boolean
+}) {
   return (
-    <div className="bg-muted/50 rounded-md p-2 text-center">
-      <p className="text-muted-foreground text-[10px] capitalize">{label}</p>
-      <p
+    <div
+      className={cn(
+        "bg-muted/50 flex flex-col items-center rounded",
+        small ? "px-1 py-0.5" : "min-w-10 px-1.5 py-1"
+      )}
+    >
+      <span
         className={cn(
-          "text-sm font-medium",
+          "text-muted-foreground leading-none capitalize",
+          small ? "text-[9px]" : "text-[11px]"
+        )}
+      >
+        {label.slice(0, 3)}
+      </span>
+      <span
+        className={cn(
+          "leading-tight font-medium",
+          small ? "text-xs" : "text-sm",
           value > 0 && "text-green-400",
           value < 0 && "text-red-400",
           value === 0 && "text-muted-foreground"
         )}
       >
         {value > 0 ? `+${value}` : value}
-      </p>
+      </span>
     </div>
   )
 }

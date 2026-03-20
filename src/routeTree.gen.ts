@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as MaterialGridRouteImport } from './routes/material-grid'
-import { Route as SplatRouteImport } from './routes/$'
 import { Route as WeaponsRouteRouteImport } from './routes/weapons/route'
 import { Route as GripsRouteRouteImport } from './routes/grips/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
@@ -41,11 +40,6 @@ const MaterialsRoute = MaterialsRouteImport.update({
 const MaterialGridRoute = MaterialGridRouteImport.update({
   id: '/material-grid',
   path: '/material-grid',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SplatRoute = SplatRouteImport.update({
-  id: '/$',
-  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WeaponsRouteRoute = WeaponsRouteRouteImport.update({
@@ -157,7 +151,6 @@ export interface FileRoutesByFullPath {
   '/gems': typeof GemsRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
   '/weapons': typeof WeaponsRouteRouteWithChildren
-  '/$': typeof SplatRoute
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
@@ -176,7 +169,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$': typeof SplatRoute
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
@@ -202,7 +194,6 @@ export interface FileRoutesById {
   '/gems': typeof GemsRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
   '/weapons': typeof WeaponsRouteRouteWithChildren
-  '/$': typeof SplatRoute
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
@@ -229,7 +220,6 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grips'
     | '/weapons'
-    | '/$'
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
@@ -248,7 +238,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/$'
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
@@ -273,7 +262,6 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grips'
     | '/weapons'
-    | '/$'
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
@@ -299,7 +287,6 @@ export interface RootRouteChildren {
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
   GripsRouteRoute: typeof GripsRouteRouteWithChildren
   WeaponsRouteRoute: typeof WeaponsRouteRouteWithChildren
-  SplatRoute: typeof SplatRoute
   MaterialGridRoute: typeof MaterialGridRoute
   MaterialsRoute: typeof MaterialsRoute
   CraftingIndexRoute: typeof CraftingIndexRoute
@@ -319,13 +306,6 @@ declare module '@tanstack/react-router' {
       path: '/material-grid'
       fullPath: '/material-grid'
       preLoaderRoute: typeof MaterialGridRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$': {
-      id: '/$'
-      path: '/$'
-      fullPath: '/$'
-      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/weapons': {
@@ -561,7 +541,6 @@ const rootRouteChildren: RootRouteChildren = {
   GemsRouteRoute: GemsRouteRouteWithChildren,
   GripsRouteRoute: GripsRouteRouteWithChildren,
   WeaponsRouteRoute: WeaponsRouteRouteWithChildren,
-  SplatRoute: SplatRoute,
   MaterialGridRoute: MaterialGridRoute,
   MaterialsRoute: MaterialsRoute,
   CraftingIndexRoute: CraftingIndexRoute,

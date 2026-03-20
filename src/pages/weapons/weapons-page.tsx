@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
+import { DamageTypeBadge } from "@/components/stat-display"
 import { ItemIcon } from "@/components/item-icon"
 import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { gameApi, fmt, type Weapon } from "@/lib/game-api"
@@ -17,7 +18,11 @@ const columns: ColumnDef<Weapon>[] = [
     ),
   },
   { accessorKey: "blade_type", header: "Type", filterFn: "equals" },
-  { accessorKey: "damage_type", header: "Damage Type" },
+  {
+    accessorKey: "damage_type",
+    header: "Damage",
+    cell: ({ getValue }) => <DamageTypeBadge type={getValue<string>()} />,
+  },
   {
     accessorKey: "str",
     header: "STR",
