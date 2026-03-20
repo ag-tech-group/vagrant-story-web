@@ -5,6 +5,7 @@ import {
   Link,
   Outlet,
   useMatches,
+  useNavigate,
 } from "@tanstack/react-router"
 import { ChevronDown, ExternalLink, LogOut } from "lucide-react"
 import { Toaster } from "sonner"
@@ -16,6 +17,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ItemIcon } from "@/components/item-icon"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
@@ -26,6 +35,14 @@ const TanStackRouterDevtools = import.meta.env.PROD
   : lazy(() =>
       import("@tanstack/react-router-devtools").then((mod) => ({
         default: mod.TanStackRouterDevtools,
+      }))
+    )
+
+const ReactQueryDevtools = import.meta.env.PROD
+  ? () => null
+  : lazy(() =>
+      import("@tanstack/react-query-devtools").then((mod) => ({
+        default: mod.ReactQueryDevtools,
       }))
     )
 
@@ -67,28 +84,32 @@ const ITEM_LINKS = [
 ]
 
 const NAV_TABS = [
-  { to: "/weapons" as const, label: "Weapons" },
-  { to: "/grips" as const, label: "Grips" },
-  { to: "/armor" as const, label: "Armor" },
-  { to: "/materials" as const, label: "Materials" },
-  { to: "/accessories" as const, label: "Accessories" },
-  { to: "/gems" as const, label: "Gems" },
-  { to: "/consumables" as const, label: "Consumables" },
-  { to: "/spells" as const, label: "Spells" },
-  { to: "/keys" as const, label: "Keys" },
-  { to: "/sigils" as const, label: "Sigils" },
-  { to: "/grimoires" as const, label: "Grimoires" },
-  { to: "/workshops" as const, label: "Workshops" },
-  { to: "/crafting" as const, label: "Crafting" },
-  { to: "/material-grid" as const, label: "Material Grid" },
+  { to: "/weapons" as const, label: "Weapons", icon: "Sword" },
+  { to: "/grips" as const, label: "Grips", icon: "Grip" },
+  { to: "/armor" as const, label: "Armor", icon: "Body" },
+  { to: "/materials" as const, label: "Materials", icon: "Bronze" },
+  { to: "/accessories" as const, label: "Accessories", icon: "Accessory" },
+  { to: "/gems" as const, label: "Gems", icon: "Gem" },
+  { to: "/consumables" as const, label: "Consumables", icon: "Consumable" },
+  { to: "/spells" as const, label: "Spells", icon: "Spell" },
+  { to: "/keys" as const, label: "Keys", icon: "Key" },
+  { to: "/sigils" as const, label: "Sigils", icon: "Sigil" },
+  { to: "/grimoires" as const, label: "Grimoires", icon: "Grimoire" },
+  { to: "/workshops" as const, label: "Workshops", icon: "Workshop" },
+  { to: "/crafting" as const, label: "Crafting", icon: "Crafting" },
+  { to: "/material-grid" as const, label: "Material Grid", icon: "Grid" },
 ]
 
 function RootComponent() {
   const auth = useAuth()
 
   const matches = useMatches()
+  const navigate = useNavigate()
   const currentPath = matches[matches.length - 1]?.fullPath ?? "/"
   const showTabs = currentPath !== "/"
+  const activeTab = NAV_TABS.find(
+    (t) => currentPath === t.to || currentPath.startsWith(t.to + "/")
+  )
 
   return (
     <>
@@ -173,27 +194,58 @@ function RootComponent() {
           </div>
         </div>
         {showTabs && (
-          <div className="border-border/50 flex gap-0 overflow-x-auto border-t px-4">
-            {NAV_TABS.map((tab) => {
-              const isActive =
-                currentPath === tab.to || currentPath.startsWith(tab.to + "/")
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    "text-muted-foreground hover:text-foreground relative shrink-0 px-3 py-2 text-sm transition-colors",
-                    isActive && "text-foreground"
-                  )}
-                >
-                  {tab.label}
-                  {isActive && (
-                    <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
-                  )}
-                </Link>
-              )
-            })}
-          </div>
+          <>
+            {/* Desktop: tab row with icons */}
+            <div className="border-border/50 hidden gap-0 overflow-x-auto border-t px-4 sm:flex">
+              {NAV_TABS.map((tab) => {
+                const isActive =
+                  currentPath === tab.to || currentPath.startsWith(tab.to + "/")
+                return (
+                  <Link
+                    key={tab.to}
+                    to={tab.to}
+                    className={cn(
+                      "text-muted-foreground hover:text-foreground relative flex shrink-0 items-center gap-1.5 px-3 py-2 text-sm transition-colors",
+                      isActive && "text-foreground"
+                    )}
+                  >
+                    <span
+                      className="bg-primary block size-3.5"
+                      style={{
+                        mask: `url(/images/icons/${tab.icon}.svg) center/contain no-repeat`,
+                        WebkitMask: `url(/images/icons/${tab.icon}.svg) center/contain no-repeat`,
+                      }}
+                    />
+                    {tab.label}
+                    {isActive && (
+                      <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+            {/* Mobile: select dropdown */}
+            <div className="border-border/50 border-t px-4 py-2 sm:hidden">
+              <Select
+                value={activeTab?.to ?? NAV_TABS[0].to}
+                onValueChange={(v) => navigate({ to: v })}
+              >
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {NAV_TABS.map((tab) => (
+                    <SelectItem key={tab.to} value={tab.to}>
+                      <div className="flex items-center gap-2">
+                        <ItemIcon type={tab.icon} size="sm" />
+                        {tab.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
         )}
       </nav>
       <div
@@ -245,6 +297,7 @@ function RootComponent() {
       <Toaster position="bottom-right" richColors closeButton />
       <Suspense fallback={null}>
         <TanStackRouterDevtools />
+        <ReactQueryDevtools />
       </Suspense>
     </>
   )

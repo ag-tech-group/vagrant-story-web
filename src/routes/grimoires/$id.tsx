@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
-import { gameApi } from "@/lib/game-api"
+import { gameApi, type Spell } from "@/lib/game-api"
 
 export const Route = createFileRoute("/grimoires/$id")({
   component: GrimoireDetail,
@@ -17,8 +17,15 @@ function GrimoireDetail() {
     queryFn: gameApi.grimoires,
   })
 
+  const { data: spells = [] } = useQuery({
+    queryKey: ["spells"],
+    queryFn: gameApi.spells,
+  })
+
   const item = grimoires.find((g) => g.id === Number(id))
   if (!item) return null
+
+  const linkedSpell = spells.find((s: Spell) => s.name === item.spell_name)
 
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
@@ -42,8 +49,21 @@ function GrimoireDetail() {
             </div>
           </div>
           <div className="flex flex-1 flex-col gap-4">
+            <p className="text-sm">
+              <span className="text-muted-foreground font-medium">Spell:</span>{" "}
+              {linkedSpell ? (
+                <Link
+                  to="/spells/$id"
+                  params={{ id: String(linkedSpell.id) }}
+                  className="text-primary hover:underline"
+                >
+                  {item.spell_name}
+                </Link>
+              ) : (
+                item.spell_name
+              )}
+            </p>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">{item.spell_name}</Badge>
               {item.drop_rate ? (
                 <Badge variant="outline">{item.drop_rate}</Badge>
               ) : (
