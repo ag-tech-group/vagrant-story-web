@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api"
 
-export interface Weapon {
+export interface Blade {
   id: number
   game_id: number
   field_name: string
@@ -220,8 +220,8 @@ async function fetchApi<T>(path: string): Promise<T> {
 }
 
 export const gameApi = {
-  weapons: () => fetchApi<Weapon[]>("/weapons?limit=200"),
-  weapon: (id: number) => fetchApi<Weapon>(`/weapons/${id}`),
+  blades: () => fetchApi<Blade[]>("/blades?limit=200"),
+  blade: (id: number) => fetchApi<Blade>(`/blades/${id}`),
   armor: () => fetchApi<Armor[]>("/armor?limit=200"),
   armorItem: (id: number) => fetchApi<Armor>(`/armor/${id}`),
   materials: () => fetchApi<Material[]>("/materials"),

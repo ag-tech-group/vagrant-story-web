@@ -69,7 +69,7 @@ const AUTH_URL = "https://auth.criticalbit.gg"
 const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
 const ITEM_LINKS = [
-  { to: "/weapons" as const, label: "Weapons" },
+  { to: "/blades" as const, label: "Blades" },
   { to: "/grips" as const, label: "Grips" },
   { to: "/armor" as const, label: "Armor" },
   { to: "/materials" as const, label: "Materials" },
@@ -84,7 +84,7 @@ const ITEM_LINKS = [
 ]
 
 const NAV_TABS = [
-  { to: "/weapons" as const, label: "Weapons", icon: "Sword" },
+  { to: "/blades" as const, label: "Blades", icon: "Sword" },
   { to: "/grips" as const, label: "Grips", icon: "Grip" },
   { to: "/armor" as const, label: "Armor", icon: "Body" },
   { to: "/materials" as const, label: "Materials", icon: "Bronze" },

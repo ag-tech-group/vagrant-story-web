@@ -42,7 +42,7 @@ export function MaterialsPage() {
       <div>
         <h1 className="text-3xl tracking-wide sm:text-4xl">Materials</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Material properties affect weapon and armor stats
+          Material properties affect blade and armor stats
         </p>
       </div>
 

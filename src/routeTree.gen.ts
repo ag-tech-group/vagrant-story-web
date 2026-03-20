@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as MaterialGridRouteImport } from './routes/material-grid'
 import { Route as WorkshopsRouteRouteImport } from './routes/workshops/route'
-import { Route as WeaponsRouteRouteImport } from './routes/weapons/route'
 import { Route as SpellsRouteRouteImport } from './routes/spells/route'
 import { Route as SigilsRouteRouteImport } from './routes/sigils/route'
 import { Route as KeysRouteRouteImport } from './routes/keys/route'
@@ -20,11 +19,11 @@ import { Route as GripsRouteRouteImport } from './routes/grips/route'
 import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
 import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
+import { Route as BladesRouteRouteImport } from './routes/blades/route'
 import { Route as ArmorRouteRouteImport } from './routes/armor/route'
 import { Route as AccessoriesRouteRouteImport } from './routes/accessories/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkshopsIndexRouteImport } from './routes/workshops/index'
-import { Route as WeaponsIndexRouteImport } from './routes/weapons/index'
 import { Route as SpellsIndexRouteImport } from './routes/spells/index'
 import { Route as SigilsIndexRouteImport } from './routes/sigils/index'
 import { Route as KeysIndexRouteImport } from './routes/keys/index'
@@ -33,10 +32,10 @@ import { Route as GrimoiresIndexRouteImport } from './routes/grimoires/index'
 import { Route as GemsIndexRouteImport } from './routes/gems/index'
 import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
 import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
+import { Route as BladesIndexRouteImport } from './routes/blades/index'
 import { Route as ArmorIndexRouteImport } from './routes/armor/index'
 import { Route as AccessoriesIndexRouteImport } from './routes/accessories/index'
 import { Route as WorkshopsIdRouteImport } from './routes/workshops/$id'
-import { Route as WeaponsIdRouteImport } from './routes/weapons/$id'
 import { Route as SpellsIdRouteImport } from './routes/spells/$id'
 import { Route as SigilsIdRouteImport } from './routes/sigils/$id'
 import { Route as KeysIdRouteImport } from './routes/keys/$id'
@@ -44,6 +43,7 @@ import { Route as GripsIdRouteImport } from './routes/grips/$id'
 import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
 import { Route as GemsIdRouteImport } from './routes/gems/$id'
 import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
+import { Route as BladesIdRouteImport } from './routes/blades/$id'
 import { Route as ArmorIdRouteImport } from './routes/armor/$id'
 import { Route as AccessoriesIdRouteImport } from './routes/accessories/$id'
 
@@ -60,11 +60,6 @@ const MaterialGridRoute = MaterialGridRouteImport.update({
 const WorkshopsRouteRoute = WorkshopsRouteRouteImport.update({
   id: '/workshops',
   path: '/workshops',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WeaponsRouteRoute = WeaponsRouteRouteImport.update({
-  id: '/weapons',
-  path: '/weapons',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpellsRouteRoute = SpellsRouteRouteImport.update({
@@ -102,6 +97,11 @@ const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
   path: '/consumables',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BladesRouteRoute = BladesRouteRouteImport.update({
+  id: '/blades',
+  path: '/blades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArmorRouteRoute = ArmorRouteRouteImport.update({
   id: '/armor',
   path: '/armor',
@@ -121,11 +121,6 @@ const WorkshopsIndexRoute = WorkshopsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => WorkshopsRouteRoute,
-} as any)
-const WeaponsIndexRoute = WeaponsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => WeaponsRouteRoute,
 } as any)
 const SpellsIndexRoute = SpellsIndexRouteImport.update({
   id: '/',
@@ -167,6 +162,11 @@ const ConsumablesIndexRoute = ConsumablesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ConsumablesRouteRoute,
 } as any)
+const BladesIndexRoute = BladesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BladesRouteRoute,
+} as any)
 const ArmorIndexRoute = ArmorIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -181,11 +181,6 @@ const WorkshopsIdRoute = WorkshopsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => WorkshopsRouteRoute,
-} as any)
-const WeaponsIdRoute = WeaponsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => WeaponsRouteRoute,
 } as any)
 const SpellsIdRoute = SpellsIdRouteImport.update({
   id: '/$id',
@@ -222,6 +217,11 @@ const ConsumablesIdRoute = ConsumablesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ConsumablesRouteRoute,
 } as any)
+const BladesIdRoute = BladesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BladesRouteRoute,
+} as any)
 const ArmorIdRoute = ArmorIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -237,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accessories': typeof AccessoriesRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
+  '/blades': typeof BladesRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
   '/grimoires': typeof GrimoiresRouteRouteWithChildren
@@ -244,12 +245,12 @@ export interface FileRoutesByFullPath {
   '/keys': typeof KeysRouteRouteWithChildren
   '/sigils': typeof SigilsRouteRouteWithChildren
   '/spells': typeof SpellsRouteRouteWithChildren
-  '/weapons': typeof WeaponsRouteRouteWithChildren
   '/workshops': typeof WorkshopsRouteRouteWithChildren
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
   '/armor/$id': typeof ArmorIdRoute
+  '/blades/$id': typeof BladesIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -257,10 +258,10 @@ export interface FileRoutesByFullPath {
   '/keys/$id': typeof KeysIdRoute
   '/sigils/$id': typeof SigilsIdRoute
   '/spells/$id': typeof SpellsIdRoute
-  '/weapons/$id': typeof WeaponsIdRoute
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
   '/armor/': typeof ArmorIndexRoute
+  '/blades/': typeof BladesIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/gems/': typeof GemsIndexRoute
@@ -269,7 +270,6 @@ export interface FileRoutesByFullPath {
   '/keys/': typeof KeysIndexRoute
   '/sigils/': typeof SigilsIndexRoute
   '/spells/': typeof SpellsIndexRoute
-  '/weapons/': typeof WeaponsIndexRoute
   '/workshops/': typeof WorkshopsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -278,6 +278,7 @@ export interface FileRoutesByTo {
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
   '/armor/$id': typeof ArmorIdRoute
+  '/blades/$id': typeof BladesIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -285,10 +286,10 @@ export interface FileRoutesByTo {
   '/keys/$id': typeof KeysIdRoute
   '/sigils/$id': typeof SigilsIdRoute
   '/spells/$id': typeof SpellsIdRoute
-  '/weapons/$id': typeof WeaponsIdRoute
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories': typeof AccessoriesIndexRoute
   '/armor': typeof ArmorIndexRoute
+  '/blades': typeof BladesIndexRoute
   '/consumables': typeof ConsumablesIndexRoute
   '/crafting': typeof CraftingIndexRoute
   '/gems': typeof GemsIndexRoute
@@ -297,7 +298,6 @@ export interface FileRoutesByTo {
   '/keys': typeof KeysIndexRoute
   '/sigils': typeof SigilsIndexRoute
   '/spells': typeof SpellsIndexRoute
-  '/weapons': typeof WeaponsIndexRoute
   '/workshops': typeof WorkshopsIndexRoute
 }
 export interface FileRoutesById {
@@ -305,6 +305,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accessories': typeof AccessoriesRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
+  '/blades': typeof BladesRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
   '/grimoires': typeof GrimoiresRouteRouteWithChildren
@@ -312,12 +313,12 @@ export interface FileRoutesById {
   '/keys': typeof KeysRouteRouteWithChildren
   '/sigils': typeof SigilsRouteRouteWithChildren
   '/spells': typeof SpellsRouteRouteWithChildren
-  '/weapons': typeof WeaponsRouteRouteWithChildren
   '/workshops': typeof WorkshopsRouteRouteWithChildren
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
   '/armor/$id': typeof ArmorIdRoute
+  '/blades/$id': typeof BladesIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -325,10 +326,10 @@ export interface FileRoutesById {
   '/keys/$id': typeof KeysIdRoute
   '/sigils/$id': typeof SigilsIdRoute
   '/spells/$id': typeof SpellsIdRoute
-  '/weapons/$id': typeof WeaponsIdRoute
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
   '/armor/': typeof ArmorIndexRoute
+  '/blades/': typeof BladesIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/gems/': typeof GemsIndexRoute
@@ -337,7 +338,6 @@ export interface FileRoutesById {
   '/keys/': typeof KeysIndexRoute
   '/sigils/': typeof SigilsIndexRoute
   '/spells/': typeof SpellsIndexRoute
-  '/weapons/': typeof WeaponsIndexRoute
   '/workshops/': typeof WorkshopsIndexRoute
 }
 export interface FileRouteTypes {
@@ -346,6 +346,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accessories'
     | '/armor'
+    | '/blades'
     | '/consumables'
     | '/gems'
     | '/grimoires'
@@ -353,12 +354,12 @@ export interface FileRouteTypes {
     | '/keys'
     | '/sigils'
     | '/spells'
-    | '/weapons'
     | '/workshops'
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
     | '/armor/$id'
+    | '/blades/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -366,10 +367,10 @@ export interface FileRouteTypes {
     | '/keys/$id'
     | '/sigils/$id'
     | '/spells/$id'
-    | '/weapons/$id'
     | '/workshops/$id'
     | '/accessories/'
     | '/armor/'
+    | '/blades/'
     | '/consumables/'
     | '/crafting/'
     | '/gems/'
@@ -378,7 +379,6 @@ export interface FileRouteTypes {
     | '/keys/'
     | '/sigils/'
     | '/spells/'
-    | '/weapons/'
     | '/workshops/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -387,6 +387,7 @@ export interface FileRouteTypes {
     | '/materials'
     | '/accessories/$id'
     | '/armor/$id'
+    | '/blades/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -394,10 +395,10 @@ export interface FileRouteTypes {
     | '/keys/$id'
     | '/sigils/$id'
     | '/spells/$id'
-    | '/weapons/$id'
     | '/workshops/$id'
     | '/accessories'
     | '/armor'
+    | '/blades'
     | '/consumables'
     | '/crafting'
     | '/gems'
@@ -406,13 +407,13 @@ export interface FileRouteTypes {
     | '/keys'
     | '/sigils'
     | '/spells'
-    | '/weapons'
     | '/workshops'
   id:
     | '__root__'
     | '/'
     | '/accessories'
     | '/armor'
+    | '/blades'
     | '/consumables'
     | '/gems'
     | '/grimoires'
@@ -420,12 +421,12 @@ export interface FileRouteTypes {
     | '/keys'
     | '/sigils'
     | '/spells'
-    | '/weapons'
     | '/workshops'
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
     | '/armor/$id'
+    | '/blades/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -433,10 +434,10 @@ export interface FileRouteTypes {
     | '/keys/$id'
     | '/sigils/$id'
     | '/spells/$id'
-    | '/weapons/$id'
     | '/workshops/$id'
     | '/accessories/'
     | '/armor/'
+    | '/blades/'
     | '/consumables/'
     | '/crafting/'
     | '/gems/'
@@ -445,7 +446,6 @@ export interface FileRouteTypes {
     | '/keys/'
     | '/sigils/'
     | '/spells/'
-    | '/weapons/'
     | '/workshops/'
   fileRoutesById: FileRoutesById
 }
@@ -453,6 +453,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessoriesRouteRoute: typeof AccessoriesRouteRouteWithChildren
   ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
+  BladesRouteRoute: typeof BladesRouteRouteWithChildren
   ConsumablesRouteRoute: typeof ConsumablesRouteRouteWithChildren
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
   GrimoiresRouteRoute: typeof GrimoiresRouteRouteWithChildren
@@ -460,7 +461,6 @@ export interface RootRouteChildren {
   KeysRouteRoute: typeof KeysRouteRouteWithChildren
   SigilsRouteRoute: typeof SigilsRouteRouteWithChildren
   SpellsRouteRoute: typeof SpellsRouteRouteWithChildren
-  WeaponsRouteRoute: typeof WeaponsRouteRouteWithChildren
   WorkshopsRouteRoute: typeof WorkshopsRouteRouteWithChildren
   MaterialGridRoute: typeof MaterialGridRoute
   MaterialsRoute: typeof MaterialsRoute
@@ -488,13 +488,6 @@ declare module '@tanstack/react-router' {
       path: '/workshops'
       fullPath: '/workshops'
       preLoaderRoute: typeof WorkshopsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/weapons': {
-      id: '/weapons'
-      path: '/weapons'
-      fullPath: '/weapons'
-      preLoaderRoute: typeof WeaponsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spells': {
@@ -546,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blades': {
+      id: '/blades'
+      path: '/blades'
+      fullPath: '/blades'
+      preLoaderRoute: typeof BladesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/armor': {
       id: '/armor'
       path: '/armor'
@@ -573,13 +573,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/workshops/'
       preLoaderRoute: typeof WorkshopsIndexRouteImport
       parentRoute: typeof WorkshopsRouteRoute
-    }
-    '/weapons/': {
-      id: '/weapons/'
-      path: '/'
-      fullPath: '/weapons/'
-      preLoaderRoute: typeof WeaponsIndexRouteImport
-      parentRoute: typeof WeaponsRouteRoute
     }
     '/spells/': {
       id: '/spells/'
@@ -637,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesIndexRouteImport
       parentRoute: typeof ConsumablesRouteRoute
     }
+    '/blades/': {
+      id: '/blades/'
+      path: '/'
+      fullPath: '/blades/'
+      preLoaderRoute: typeof BladesIndexRouteImport
+      parentRoute: typeof BladesRouteRoute
+    }
     '/armor/': {
       id: '/armor/'
       path: '/'
@@ -657,13 +657,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/workshops/$id'
       preLoaderRoute: typeof WorkshopsIdRouteImport
       parentRoute: typeof WorkshopsRouteRoute
-    }
-    '/weapons/$id': {
-      id: '/weapons/$id'
-      path: '/$id'
-      fullPath: '/weapons/$id'
-      preLoaderRoute: typeof WeaponsIdRouteImport
-      parentRoute: typeof WeaponsRouteRoute
     }
     '/spells/$id': {
       id: '/spells/$id'
@@ -714,6 +707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesIdRouteImport
       parentRoute: typeof ConsumablesRouteRoute
     }
+    '/blades/$id': {
+      id: '/blades/$id'
+      path: '/$id'
+      fullPath: '/blades/$id'
+      preLoaderRoute: typeof BladesIdRouteImport
+      parentRoute: typeof BladesRouteRoute
+    }
     '/armor/$id': {
       id: '/armor/$id'
       path: '/$id'
@@ -756,6 +756,20 @@ const ArmorRouteRouteChildren: ArmorRouteRouteChildren = {
 
 const ArmorRouteRouteWithChildren = ArmorRouteRoute._addFileChildren(
   ArmorRouteRouteChildren,
+)
+
+interface BladesRouteRouteChildren {
+  BladesIdRoute: typeof BladesIdRoute
+  BladesIndexRoute: typeof BladesIndexRoute
+}
+
+const BladesRouteRouteChildren: BladesRouteRouteChildren = {
+  BladesIdRoute: BladesIdRoute,
+  BladesIndexRoute: BladesIndexRoute,
+}
+
+const BladesRouteRouteWithChildren = BladesRouteRoute._addFileChildren(
+  BladesRouteRouteChildren,
 )
 
 interface ConsumablesRouteRouteChildren {
@@ -855,20 +869,6 @@ const SpellsRouteRouteWithChildren = SpellsRouteRoute._addFileChildren(
   SpellsRouteRouteChildren,
 )
 
-interface WeaponsRouteRouteChildren {
-  WeaponsIdRoute: typeof WeaponsIdRoute
-  WeaponsIndexRoute: typeof WeaponsIndexRoute
-}
-
-const WeaponsRouteRouteChildren: WeaponsRouteRouteChildren = {
-  WeaponsIdRoute: WeaponsIdRoute,
-  WeaponsIndexRoute: WeaponsIndexRoute,
-}
-
-const WeaponsRouteRouteWithChildren = WeaponsRouteRoute._addFileChildren(
-  WeaponsRouteRouteChildren,
-)
-
 interface WorkshopsRouteRouteChildren {
   WorkshopsIdRoute: typeof WorkshopsIdRoute
   WorkshopsIndexRoute: typeof WorkshopsIndexRoute
@@ -887,6 +887,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessoriesRouteRoute: AccessoriesRouteRouteWithChildren,
   ArmorRouteRoute: ArmorRouteRouteWithChildren,
+  BladesRouteRoute: BladesRouteRouteWithChildren,
   ConsumablesRouteRoute: ConsumablesRouteRouteWithChildren,
   GemsRouteRoute: GemsRouteRouteWithChildren,
   GrimoiresRouteRoute: GrimoiresRouteRouteWithChildren,
@@ -894,7 +895,6 @@ const rootRouteChildren: RootRouteChildren = {
   KeysRouteRoute: KeysRouteRouteWithChildren,
   SigilsRouteRoute: SigilsRouteRouteWithChildren,
   SpellsRouteRoute: SpellsRouteRouteWithChildren,
-  WeaponsRouteRoute: WeaponsRouteRouteWithChildren,
   WorkshopsRouteRoute: WorkshopsRouteRouteWithChildren,
   MaterialGridRoute: MaterialGridRoute,
   MaterialsRoute: MaterialsRoute,

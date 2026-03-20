@@ -6,9 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { gameApi } from "@/lib/game-api"
 
 export function HomePage() {
-  const { data: weapons = [] } = useQuery({
-    queryKey: ["weapons"],
-    queryFn: gameApi.weapons,
+  const { data: blades = [] } = useQuery({
+    queryKey: ["blades"],
+    queryFn: gameApi.blades,
   })
   const { data: armor = [] } = useQuery({
     queryKey: ["armor"],
@@ -56,10 +56,10 @@ export function HomePage() {
 
   const DB_CARDS = [
     {
-      to: "/weapons" as const,
-      label: "Weapons",
+      to: "/blades" as const,
+      label: "Blades",
       icon: "Sword",
-      count: weapons.length,
+      count: blades.length,
     },
     {
       to: "/grips" as const,
@@ -133,7 +133,7 @@ export function HomePage() {
         </h1>
         <p className="text-muted-foreground max-w-2xl text-lg lg:text-xl">
           Community game database and crafting tools for the classic PlayStation
-          RPG. Browse weapons, armor, materials, and more.
+          RPG. Browse blades, armor, materials, and more.
         </p>
       </section>
 

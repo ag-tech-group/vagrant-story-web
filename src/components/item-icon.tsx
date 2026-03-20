@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 
 const ICON_MAP: Record<string, string> = {
-  // Weapon blade types (corrected API values)
+  // Blade types (corrected API values)
   Dagger: "Dagger",
   Sword: "Sword",
   "Great Sword": "Great_Sword",

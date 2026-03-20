@@ -9,11 +9,11 @@ import { ItemIcon } from "@/components/item-icon"
 import { gameApi, fmt } from "@/lib/game-api"
 import { computeEffectiveStats, type ItemStats } from "@/lib/item-stats"
 
-export const Route = createFileRoute("/weapons/$id")({
-  component: WeaponDetail,
+export const Route = createFileRoute("/blades/$id")({
+  component: BladeDetail,
 })
 
-const WEAPON_HANDS: Record<string, string> = {
+const BLADE_HANDS: Record<string, string> = {
   Dagger: "1H",
   Sword: "1H",
   "Axe / Mace": "1H",
@@ -27,35 +27,35 @@ const WEAPON_HANDS: Record<string, string> = {
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 
-function WeaponDetail() {
+function BladeDetail() {
   const { id } = Route.useParams()
   const [material, setMaterial] = useState<string | null>(null)
 
-  const { data: weapons = [] } = useQuery({
-    queryKey: ["weapons"],
-    queryFn: gameApi.weapons,
+  const { data: blades = [] } = useQuery({
+    queryKey: ["blades"],
+    queryFn: gameApi.blades,
   })
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
   })
 
-  const weapon = weapons.find((w) => w.id === Number(id))
-  if (!weapon) return null
+  const blade = blades.find((b) => b.id === Number(id))
+  if (!blade) return null
 
-  const hands = WEAPON_HANDS[weapon.blade_type]
+  const hands = BLADE_HANDS[blade.blade_type]
   const materialData = material
     ? materials.find((m) => m.name === material)
     : undefined
 
   const baseStats: ItemStats = {
-    str: weapon.str,
-    int: weapon.int,
-    agi: weapon.agi,
-    range: weapon.range,
-    damage: weapon.damage,
-    risk: weapon.risk,
-    damage_type: weapon.damage_type,
+    str: blade.str,
+    int: blade.int,
+    agi: blade.agi,
+    range: blade.range,
+    damage: blade.damage,
+    risk: blade.risk,
+    damage_type: blade.damage_type,
   }
 
   const effectiveStats =
@@ -68,7 +68,7 @@ function WeaponDetail() {
       <CardContent className="pt-6">
         <div className="flex w-full justify-end">
           <Link
-            to="/weapons"
+            to="/blades"
             className="text-muted-foreground hover:text-foreground -mt-2 -mr-2 p-1"
           >
             <X className="size-5" />
@@ -78,16 +78,16 @@ function WeaponDetail() {
           {/* Left: image, name, type, material */}
           <div className="flex flex-col items-center gap-3">
             <ItemIcon
-              type={weapon.blade_type}
+              type={blade.blade_type}
               size="lg"
               className="rounded-lg"
             />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
-                {fmt(weapon.field_name)}
+                {fmt(blade.field_name)}
               </h2>
               <div className="text-muted-foreground mt-0.5 flex items-center justify-center gap-2 text-sm">
-                <span>{weapon.blade_type}</span>
+                <span>{blade.blade_type}</span>
                 {hands && (
                   <>
                     <span>·</span>
