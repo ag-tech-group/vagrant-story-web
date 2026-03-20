@@ -42,6 +42,7 @@ const router = createRouter({
   },
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
+  scrollRestoration: true,
   defaultErrorComponent: RootErrorComponent,
   defaultNotFoundComponent: NotFound,
 })

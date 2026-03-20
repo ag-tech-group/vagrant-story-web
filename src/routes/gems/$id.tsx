@@ -54,7 +54,7 @@ function GemDetail() {
             <X className="size-5" />
           </Link>
         </div>
-        <div className="flex gap-6">
+        <div className="flex flex-col gap-6 sm:flex-row">
           <div className="flex flex-col items-center gap-3">
             <ItemIcon type="Gem" size="lg" className="rounded-lg" />
             <div className="text-center">
