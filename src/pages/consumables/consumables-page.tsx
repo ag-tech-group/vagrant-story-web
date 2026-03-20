@@ -26,6 +26,15 @@ const columns: ColumnDef<Consumable>[] = [
     },
     enableSorting: false,
   },
+  {
+    accessorKey: "drop_rate",
+    header: "Drop Rate",
+    cell: ({ getValue }) => {
+      const v = getValue<string>()
+      if (!v) return <span className="text-muted-foreground">-</span>
+      return <span className="text-muted-foreground text-sm">{v}</span>
+    },
+  },
 ]
 
 export function ConsumablesPage() {

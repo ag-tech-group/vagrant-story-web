@@ -19,6 +19,16 @@ function ConsumableDetail() {
   const item = consumables.find((c) => c.id === Number(id))
   if (!item) return null
 
+  const details = [
+    { label: "HP Restore", value: item.hp_restore },
+    { label: "MP Restore", value: item.mp_restore },
+    { label: "RISK Reduce", value: item.risk_reduce },
+    { label: "Status Cure", value: item.status_cure },
+    { label: "Permanent Stat", value: item.permanent_stat },
+    { label: "Drop Rate", value: item.drop_rate },
+    { label: "Drop Location", value: item.drop_location },
+  ].filter((d) => d.value)
+
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
       <CardContent className="pt-6">
@@ -40,13 +50,25 @@ function ConsumableDetail() {
               <p className="text-muted-foreground mt-0.5 text-sm">Consumable</p>
             </div>
           </div>
-          <div className="flex flex-1 flex-col items-center justify-center gap-3">
+          <div className="flex flex-1 flex-col gap-3">
             {item.description ? (
-              <p className="text-center text-sm">{item.description}</p>
+              <p className="text-sm">{item.description}</p>
             ) : (
               <p className="text-muted-foreground text-sm">
                 No description available
               </p>
+            )}
+            {details.length > 0 && (
+              <div className="space-y-1.5">
+                {details.map((d) => (
+                  <p key={d.label} className="text-sm">
+                    <span className="text-muted-foreground font-medium">
+                      {d.label}:
+                    </span>{" "}
+                    {d.value}
+                  </p>
+                ))}
+              </div>
             )}
           </div>
         </div>
