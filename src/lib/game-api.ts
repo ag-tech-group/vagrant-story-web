@@ -103,9 +103,14 @@ export interface Grip {
   name: string
   description_fr?: string
   grip_type: string
+  compatible_weapons: string
   str: number
   int: number
   agi: number
+  blunt: number
+  edged: number
+  piercing: number
+  gem_slots: number
   dp?: number
   pp?: number
 }

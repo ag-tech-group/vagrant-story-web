@@ -33,7 +33,7 @@ function GripDetail() {
         </div>
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-3">
-            <ItemIcon type={"Grip"} size="lg" className="rounded-lg" />
+            <ItemIcon type="Grip" size="lg" className="rounded-lg" />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
                 {fmt(grip.field_name)}
@@ -41,15 +41,29 @@ function GripDetail() {
               <p className="text-muted-foreground mt-0.5 text-sm">
                 {grip.grip_type}
               </p>
+              {grip.compatible_weapons && (
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  {grip.compatible_weapons}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-3">
+            {/* Core stats */}
             <div className="flex flex-wrap justify-center gap-2">
               <StatBox label="STR" value={grip.str} />
               <StatBox label="INT" value={grip.int} />
               <StatBox label="AGI" value={grip.agi} />
-              {grip.dp != null && <StatBox label="DP" value={grip.dp} />}
-              {grip.pp != null && <StatBox label="PP" value={grip.pp} />}
+            </div>
+            {/* Damage type stats */}
+            <div className="flex flex-wrap justify-center gap-2">
+              <StatBox label="Blt" value={grip.blunt} />
+              <StatBox label="Edg" value={grip.edged} />
+              <StatBox label="Prc" value={grip.piercing} />
+            </div>
+            {/* Gem slots */}
+            <div className="flex flex-wrap justify-center gap-2">
+              <StatBox label="Gems" value={grip.gem_slots} />
             </div>
           </div>
         </div>
