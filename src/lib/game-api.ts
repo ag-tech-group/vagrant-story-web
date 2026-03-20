@@ -123,6 +123,13 @@ export interface Consumable {
   description_fr?: string
   description?: string
   effects?: unknown
+  hp_restore?: string
+  mp_restore?: string
+  risk_reduce?: string
+  status_cure?: string
+  permanent_stat?: string
+  drop_rate?: string
+  drop_location?: string
 }
 
 export interface Spell {
