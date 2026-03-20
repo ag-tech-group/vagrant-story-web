@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
 import { gameApi } from "@/lib/game-api"
@@ -9,21 +8,6 @@ import { gameApi } from "@/lib/game-api"
 export const Route = createFileRoute("/consumables/$id")({
   component: ConsumableDetail,
 })
-
-interface Effect {
-  type: string
-  value: number
-  target: string
-  modifier: string
-}
-
-function formatEffect(e: Effect): string | null {
-  const val = e.value
-  if (typeof val === "string") return `${e.modifier} Random`
-  if (val === 32767) return `${e.modifier} Full`
-  if (val === 0) return null
-  return `${e.modifier} ${val > 0 ? `+${val}` : val}`
-}
 
 function ConsumableDetail() {
   const { id } = Route.useParams()
@@ -34,8 +18,6 @@ function ConsumableDetail() {
 
   const item = consumables.find((c) => c.id === Number(id))
   if (!item) return null
-
-  const effects = (item.effects as Effect[] | null | undefined) ?? []
 
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
@@ -50,7 +32,7 @@ function ConsumableDetail() {
         </div>
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-3">
-            <ItemIcon type={"Gem"} size="lg" className="rounded-lg" />
+            <ItemIcon type="Consumable" size="lg" className="rounded-lg" />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
                 {item.name}
@@ -59,20 +41,12 @@ function ConsumableDetail() {
             </div>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-3">
-            {effects.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {effects.map((e, i) => {
-                  const label = formatEffect(e)
-                  if (!label) return null
-                  return (
-                    <Badge key={i} variant="secondary">
-                      {label}
-                    </Badge>
-                  )
-                })}
-              </div>
+            {item.description ? (
+              <p className="text-center text-sm">{item.description}</p>
             ) : (
-              <p className="text-muted-foreground text-sm">No effects</p>
+              <p className="text-muted-foreground text-sm">
+                No description available
+              </p>
             )}
           </div>
         </div>

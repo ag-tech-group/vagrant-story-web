@@ -1,9 +1,18 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { type ColumnDef } from "@tanstack/react-table"
+import { DataTable, type ColumnFilter } from "@/components/data-table"
 import { ItemIcon } from "@/components/item-icon"
-import { DataTable } from "@/components/data-table"
 import { gameApi, fmt, type Gem } from "@/lib/game-api"
+
+function StatCell({ value }: { value: number }) {
+  if (value === 0) return <span className="text-muted-foreground">0</span>
+  return (
+    <span className={value > 0 ? "text-green-400" : "text-red-400"}>
+      {value > 0 ? `+${value}` : value}
+    </span>
+  )
+}
 
 const columns: ColumnDef<Gem>[] = [
   {
@@ -16,8 +25,30 @@ const columns: ColumnDef<Gem>[] = [
       </div>
     ),
   },
-  { accessorKey: "affinity_type", header: "Affinity" },
-  { accessorKey: "magnitude", header: "Magnitude" },
+  {
+    accessorKey: "gem_type",
+    header: "Type",
+    filterFn: "equals",
+    cell: ({ getValue }) => {
+      const v = getValue<string>()
+      return v || <span className="text-muted-foreground">-</span>
+    },
+  },
+  {
+    accessorKey: "str",
+    header: "STR",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "int",
+    header: "INT",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
+  {
+    accessorKey: "agi",
+    header: "AGI",
+    cell: ({ getValue }) => <StatCell value={getValue<number>()} />,
+  },
 ]
 
 export function GemsPage() {
@@ -31,12 +62,20 @@ export function GemsPage() {
     [data]
   )
 
+  const typeFilters = useMemo<ColumnFilter[]>(() => {
+    const types = [
+      ...new Set(data.map((g) => g.gem_type).filter(Boolean)),
+    ].sort() as string[]
+    return [{ column: "gem_type", label: "Type", options: types }]
+  }, [data])
+
   return (
     <DataTable
       data={enriched}
       columns={columns}
       searchPlaceholder="Search gems..."
       isLoading={isLoading}
+      filters={typeFilters}
       getRowLink={(row) => ({
         to: "/gems/$id",
         params: { id: String(row.original.id) },

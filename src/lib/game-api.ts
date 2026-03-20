@@ -74,8 +74,26 @@ export interface Gem {
   field_name: string
   name: string
   description_fr?: string
-  magnitude: number
+  description?: string
+  magnitude: string
   affinity_type: string
+  gem_type?: string
+  str: number
+  int: number
+  agi: number
+  human: number
+  beast: number
+  undead: number
+  phantom: number
+  dragon: number
+  evil: number
+  physical: number
+  fire: number
+  water: number
+  wind: number
+  earth: number
+  light: number
+  dark: number
 }
 
 export interface Grip {
@@ -98,6 +116,7 @@ export interface Consumable {
   field_name: string
   name: string
   description_fr?: string
+  description?: string
   effects?: unknown
 }
 
