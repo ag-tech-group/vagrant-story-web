@@ -12,9 +12,9 @@ export const Route = createFileRoute("/grimoires/$id")({
 
 function GrimoireDetail() {
   const { id } = Route.useParams()
-  const { data: item } = useQuery({
-    queryKey: ["grimoire", id],
-    queryFn: () => gameApi.grimoire(Number(id)),
+  const { data: grimoires = [] } = useQuery({
+    queryKey: ["grimoires"],
+    queryFn: gameApi.grimoires,
   })
 
   const { data: spells = [] } = useQuery({
@@ -22,9 +22,14 @@ function GrimoireDetail() {
     queryFn: gameApi.spells,
   })
 
+  const item = grimoires.find((g) => g.id === Number(id))
   if (!item) return null
 
   const linkedSpell = spells.find((s: Spell) => s.name === item.spell_name)
+
+  const areas = item.areas.split(", ").filter(Boolean)
+  const sources = item.sources.split(", ").filter(Boolean)
+  const rates = item.drop_rates.split(", ").filter(Boolean)
 
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
@@ -63,26 +68,31 @@ function GrimoireDetail() {
               )}
             </p>
             <div className="flex flex-wrap gap-2">
-              {item.drop_rate ? (
-                <Badge variant="outline">{item.drop_rate}</Badge>
-              ) : (
-                <Badge variant="outline">Once</Badge>
-              )}
               {item.repeatable && <Badge variant="outline">Repeatable</Badge>}
             </div>
-            <div className="space-y-2 text-sm">
-              <p>
-                <span className="text-muted-foreground font-medium">
-                  Location:
-                </span>{" "}
-                {item.room} ({item.area})
+            <div>
+              <p className="text-muted-foreground mb-2 text-sm font-medium">
+                Sources
               </p>
-              <p>
-                <span className="text-muted-foreground font-medium">
-                  Source:
-                </span>{" "}
-                {item.source}
-              </p>
+              <div className="space-y-2">
+                {areas.map((area, i) => (
+                  <div
+                    key={i}
+                    className="bg-muted/50 flex items-center justify-between rounded px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <span>{area}</span>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        — {sources[i] || "Unknown"}
+                      </span>
+                    </div>
+                    <Badge variant="outline" className="ml-2 shrink-0">
+                      {rates[i] || "Once"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
