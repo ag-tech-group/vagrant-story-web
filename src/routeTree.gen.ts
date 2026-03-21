@@ -22,6 +22,7 @@ import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
 import { Route as ForgeRouteRouteImport } from './routes/forge/route'
 import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
+import { Route as ChestsRouteRouteImport } from './routes/chests/route'
 import { Route as CharactersRouteRouteImport } from './routes/characters/route'
 import { Route as BreakArtsRouteRouteImport } from './routes/break-arts/route'
 import { Route as BladesRouteRouteImport } from './routes/blades/route'
@@ -41,6 +42,7 @@ import { Route as GemsIndexRouteImport } from './routes/gems/index'
 import { Route as ForgeIndexRouteImport } from './routes/forge/index'
 import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
 import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
+import { Route as ChestsIndexRouteImport } from './routes/chests/index'
 import { Route as CharactersIndexRouteImport } from './routes/characters/index'
 import { Route as BreakArtsIndexRouteImport } from './routes/break-arts/index'
 import { Route as BladesIndexRouteImport } from './routes/blades/index'
@@ -57,6 +59,7 @@ import { Route as GripsIdRouteImport } from './routes/grips/$id'
 import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
 import { Route as GemsIdRouteImport } from './routes/gems/$id'
 import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
+import { Route as ChestsIdRouteImport } from './routes/chests/$id'
 import { Route as CharactersIdRouteImport } from './routes/characters/$id'
 import { Route as BreakArtsIdRouteImport } from './routes/break-arts/$id'
 import { Route as BladesIdRouteImport } from './routes/blades/$id'
@@ -127,6 +130,11 @@ const ForgeRouteRoute = ForgeRouteRouteImport.update({
 const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
   id: '/consumables',
   path: '/consumables',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChestsRouteRoute = ChestsRouteRouteImport.update({
+  id: '/chests',
+  path: '/chests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CharactersRouteRoute = CharactersRouteRouteImport.update({
@@ -224,6 +232,11 @@ const ConsumablesIndexRoute = ConsumablesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ConsumablesRouteRoute,
 } as any)
+const ChestsIndexRoute = ChestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChestsRouteRoute,
+} as any)
 const CharactersIndexRoute = CharactersIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -304,6 +317,11 @@ const ConsumablesIdRoute = ConsumablesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ConsumablesRouteRoute,
 } as any)
+const ChestsIdRoute = ChestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ChestsRouteRoute,
+} as any)
 const CharactersIdRoute = CharactersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -343,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/blades': typeof BladesRouteRouteWithChildren
   '/break-arts': typeof BreakArtsRouteRouteWithChildren
   '/characters': typeof CharactersRouteRouteWithChildren
+  '/chests': typeof ChestsRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/forge': typeof ForgeRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
@@ -362,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/blades/$id': typeof BladesIdRoute
   '/break-arts/$id': typeof BreakArtsIdRoute
   '/characters/$id': typeof CharactersIdRoute
+  '/chests/$id': typeof ChestsIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -378,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/blades/': typeof BladesIndexRoute
   '/break-arts/': typeof BreakArtsIndexRoute
   '/characters/': typeof CharactersIndexRoute
+  '/chests/': typeof ChestsIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/forge/': typeof ForgeIndexRoute
@@ -401,6 +422,7 @@ export interface FileRoutesByTo {
   '/blades/$id': typeof BladesIdRoute
   '/break-arts/$id': typeof BreakArtsIdRoute
   '/characters/$id': typeof CharactersIdRoute
+  '/chests/$id': typeof ChestsIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -417,6 +439,7 @@ export interface FileRoutesByTo {
   '/blades': typeof BladesIndexRoute
   '/break-arts': typeof BreakArtsIndexRoute
   '/characters': typeof CharactersIndexRoute
+  '/chests': typeof ChestsIndexRoute
   '/consumables': typeof ConsumablesIndexRoute
   '/crafting': typeof CraftingIndexRoute
   '/forge': typeof ForgeIndexRoute
@@ -439,6 +462,7 @@ export interface FileRoutesById {
   '/blades': typeof BladesRouteRouteWithChildren
   '/break-arts': typeof BreakArtsRouteRouteWithChildren
   '/characters': typeof CharactersRouteRouteWithChildren
+  '/chests': typeof ChestsRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/forge': typeof ForgeRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
@@ -458,6 +482,7 @@ export interface FileRoutesById {
   '/blades/$id': typeof BladesIdRoute
   '/break-arts/$id': typeof BreakArtsIdRoute
   '/characters/$id': typeof CharactersIdRoute
+  '/chests/$id': typeof ChestsIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -474,6 +499,7 @@ export interface FileRoutesById {
   '/blades/': typeof BladesIndexRoute
   '/break-arts/': typeof BreakArtsIndexRoute
   '/characters/': typeof CharactersIndexRoute
+  '/chests/': typeof ChestsIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/forge/': typeof ForgeIndexRoute
@@ -497,6 +523,7 @@ export interface FileRouteTypes {
     | '/blades'
     | '/break-arts'
     | '/characters'
+    | '/chests'
     | '/consumables'
     | '/forge'
     | '/gems'
@@ -516,6 +543,7 @@ export interface FileRouteTypes {
     | '/blades/$id'
     | '/break-arts/$id'
     | '/characters/$id'
+    | '/chests/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -532,6 +560,7 @@ export interface FileRouteTypes {
     | '/blades/'
     | '/break-arts/'
     | '/characters/'
+    | '/chests/'
     | '/consumables/'
     | '/crafting/'
     | '/forge/'
@@ -555,6 +584,7 @@ export interface FileRouteTypes {
     | '/blades/$id'
     | '/break-arts/$id'
     | '/characters/$id'
+    | '/chests/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -571,6 +601,7 @@ export interface FileRouteTypes {
     | '/blades'
     | '/break-arts'
     | '/characters'
+    | '/chests'
     | '/consumables'
     | '/crafting'
     | '/forge'
@@ -592,6 +623,7 @@ export interface FileRouteTypes {
     | '/blades'
     | '/break-arts'
     | '/characters'
+    | '/chests'
     | '/consumables'
     | '/forge'
     | '/gems'
@@ -611,6 +643,7 @@ export interface FileRouteTypes {
     | '/blades/$id'
     | '/break-arts/$id'
     | '/characters/$id'
+    | '/chests/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -627,6 +660,7 @@ export interface FileRouteTypes {
     | '/blades/'
     | '/break-arts/'
     | '/characters/'
+    | '/chests/'
     | '/consumables/'
     | '/crafting/'
     | '/forge/'
@@ -649,6 +683,7 @@ export interface RootRouteChildren {
   BladesRouteRoute: typeof BladesRouteRouteWithChildren
   BreakArtsRouteRoute: typeof BreakArtsRouteRouteWithChildren
   CharactersRouteRoute: typeof CharactersRouteRouteWithChildren
+  ChestsRouteRoute: typeof ChestsRouteRouteWithChildren
   ConsumablesRouteRoute: typeof ConsumablesRouteRouteWithChildren
   ForgeRouteRoute: typeof ForgeRouteRouteWithChildren
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
@@ -756,6 +791,13 @@ declare module '@tanstack/react-router' {
       path: '/consumables'
       fullPath: '/consumables'
       preLoaderRoute: typeof ConsumablesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chests': {
+      id: '/chests'
+      path: '/chests'
+      fullPath: '/chests'
+      preLoaderRoute: typeof ChestsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/characters': {
@@ -891,6 +933,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesIndexRouteImport
       parentRoute: typeof ConsumablesRouteRoute
     }
+    '/chests/': {
+      id: '/chests/'
+      path: '/'
+      fullPath: '/chests/'
+      preLoaderRoute: typeof ChestsIndexRouteImport
+      parentRoute: typeof ChestsRouteRoute
+    }
     '/characters/': {
       id: '/characters/'
       path: '/'
@@ -1002,6 +1051,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/consumables/$id'
       preLoaderRoute: typeof ConsumablesIdRouteImport
       parentRoute: typeof ConsumablesRouteRoute
+    }
+    '/chests/$id': {
+      id: '/chests/$id'
+      path: '/$id'
+      fullPath: '/chests/$id'
+      preLoaderRoute: typeof ChestsIdRouteImport
+      parentRoute: typeof ChestsRouteRoute
     }
     '/characters/$id': {
       id: '/characters/$id'
@@ -1128,6 +1184,20 @@ const CharactersRouteRouteChildren: CharactersRouteRouteChildren = {
 
 const CharactersRouteRouteWithChildren = CharactersRouteRoute._addFileChildren(
   CharactersRouteRouteChildren,
+)
+
+interface ChestsRouteRouteChildren {
+  ChestsIdRoute: typeof ChestsIdRoute
+  ChestsIndexRoute: typeof ChestsIndexRoute
+}
+
+const ChestsRouteRouteChildren: ChestsRouteRouteChildren = {
+  ChestsIdRoute: ChestsIdRoute,
+  ChestsIndexRoute: ChestsIndexRoute,
+}
+
+const ChestsRouteRouteWithChildren = ChestsRouteRoute._addFileChildren(
+  ChestsRouteRouteChildren,
 )
 
 interface ConsumablesRouteRouteChildren {
@@ -1289,6 +1359,7 @@ const rootRouteChildren: RootRouteChildren = {
   BladesRouteRoute: BladesRouteRouteWithChildren,
   BreakArtsRouteRoute: BreakArtsRouteRouteWithChildren,
   CharactersRouteRoute: CharactersRouteRouteWithChildren,
+  ChestsRouteRoute: ChestsRouteRouteWithChildren,
   ConsumablesRouteRoute: ConsumablesRouteRouteWithChildren,
   ForgeRouteRoute: ForgeRouteRouteWithChildren,
   GemsRouteRoute: GemsRouteRouteWithChildren,

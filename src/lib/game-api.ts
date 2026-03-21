@@ -242,6 +242,27 @@ export interface Ranking {
   requirement: string
 }
 
+export interface ChestItem {
+  id: number
+  chest_id: number
+  item_type: string
+  item_name: string
+  material: string | null
+  gem_slots: number | null
+  quantity: number
+}
+
+export interface Chest {
+  id: number
+  area: string
+  room: string
+  lock_type: string | null
+}
+
+export interface ChestDetail extends Chest {
+  items: ChestItem[]
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -292,6 +313,8 @@ export const gameApi = {
   sigils: () => fetchApi<Sigil[]>("/sigils?limit=200"),
   grimoires: () => fetchApi<Grimoire[]>("/grimoires?limit=500"),
   grimoire: (id: number) => fetchApi<GrimoireDetail>(`/grimoires/${id}`),
+  chests: () => fetchApi<Chest[]>("/chests?limit=500"),
+  chest: (id: number) => fetchApi<ChestDetail>(`/chests/${id}`),
   workshops: () => fetchApi<Workshop[]>("/workshops?limit=200"),
   characters: () => fetchApi<Character[]>("/characters?limit=200"),
   character: (id: number) => fetchApi<Character>(`/characters/${id}`),

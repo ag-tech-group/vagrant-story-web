@@ -22,6 +22,7 @@ const DATABASE_PAGES = [
   { to: "/grimoires", label: "Grimoires", icon: "Grimoire" },
   { to: "/keys", label: "Keys", icon: "Key" },
   { to: "/sigils", label: "Sigils", icon: "Sigil" },
+  { to: "/chests", label: "Chests", icon: "Chest" },
   { to: "/workshops", label: "Workshops", icon: "Workshop" },
   { to: "/characters", label: "Characters", icon: "Character" },
   { to: "/titles", label: "Titles", icon: "Title" },
