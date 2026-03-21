@@ -17,6 +17,7 @@ import { Route as SpellsRouteRouteImport } from './routes/spells/route'
 import { Route as SigilsRouteRouteImport } from './routes/sigils/route'
 import { Route as RankingsRouteRouteImport } from './routes/rankings/route'
 import { Route as KeysRouteRouteImport } from './routes/keys/route'
+import { Route as InventoryRouteRouteImport } from './routes/inventory/route'
 import { Route as GripsRouteRouteImport } from './routes/grips/route'
 import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
@@ -37,6 +38,7 @@ import { Route as SpellsIndexRouteImport } from './routes/spells/index'
 import { Route as SigilsIndexRouteImport } from './routes/sigils/index'
 import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as KeysIndexRouteImport } from './routes/keys/index'
+import { Route as InventoryIndexRouteImport } from './routes/inventory/index'
 import { Route as GripsIndexRouteImport } from './routes/grips/index'
 import { Route as GrimoiresIndexRouteImport } from './routes/grimoires/index'
 import { Route as GemsIndexRouteImport } from './routes/gems/index'
@@ -108,6 +110,11 @@ const RankingsRouteRoute = RankingsRouteRouteImport.update({
 const KeysRouteRoute = KeysRouteRouteImport.update({
   id: '/keys',
   path: '/keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventoryRouteRoute = InventoryRouteRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GripsRouteRoute = GripsRouteRouteImport.update({
@@ -209,6 +216,11 @@ const KeysIndexRoute = KeysIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => KeysRouteRoute,
+} as any)
+const InventoryIndexRoute = InventoryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InventoryRouteRoute,
 } as any)
 const GripsIndexRoute = GripsIndexRouteImport.update({
   id: '/',
@@ -386,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/gems': typeof GemsRouteRouteWithChildren
   '/grimoires': typeof GrimoiresRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
+  '/inventory': typeof InventoryRouteRouteWithChildren
   '/keys': typeof KeysRouteRouteWithChildren
   '/rankings': typeof RankingsRouteRouteWithChildren
   '/sigils': typeof SigilsRouteRouteWithChildren
@@ -426,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/gems/': typeof GemsIndexRoute
   '/grimoires/': typeof GrimoiresIndexRoute
   '/grips/': typeof GripsIndexRoute
+  '/inventory/': typeof InventoryIndexRoute
   '/keys/': typeof KeysIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/sigils/': typeof SigilsIndexRoute
@@ -469,6 +483,7 @@ export interface FileRoutesByTo {
   '/gems': typeof GemsIndexRoute
   '/grimoires': typeof GrimoiresIndexRoute
   '/grips': typeof GripsIndexRoute
+  '/inventory': typeof InventoryIndexRoute
   '/keys': typeof KeysIndexRoute
   '/rankings': typeof RankingsIndexRoute
   '/sigils': typeof SigilsIndexRoute
@@ -492,6 +507,7 @@ export interface FileRoutesById {
   '/gems': typeof GemsRouteRouteWithChildren
   '/grimoires': typeof GrimoiresRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
+  '/inventory': typeof InventoryRouteRouteWithChildren
   '/keys': typeof KeysRouteRouteWithChildren
   '/rankings': typeof RankingsRouteRouteWithChildren
   '/sigils': typeof SigilsRouteRouteWithChildren
@@ -532,6 +548,7 @@ export interface FileRoutesById {
   '/gems/': typeof GemsIndexRoute
   '/grimoires/': typeof GrimoiresIndexRoute
   '/grips/': typeof GripsIndexRoute
+  '/inventory/': typeof InventoryIndexRoute
   '/keys/': typeof KeysIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/sigils/': typeof SigilsIndexRoute
@@ -556,6 +573,7 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grimoires'
     | '/grips'
+    | '/inventory'
     | '/keys'
     | '/rankings'
     | '/sigils'
@@ -596,6 +614,7 @@ export interface FileRouteTypes {
     | '/gems/'
     | '/grimoires/'
     | '/grips/'
+    | '/inventory/'
     | '/keys/'
     | '/rankings/'
     | '/sigils/'
@@ -639,6 +658,7 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grimoires'
     | '/grips'
+    | '/inventory'
     | '/keys'
     | '/rankings'
     | '/sigils'
@@ -661,6 +681,7 @@ export interface FileRouteTypes {
     | '/gems'
     | '/grimoires'
     | '/grips'
+    | '/inventory'
     | '/keys'
     | '/rankings'
     | '/sigils'
@@ -701,6 +722,7 @@ export interface FileRouteTypes {
     | '/gems/'
     | '/grimoires/'
     | '/grips/'
+    | '/inventory/'
     | '/keys/'
     | '/rankings/'
     | '/sigils/'
@@ -724,6 +746,7 @@ export interface RootRouteChildren {
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
   GrimoiresRouteRoute: typeof GrimoiresRouteRouteWithChildren
   GripsRouteRoute: typeof GripsRouteRouteWithChildren
+  InventoryRouteRoute: typeof InventoryRouteRouteWithChildren
   KeysRouteRoute: typeof KeysRouteRouteWithChildren
   RankingsRouteRoute: typeof RankingsRouteRouteWithChildren
   SigilsRouteRoute: typeof SigilsRouteRouteWithChildren
@@ -791,6 +814,13 @@ declare module '@tanstack/react-router' {
       path: '/keys'
       fullPath: '/keys'
       preLoaderRoute: typeof KeysRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventory': {
+      id: '/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof InventoryRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/grips': {
@@ -932,6 +962,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/keys/'
       preLoaderRoute: typeof KeysIndexRouteImport
       parentRoute: typeof KeysRouteRoute
+    }
+    '/inventory/': {
+      id: '/inventory/'
+      path: '/'
+      fullPath: '/inventory/'
+      preLoaderRoute: typeof InventoryIndexRouteImport
+      parentRoute: typeof InventoryRouteRoute
     }
     '/grips/': {
       id: '/grips/'
@@ -1337,6 +1374,18 @@ const GripsRouteRouteWithChildren = GripsRouteRoute._addFileChildren(
   GripsRouteRouteChildren,
 )
 
+interface InventoryRouteRouteChildren {
+  InventoryIndexRoute: typeof InventoryIndexRoute
+}
+
+const InventoryRouteRouteChildren: InventoryRouteRouteChildren = {
+  InventoryIndexRoute: InventoryIndexRoute,
+}
+
+const InventoryRouteRouteWithChildren = InventoryRouteRoute._addFileChildren(
+  InventoryRouteRouteChildren,
+)
+
 interface KeysRouteRouteChildren {
   KeysIdRoute: typeof KeysIdRoute
   KeysIndexRoute: typeof KeysIndexRoute
@@ -1436,6 +1485,7 @@ const rootRouteChildren: RootRouteChildren = {
   GemsRouteRoute: GemsRouteRouteWithChildren,
   GrimoiresRouteRoute: GrimoiresRouteRouteWithChildren,
   GripsRouteRoute: GripsRouteRouteWithChildren,
+  InventoryRouteRoute: InventoryRouteRouteWithChildren,
   KeysRouteRoute: KeysRouteRouteWithChildren,
   RankingsRouteRoute: RankingsRouteRouteWithChildren,
   SigilsRouteRoute: SigilsRouteRouteWithChildren,
