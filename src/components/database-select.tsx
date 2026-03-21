@@ -24,6 +24,7 @@ const DATABASE_PAGES = [
   { to: "/sigils", label: "Sigils", icon: "Sigil" },
   { to: "/workshops", label: "Workshops", icon: "Workshop" },
   { to: "/chests", label: "Chests", icon: "Chest" },
+  { to: "/areas", label: "Areas", icon: "Area" },
   { to: "/characters", label: "Characters", icon: "Character" },
   { to: "/titles", label: "Titles", icon: "Title" },
   { to: "/rankings", label: "Rankings", icon: "Ranking" },

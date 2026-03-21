@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
-import { gameApi } from "@/lib/game-api"
+import { gameApi, type Area } from "@/lib/game-api"
 
 export const Route = createFileRoute("/keys/$id")({
   component: KeyDetail,
@@ -15,9 +15,15 @@ function KeyDetail() {
     queryKey: ["keys"],
     queryFn: gameApi.keys,
   })
+  const { data: areas = [] } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: gameApi.areas,
+  })
 
   const item = keys.find((k) => k.id === Number(id))
   if (!item) return null
+
+  const linkedArea = areas.find((a) => a.name === item.area)
 
   const locations = item.locations_used
     .split(", ")
@@ -50,7 +56,25 @@ function KeyDetail() {
                 <span className="text-muted-foreground font-medium">
                   Found in:
                 </span>{" "}
-                {item.room ? `${item.room} (${item.area})` : item.area}
+                {item.room ? (
+                  <>
+                    {item.room} (
+                    {linkedArea ? (
+                      <Link
+                        to="/areas/$id"
+                        params={{ id: String(linkedArea.id) }}
+                        className="text-primary hover:underline"
+                      >
+                        {item.area}
+                      </Link>
+                    ) : (
+                      item.area
+                    )}
+                    )
+                  </>
+                ) : (
+                  item.area
+                )}
               </p>
               <p>
                 <span className="text-muted-foreground font-medium">

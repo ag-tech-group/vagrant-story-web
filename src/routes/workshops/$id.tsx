@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
 import { MaterialBadge } from "@/components/stat-display"
-import { gameApi } from "@/lib/game-api"
+import { gameApi, type Area } from "@/lib/game-api"
 
 export const Route = createFileRoute("/workshops/$id")({
   component: WorkshopDetail,
@@ -16,9 +16,19 @@ function WorkshopDetail() {
     queryKey: ["workshops"],
     queryFn: gameApi.workshops,
   })
+  const { data: areas = [] } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: gameApi.areas,
+  })
 
   const item = workshops.find((w) => w.id === Number(id))
   if (!item) return null
+
+  // Workshop area is "Area: Room" — extract area name for linking
+  const colonIdx = item.area.indexOf(": ")
+  const wsAreaName = colonIdx >= 0 ? item.area.slice(0, colonIdx) : item.area
+  const wsRoomName = colonIdx >= 0 ? item.area.slice(colonIdx + 2) : ""
+  const linkedArea = areas.find((a) => a.name === wsAreaName)
 
   const materials = item.available_materials
     .split(", ")
@@ -50,7 +60,20 @@ function WorkshopDetail() {
               <span className="text-muted-foreground font-medium">
                 Location:
               </span>{" "}
-              {item.area}
+              {linkedArea ? (
+                <>
+                  <Link
+                    to="/areas/$id"
+                    params={{ id: String(linkedArea.id) }}
+                    className="text-primary hover:underline"
+                  >
+                    {wsAreaName}
+                  </Link>
+                  {wsRoomName && `: ${wsRoomName}`}
+                </>
+              ) : (
+                item.area
+              )}
             </p>
             <div>
               <p className="text-muted-foreground mb-1.5 text-sm font-medium">

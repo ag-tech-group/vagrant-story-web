@@ -14,6 +14,7 @@ import {
   type Gem,
   type Consumable,
   type Grimoire,
+  type Area,
 } from "@/lib/game-api"
 
 export const Route = createFileRoute("/chests/$id")({
@@ -99,8 +100,16 @@ function ChestDetail() {
     queryKey: ["keys"],
     queryFn: gameApi.keys,
   })
+  const { data: areas = [] } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: gameApi.areas,
+  })
 
   if (!chest) return null
+
+  // Find area for cross-linking (normalize "Town Centre" -> "Town Center")
+  const normalizedArea = chest.area.replace("Town Centre", "Town Center")
+  const linkedArea = areas.find((a) => a.name === normalizedArea)
 
   // Build lookup maps by name
   const lookups: Record<string, Map<string, number>> = {
@@ -155,7 +164,17 @@ function ChestDetail() {
                 {chest.room}
               </h2>
               <p className="text-muted-foreground mt-0.5 text-sm">
-                {chest.area}
+                {linkedArea ? (
+                  <Link
+                    to="/areas/$id"
+                    params={{ id: String(linkedArea.id) }}
+                    className="text-primary hover:underline"
+                  >
+                    {chest.area}
+                  </Link>
+                ) : (
+                  chest.area
+                )}
               </p>
               {chest.lock_type && (
                 <div className="mt-2 flex items-center justify-center gap-2 text-sm">

@@ -28,6 +28,7 @@ import { Route as BreakArtsRouteRouteImport } from './routes/break-arts/route'
 import { Route as BladesRouteRouteImport } from './routes/blades/route'
 import { Route as BattleAbilitiesRouteRouteImport } from './routes/battle-abilities/route'
 import { Route as ArmorRouteRouteImport } from './routes/armor/route'
+import { Route as AreasRouteRouteImport } from './routes/areas/route'
 import { Route as AccessoriesRouteRouteImport } from './routes/accessories/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkshopsIndexRouteImport } from './routes/workshops/index'
@@ -48,6 +49,7 @@ import { Route as BreakArtsIndexRouteImport } from './routes/break-arts/index'
 import { Route as BladesIndexRouteImport } from './routes/blades/index'
 import { Route as BattleAbilitiesIndexRouteImport } from './routes/battle-abilities/index'
 import { Route as ArmorIndexRouteImport } from './routes/armor/index'
+import { Route as AreasIndexRouteImport } from './routes/areas/index'
 import { Route as AccessoriesIndexRouteImport } from './routes/accessories/index'
 import { Route as WorkshopsIdRouteImport } from './routes/workshops/$id'
 import { Route as TitlesIdRouteImport } from './routes/titles/$id'
@@ -65,6 +67,7 @@ import { Route as BreakArtsIdRouteImport } from './routes/break-arts/$id'
 import { Route as BladesIdRouteImport } from './routes/blades/$id'
 import { Route as BattleAbilitiesIdRouteImport } from './routes/battle-abilities/$id'
 import { Route as ArmorIdRouteImport } from './routes/armor/$id'
+import { Route as AreasIdRouteImport } from './routes/areas/$id'
 import { Route as AccessoriesIdRouteImport } from './routes/accessories/$id'
 
 const MaterialsRoute = MaterialsRouteImport.update({
@@ -160,6 +163,11 @@ const BattleAbilitiesRouteRoute = BattleAbilitiesRouteRouteImport.update({
 const ArmorRouteRoute = ArmorRouteRouteImport.update({
   id: '/armor',
   path: '/armor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AreasRouteRoute = AreasRouteRouteImport.update({
+  id: '/areas',
+  path: '/areas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccessoriesRouteRoute = AccessoriesRouteRouteImport.update({
@@ -262,6 +270,11 @@ const ArmorIndexRoute = ArmorIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ArmorRouteRoute,
 } as any)
+const AreasIndexRoute = AreasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AreasRouteRoute,
+} as any)
 const AccessoriesIndexRoute = AccessoriesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -347,6 +360,11 @@ const ArmorIdRoute = ArmorIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ArmorRouteRoute,
 } as any)
+const AreasIdRoute = AreasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AreasRouteRoute,
+} as any)
 const AccessoriesIdRoute = AccessoriesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -356,6 +374,7 @@ const AccessoriesIdRoute = AccessoriesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accessories': typeof AccessoriesRouteRouteWithChildren
+  '/areas': typeof AreasRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
   '/battle-abilities': typeof BattleAbilitiesRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
@@ -376,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
+  '/areas/$id': typeof AreasIdRoute
   '/armor/$id': typeof ArmorIdRoute
   '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
   '/blades/$id': typeof BladesIdRoute
@@ -393,6 +413,7 @@ export interface FileRoutesByFullPath {
   '/titles/$id': typeof TitlesIdRoute
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
+  '/areas/': typeof AreasIndexRoute
   '/armor/': typeof ArmorIndexRoute
   '/battle-abilities/': typeof BattleAbilitiesIndexRoute
   '/blades/': typeof BladesIndexRoute
@@ -417,6 +438,7 @@ export interface FileRoutesByTo {
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
+  '/areas/$id': typeof AreasIdRoute
   '/armor/$id': typeof ArmorIdRoute
   '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
   '/blades/$id': typeof BladesIdRoute
@@ -434,6 +456,7 @@ export interface FileRoutesByTo {
   '/titles/$id': typeof TitlesIdRoute
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories': typeof AccessoriesIndexRoute
+  '/areas': typeof AreasIndexRoute
   '/armor': typeof ArmorIndexRoute
   '/battle-abilities': typeof BattleAbilitiesIndexRoute
   '/blades': typeof BladesIndexRoute
@@ -457,6 +480,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accessories': typeof AccessoriesRouteRouteWithChildren
+  '/areas': typeof AreasRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
   '/battle-abilities': typeof BattleAbilitiesRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
@@ -477,6 +501,7 @@ export interface FileRoutesById {
   '/material-grid': typeof MaterialGridRoute
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
+  '/areas/$id': typeof AreasIdRoute
   '/armor/$id': typeof ArmorIdRoute
   '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
   '/blades/$id': typeof BladesIdRoute
@@ -494,6 +519,7 @@ export interface FileRoutesById {
   '/titles/$id': typeof TitlesIdRoute
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
+  '/areas/': typeof AreasIndexRoute
   '/armor/': typeof ArmorIndexRoute
   '/battle-abilities/': typeof BattleAbilitiesIndexRoute
   '/blades/': typeof BladesIndexRoute
@@ -518,6 +544,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accessories'
+    | '/areas'
     | '/armor'
     | '/battle-abilities'
     | '/blades'
@@ -538,6 +565,7 @@ export interface FileRouteTypes {
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
+    | '/areas/$id'
     | '/armor/$id'
     | '/battle-abilities/$id'
     | '/blades/$id'
@@ -555,6 +583,7 @@ export interface FileRouteTypes {
     | '/titles/$id'
     | '/workshops/$id'
     | '/accessories/'
+    | '/areas/'
     | '/armor/'
     | '/battle-abilities/'
     | '/blades/'
@@ -579,6 +608,7 @@ export interface FileRouteTypes {
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
+    | '/areas/$id'
     | '/armor/$id'
     | '/battle-abilities/$id'
     | '/blades/$id'
@@ -596,6 +626,7 @@ export interface FileRouteTypes {
     | '/titles/$id'
     | '/workshops/$id'
     | '/accessories'
+    | '/areas'
     | '/armor'
     | '/battle-abilities'
     | '/blades'
@@ -618,6 +649,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/accessories'
+    | '/areas'
     | '/armor'
     | '/battle-abilities'
     | '/blades'
@@ -638,6 +670,7 @@ export interface FileRouteTypes {
     | '/material-grid'
     | '/materials'
     | '/accessories/$id'
+    | '/areas/$id'
     | '/armor/$id'
     | '/battle-abilities/$id'
     | '/blades/$id'
@@ -655,6 +688,7 @@ export interface FileRouteTypes {
     | '/titles/$id'
     | '/workshops/$id'
     | '/accessories/'
+    | '/areas/'
     | '/armor/'
     | '/battle-abilities/'
     | '/blades/'
@@ -678,6 +712,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessoriesRouteRoute: typeof AccessoriesRouteRouteWithChildren
+  AreasRouteRoute: typeof AreasRouteRouteWithChildren
   ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
   BattleAbilitiesRouteRoute: typeof BattleAbilitiesRouteRouteWithChildren
   BladesRouteRoute: typeof BladesRouteRouteWithChildren
@@ -835,6 +870,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArmorRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/areas': {
+      id: '/areas'
+      path: '/areas'
+      fullPath: '/areas'
+      preLoaderRoute: typeof AreasRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accessories': {
       id: '/accessories'
       path: '/accessories'
@@ -975,6 +1017,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArmorIndexRouteImport
       parentRoute: typeof ArmorRouteRoute
     }
+    '/areas/': {
+      id: '/areas/'
+      path: '/'
+      fullPath: '/areas/'
+      preLoaderRoute: typeof AreasIndexRouteImport
+      parentRoute: typeof AreasRouteRoute
+    }
     '/accessories/': {
       id: '/accessories/'
       path: '/'
@@ -1094,6 +1143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArmorIdRouteImport
       parentRoute: typeof ArmorRouteRoute
     }
+    '/areas/$id': {
+      id: '/areas/$id'
+      path: '/$id'
+      fullPath: '/areas/$id'
+      preLoaderRoute: typeof AreasIdRouteImport
+      parentRoute: typeof AreasRouteRoute
+    }
     '/accessories/$id': {
       id: '/accessories/$id'
       path: '/$id'
@@ -1116,6 +1172,20 @@ const AccessoriesRouteRouteChildren: AccessoriesRouteRouteChildren = {
 
 const AccessoriesRouteRouteWithChildren =
   AccessoriesRouteRoute._addFileChildren(AccessoriesRouteRouteChildren)
+
+interface AreasRouteRouteChildren {
+  AreasIdRoute: typeof AreasIdRoute
+  AreasIndexRoute: typeof AreasIndexRoute
+}
+
+const AreasRouteRouteChildren: AreasRouteRouteChildren = {
+  AreasIdRoute: AreasIdRoute,
+  AreasIndexRoute: AreasIndexRoute,
+}
+
+const AreasRouteRouteWithChildren = AreasRouteRoute._addFileChildren(
+  AreasRouteRouteChildren,
+)
 
 interface ArmorRouteRouteChildren {
   ArmorIdRoute: typeof ArmorIdRoute
@@ -1354,6 +1424,7 @@ const WorkshopsRouteRouteWithChildren = WorkshopsRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessoriesRouteRoute: AccessoriesRouteRouteWithChildren,
+  AreasRouteRoute: AreasRouteRouteWithChildren,
   ArmorRouteRoute: ArmorRouteRouteWithChildren,
   BattleAbilitiesRouteRoute: BattleAbilitiesRouteRouteWithChildren,
   BladesRouteRoute: BladesRouteRouteWithChildren,
