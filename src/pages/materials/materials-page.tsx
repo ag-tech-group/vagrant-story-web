@@ -71,9 +71,7 @@ function MaterialCard({ material: m }: { material: Material }) {
   const showShield =
     categories?.includes("Shields") &&
     hasNonZero(m.shield_str, m.shield_int, m.shield_agi)
-  const showArmor =
-    categories?.includes("Armor") &&
-    hasNonZero(m.armor_str, m.armor_int, m.armor_agi)
+  const showArmor = categories?.includes("Armor") ?? false
   const hasOffsets = showBlade || showShield || showArmor
 
   return (
@@ -83,13 +81,7 @@ function MaterialCard({ material: m }: { material: Material }) {
         <MaterialBadge mat={m.name} />
       </div>
 
-      {categories && (
-        <p className="text-muted-foreground text-[11px]">
-          {categories.join(", ")}
-        </p>
-      )}
-
-      {hasOffsets ? (
+      {hasOffsets || categories?.includes("Armor") ? (
         <div className="space-y-1.5">
           {showBlade && (
             <OffsetRow
