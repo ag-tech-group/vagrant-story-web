@@ -121,13 +121,22 @@ function ChestDetail() {
     if (!routePrefix) return null
     const lookup = lookups[item.item_type]
     if (!lookup) return null
-    const itemId = lookup.get(item.item_name)
+    let itemId = lookup.get(item.item_name)
+    // Gem chest items often have a " Gem" suffix (e.g. "Braveheart Gem")
+    // that the gems table doesn't include in the name
+    if (
+      itemId == null &&
+      item.item_type === "gem" &&
+      item.item_name.endsWith(" Gem")
+    ) {
+      itemId = lookup.get(item.item_name.slice(0, -4))
+    }
     if (itemId == null) return null
     return `${routePrefix}/${itemId}`
   }
 
   return (
-    <Card className="border-primary/30 mx-auto max-w-3xl">
+    <Card className="border-primary/30 mx-auto max-w-4xl">
       <CardContent className="pt-6">
         <div className="flex w-full justify-end">
           <Link
