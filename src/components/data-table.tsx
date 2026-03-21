@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "@tanstack/react-router"
+import { Link, useLocation } from "@tanstack/react-router"
 import {
   flexRender,
   getFilteredRowModel,
@@ -38,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 export interface ColumnFilter {
   column: string
@@ -64,6 +65,7 @@ export function DataTable<T>({
   pageSize = 10,
   filters,
 }: DataTableProps<T>) {
+  const location = useLocation()
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -184,10 +186,19 @@ export function DataTable<T>({
                 const link = getRowLink?.(row)
 
                 if (link) {
+                  const resolvedPath = Object.entries(link.params).reduce(
+                    (path, [key, value]) => path.replace(`$${key}`, value),
+                    link.to
+                  )
+                  const isActive = location.pathname === resolvedPath
+
                   return (
                     <TableRow
                       key={row.id}
-                      className="hover:bg-muted/50 cursor-pointer"
+                      className={cn(
+                        "hover:bg-muted/50 cursor-pointer",
+                        isActive && "border-l-primary bg-muted/30 border-l-2"
+                      )}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id} className="p-0">

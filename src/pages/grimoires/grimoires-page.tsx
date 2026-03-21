@@ -61,27 +61,53 @@ export function GrimoiresPage() {
       {
         accessorKey: "areas",
         header: "Area",
-        cell: ({ getValue }) => (
-          <span className="text-sm">{getValue<string>()}</span>
-        ),
+        cell: ({ getValue }) => {
+          const v = getValue<string>()
+          const parts = v.split(", ")
+          if (parts.length <= 1) return <span className="text-sm">{v}</span>
+          return (
+            <span className="text-sm">
+              {parts[0]}{" "}
+              <span className="text-muted-foreground text-xs">
+                (+{parts.length - 1})
+              </span>
+            </span>
+          )
+        },
         enableSorting: false,
       },
       {
         accessorKey: "sources",
         header: "Source",
-        cell: ({ getValue }) => (
-          <span className="text-muted-foreground text-sm">
-            {getValue<string>()}
-          </span>
-        ),
+        cell: ({ getValue }) => {
+          const v = getValue<string>()
+          const parts = v.split(", ")
+          if (parts.length <= 1)
+            return <span className="text-muted-foreground text-sm">{v}</span>
+          return (
+            <span className="text-muted-foreground text-sm">
+              {parts[0]} <span className="text-xs">(+{parts.length - 1})</span>
+            </span>
+          )
+        },
         enableSorting: false,
       },
       {
         accessorKey: "drop_rates",
         header: "Rate",
-        cell: ({ getValue }) => (
-          <span className="text-sm">{getValue<string>()}</span>
-        ),
+        cell: ({ getValue }) => {
+          const v = getValue<string>()
+          const parts = v.split(", ")
+          if (parts.length <= 1) return <span className="text-sm">{v}</span>
+          return (
+            <span className="text-sm">
+              {parts[0]}{" "}
+              <span className="text-muted-foreground text-xs">
+                (+{parts.length - 1})
+              </span>
+            </span>
+          )
+        },
         enableSorting: false,
       },
     ],
