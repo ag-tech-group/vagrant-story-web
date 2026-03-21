@@ -109,6 +109,7 @@ export function CraftingPage() {
           return next
         },
         replace: true,
+        resetScroll: false,
       }),
     [navigate]
   )
