@@ -29,9 +29,9 @@ const ICON_MAP: Record<string, string> = {
   "Bare Hands": "Bare_Hands",
   "Axe/Mace": "Axe",
   // Characters, Titles, Rankings
-  Character: "Accessory",
-  Title: "Sigil",
-  Ranking: "BreakArt",
+  Character: "Character",
+  Title: "Title",
+  Ranking: "Ranking",
   // Others
   Gem: "Gem",
   Grip: "Grip",
