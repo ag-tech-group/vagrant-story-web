@@ -50,6 +50,14 @@ export function HomePage() {
     queryKey: ["materials"],
     queryFn: gameApi.materials,
   })
+  const { data: breakArts = [] } = useQuery({
+    queryKey: ["break-arts"],
+    queryFn: gameApi.breakArts,
+  })
+  const { data: battleAbilities = [] } = useQuery({
+    queryKey: ["battle-abilities"],
+    queryFn: gameApi.battleAbilities,
+  })
 
   const accessories = armor.filter((a) => a.armor_type === "Accessory")
   const armorOnly = armor.filter((a) => a.armor_type !== "Accessory")
@@ -91,6 +99,18 @@ export function HomePage() {
       label: "Consumables",
       icon: "Consumable",
       count: consumables.length,
+    },
+    {
+      to: "/break-arts" as const,
+      label: "Break Arts",
+      icon: "Break Art",
+      count: breakArts.length,
+    },
+    {
+      to: "/battle-abilities" as const,
+      label: "Battle Abilities",
+      icon: "Battle Ability",
+      count: battleAbilities.length,
     },
     {
       to: "/spells" as const,
