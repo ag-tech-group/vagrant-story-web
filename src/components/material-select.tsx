@@ -40,7 +40,7 @@ export function MaterialSelect({
       )}
       <div className="relative">
         <Select value={value ?? ""} onValueChange={(v) => onSelect(v || null)}>
-          <SelectTrigger className="h-10 w-full">
+          <SelectTrigger className="h-auto min-h-12 w-full py-2">
             <SelectValue placeholder="Select material..." />
           </SelectTrigger>
           <SelectContent>

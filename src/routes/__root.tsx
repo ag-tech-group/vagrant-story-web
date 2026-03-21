@@ -81,6 +81,7 @@ const ITEM_LINKS = [
   { to: "/sigils" as const, label: "Sigils" },
   { to: "/grimoires" as const, label: "Grimoires" },
   { to: "/workshops" as const, label: "Workshops" },
+  { to: "/forge" as const, label: "Forge" },
 ]
 
 const NAV_TABS = [
@@ -96,6 +97,7 @@ const NAV_TABS = [
   { to: "/sigils" as const, label: "Sigils", icon: "Sigil" },
   { to: "/grimoires" as const, label: "Grimoires", icon: "Grimoire" },
   { to: "/workshops" as const, label: "Workshops", icon: "Workshop" },
+  { to: "/forge" as const, label: "Forge", icon: "Forge" },
   { to: "/crafting" as const, label: "Crafting", icon: "Crafting" },
   { to: "/material-grid" as const, label: "Material Grid", icon: "Grid" },
 ]
@@ -136,6 +138,12 @@ function RootComponent() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Link
+                to="/forge"
+                className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
+              >
+                Forge
+              </Link>
               <Link
                 to="/crafting"
                 className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
