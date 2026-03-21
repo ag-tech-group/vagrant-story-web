@@ -31,6 +31,9 @@ const ICON_MAP: Record<string, string> = {
   Sigil: "Sigil",
   Grimoire: "Grimoire",
   Workshop: "Workshop",
+  Forge: "Forge",
+  Crafting: "Crafting",
+  Grid: "Grid",
   // Material types (all use ingot icon)
   Wood: "Bronze",
   Leather: "Bronze",

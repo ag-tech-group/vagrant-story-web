@@ -165,42 +165,52 @@ export function HomePage() {
         <section>
           <h2 className="mb-6 text-2xl tracking-wide">Tools</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <Link to="/forge">
+              <Card className="hover:border-primary/40 h-full transition-colors">
+                <CardContent className="flex items-start gap-3 pt-6">
+                  <ItemIcon type="Forge" size="sm" />
+                  <div>
+                    <h3 className="font-sans text-lg font-medium">Forge</h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Equipment builder. Select a blade, armor, or shield with a
+                      material and grip to see combined stats.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
             <Link to="/crafting">
               <Card className="hover:border-primary/40 h-full transition-colors">
-                <CardContent className="pt-6">
-                  <h3 className="font-sans text-lg font-medium">
-                    Crafting Calculator
-                  </h3>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Combine items and see results. Includes reverse lookup to
-                    find recipes for any item.
-                  </p>
+                <CardContent className="flex items-start gap-3 pt-6">
+                  <ItemIcon type="Crafting" size="sm" />
+                  <div>
+                    <h3 className="font-sans text-lg font-medium">
+                      Crafting Calculator
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Combine items and see results. Includes reverse lookup to
+                      find recipes for any item.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </Link>
             <Link to="/material-grid">
               <Card className="hover:border-primary/40 h-full transition-colors">
-                <CardContent className="pt-6">
-                  <h3 className="font-sans text-lg font-medium">
-                    Material Grid
-                  </h3>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Compact grid reference for blade, armor, and shield material
-                    combination tables.
-                  </p>
+                <CardContent className="flex items-start gap-3 pt-6">
+                  <ItemIcon type="Grid" size="sm" />
+                  <div>
+                    <h3 className="font-sans text-lg font-medium">
+                      Material Grid
+                    </h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Compact grid reference for blade, armor, and shield
+                      material combination tables.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </Link>
-            <Card className="opacity-50">
-              <CardContent className="pt-6">
-                <h3 className="font-sans text-lg font-medium">
-                  More Coming Soon
-                </h3>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Spells, skills, enemy data, and more tools are planned.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         </section>
 

@@ -18,6 +18,7 @@ import { Route as KeysRouteRouteImport } from './routes/keys/route'
 import { Route as GripsRouteRouteImport } from './routes/grips/route'
 import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
+import { Route as ForgeRouteRouteImport } from './routes/forge/route'
 import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
 import { Route as BladesRouteRouteImport } from './routes/blades/route'
 import { Route as ArmorRouteRouteImport } from './routes/armor/route'
@@ -30,6 +31,7 @@ import { Route as KeysIndexRouteImport } from './routes/keys/index'
 import { Route as GripsIndexRouteImport } from './routes/grips/index'
 import { Route as GrimoiresIndexRouteImport } from './routes/grimoires/index'
 import { Route as GemsIndexRouteImport } from './routes/gems/index'
+import { Route as ForgeIndexRouteImport } from './routes/forge/index'
 import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
 import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
 import { Route as BladesIndexRouteImport } from './routes/blades/index'
@@ -92,6 +94,11 @@ const GemsRouteRoute = GemsRouteRouteImport.update({
   path: '/gems',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgeRouteRoute = ForgeRouteRouteImport.update({
+  id: '/forge',
+  path: '/forge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
   id: '/consumables',
   path: '/consumables',
@@ -151,6 +158,11 @@ const GemsIndexRoute = GemsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => GemsRouteRoute,
+} as any)
+const ForgeIndexRoute = ForgeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ForgeRouteRoute,
 } as any)
 const CraftingIndexRoute = CraftingIndexRouteImport.update({
   id: '/crafting/',
@@ -239,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/armor': typeof ArmorRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
+  '/forge': typeof ForgeRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
   '/grimoires': typeof GrimoiresRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
@@ -264,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/blades/': typeof BladesIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
+  '/forge/': typeof ForgeIndexRoute
   '/gems/': typeof GemsIndexRoute
   '/grimoires/': typeof GrimoiresIndexRoute
   '/grips/': typeof GripsIndexRoute
@@ -292,6 +306,7 @@ export interface FileRoutesByTo {
   '/blades': typeof BladesIndexRoute
   '/consumables': typeof ConsumablesIndexRoute
   '/crafting': typeof CraftingIndexRoute
+  '/forge': typeof ForgeIndexRoute
   '/gems': typeof GemsIndexRoute
   '/grimoires': typeof GrimoiresIndexRoute
   '/grips': typeof GripsIndexRoute
@@ -307,6 +322,7 @@ export interface FileRoutesById {
   '/armor': typeof ArmorRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
+  '/forge': typeof ForgeRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
   '/grimoires': typeof GrimoiresRouteRouteWithChildren
   '/grips': typeof GripsRouteRouteWithChildren
@@ -332,6 +348,7 @@ export interface FileRoutesById {
   '/blades/': typeof BladesIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
+  '/forge/': typeof ForgeIndexRoute
   '/gems/': typeof GemsIndexRoute
   '/grimoires/': typeof GrimoiresIndexRoute
   '/grips/': typeof GripsIndexRoute
@@ -348,6 +365,7 @@ export interface FileRouteTypes {
     | '/armor'
     | '/blades'
     | '/consumables'
+    | '/forge'
     | '/gems'
     | '/grimoires'
     | '/grips'
@@ -373,6 +391,7 @@ export interface FileRouteTypes {
     | '/blades/'
     | '/consumables/'
     | '/crafting/'
+    | '/forge/'
     | '/gems/'
     | '/grimoires/'
     | '/grips/'
@@ -401,6 +420,7 @@ export interface FileRouteTypes {
     | '/blades'
     | '/consumables'
     | '/crafting'
+    | '/forge'
     | '/gems'
     | '/grimoires'
     | '/grips'
@@ -415,6 +435,7 @@ export interface FileRouteTypes {
     | '/armor'
     | '/blades'
     | '/consumables'
+    | '/forge'
     | '/gems'
     | '/grimoires'
     | '/grips'
@@ -440,6 +461,7 @@ export interface FileRouteTypes {
     | '/blades/'
     | '/consumables/'
     | '/crafting/'
+    | '/forge/'
     | '/gems/'
     | '/grimoires/'
     | '/grips/'
@@ -455,6 +477,7 @@ export interface RootRouteChildren {
   ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
   BladesRouteRoute: typeof BladesRouteRouteWithChildren
   ConsumablesRouteRoute: typeof ConsumablesRouteRouteWithChildren
+  ForgeRouteRoute: typeof ForgeRouteRouteWithChildren
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
   GrimoiresRouteRoute: typeof GrimoiresRouteRouteWithChildren
   GripsRouteRoute: typeof GripsRouteRouteWithChildren
@@ -530,6 +553,13 @@ declare module '@tanstack/react-router' {
       path: '/gems'
       fullPath: '/gems'
       preLoaderRoute: typeof GemsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forge': {
+      id: '/forge'
+      path: '/forge'
+      fullPath: '/forge'
+      preLoaderRoute: typeof ForgeRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consumables': {
@@ -615,6 +645,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/gems/'
       preLoaderRoute: typeof GemsIndexRouteImport
       parentRoute: typeof GemsRouteRoute
+    }
+    '/forge/': {
+      id: '/forge/'
+      path: '/'
+      fullPath: '/forge/'
+      preLoaderRoute: typeof ForgeIndexRouteImport
+      parentRoute: typeof ForgeRouteRoute
     }
     '/crafting/': {
       id: '/crafting/'
@@ -785,6 +822,18 @@ const ConsumablesRouteRouteChildren: ConsumablesRouteRouteChildren = {
 const ConsumablesRouteRouteWithChildren =
   ConsumablesRouteRoute._addFileChildren(ConsumablesRouteRouteChildren)
 
+interface ForgeRouteRouteChildren {
+  ForgeIndexRoute: typeof ForgeIndexRoute
+}
+
+const ForgeRouteRouteChildren: ForgeRouteRouteChildren = {
+  ForgeIndexRoute: ForgeIndexRoute,
+}
+
+const ForgeRouteRouteWithChildren = ForgeRouteRoute._addFileChildren(
+  ForgeRouteRouteChildren,
+)
+
 interface GemsRouteRouteChildren {
   GemsIdRoute: typeof GemsIdRoute
   GemsIndexRoute: typeof GemsIndexRoute
@@ -889,6 +938,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArmorRouteRoute: ArmorRouteRouteWithChildren,
   BladesRouteRoute: BladesRouteRouteWithChildren,
   ConsumablesRouteRoute: ConsumablesRouteRouteWithChildren,
+  ForgeRouteRoute: ForgeRouteRouteWithChildren,
   GemsRouteRoute: GemsRouteRouteWithChildren,
   GrimoiresRouteRoute: GrimoiresRouteRouteWithChildren,
   GripsRouteRoute: GripsRouteRouteWithChildren,

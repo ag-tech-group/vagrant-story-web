@@ -15,6 +15,7 @@ export interface Blade {
   agi: number
   range: number
   damage: number
+  hands: string
 }
 
 export interface Armor {

@@ -90,9 +90,10 @@ export function ItemPicker({
             )}
             <div className="flex items-center gap-1">
               {value && (
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground"
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer"
                   onPointerDown={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -105,7 +106,7 @@ export function ItemPicker({
                   }}
                 >
                   <X className="size-4" />
-                </button>
+                </span>
               )}
               <ChevronsUpDown className="text-muted-foreground size-4" />
             </div>
