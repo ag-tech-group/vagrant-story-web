@@ -38,7 +38,7 @@ export function MaterialsPage() {
   })
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 lg:p-10">
+    <>
       <div>
         <h1 className="text-3xl tracking-wide sm:text-4xl">Materials</h1>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -55,7 +55,7 @@ export function MaterialsPage() {
           ))}
         </div>
       )}
-    </div>
+    </>
   )
 }
 

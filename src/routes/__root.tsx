@@ -85,25 +85,25 @@ const ITEM_LINKS = [
   { to: "/workshops" as const, label: "Workshops" },
 ]
 
+const DATABASE_ROUTES = [
+  "/blades",
+  "/grips",
+  "/armor",
+  "/materials",
+  "/accessories",
+  "/gems",
+  "/consumables",
+  "/break-arts",
+  "/battle-abilities",
+  "/spells",
+  "/grimoires",
+  "/keys",
+  "/sigils",
+  "/workshops",
+]
+
 const NAV_TABS = [
-  { to: "/blades" as const, label: "Blades", icon: "Sword" },
-  { to: "/grips" as const, label: "Grips", icon: "Grip" },
-  { to: "/armor" as const, label: "Armor", icon: "Body" },
-  { to: "/materials" as const, label: "Materials", icon: "Bronze" },
-  { to: "/accessories" as const, label: "Accessories", icon: "Accessory" },
-  { to: "/gems" as const, label: "Gems", icon: "Gem" },
-  { to: "/consumables" as const, label: "Consumables", icon: "Consumable" },
-  { to: "/break-arts" as const, label: "Break Arts", icon: "BreakArt" },
-  {
-    to: "/battle-abilities" as const,
-    label: "Battle Abilities",
-    icon: "BattleAbility",
-  },
-  { to: "/spells" as const, label: "Spells", icon: "Spell" },
-  { to: "/grimoires" as const, label: "Grimoires", icon: "Grimoire" },
-  { to: "/keys" as const, label: "Keys", icon: "Key" },
-  { to: "/sigils" as const, label: "Sigils", icon: "Sigil" },
-  { to: "/workshops" as const, label: "Workshops", icon: "Workshop" },
+  { to: "/blades" as const, label: "Game Database", icon: "Sword" },
   { to: "/forge" as const, label: "Forge", icon: "Forge" },
   { to: "/crafting" as const, label: "Crafting", icon: "Crafting" },
   { to: "/material-grid" as const, label: "Material Grid", icon: "Grid" },
@@ -116,9 +116,14 @@ function RootComponent() {
   const navigate = useNavigate()
   const currentPath = matches[matches.length - 1]?.fullPath ?? "/"
   const showTabs = currentPath !== "/"
-  const activeTab = NAV_TABS.find(
-    (t) => currentPath === t.to || currentPath.startsWith(t.to + "/")
+  const isOnDatabaseRoute = DATABASE_ROUTES.some(
+    (r) => currentPath === r || currentPath.startsWith(r + "/")
   )
+  const activeTab = isOnDatabaseRoute
+    ? NAV_TABS[0]
+    : NAV_TABS.find(
+        (t) => currentPath === t.to || currentPath.startsWith(t.to + "/")
+      )
 
   return (
     <>
@@ -214,7 +219,10 @@ function RootComponent() {
             <div className="border-border/50 hidden gap-0 overflow-x-auto border-t px-4 lg:flex">
               {NAV_TABS.map((tab) => {
                 const isActive =
-                  currentPath === tab.to || currentPath.startsWith(tab.to + "/")
+                  tab.to === "/blades"
+                    ? isOnDatabaseRoute
+                    : currentPath === tab.to ||
+                      currentPath.startsWith(tab.to + "/")
                 return (
                   <Link
                     key={tab.to}
