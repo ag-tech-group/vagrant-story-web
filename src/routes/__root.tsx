@@ -83,6 +83,7 @@ const DATABASE_ROUTES = [
   "/keys",
   "/sigils",
   "/workshops",
+  "/areas",
 ]
 
 const NAV_TABS = [

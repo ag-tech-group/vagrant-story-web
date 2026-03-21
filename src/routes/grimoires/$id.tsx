@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
-import { gameApi, type Spell } from "@/lib/game-api"
+import { gameApi, type Spell, type Area } from "@/lib/game-api"
 
 export const Route = createFileRoute("/grimoires/$id")({
   component: GrimoireDetail,
@@ -22,12 +22,19 @@ function GrimoireDetail() {
     queryFn: gameApi.spells,
   })
 
+  const { data: areas = [] } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: gameApi.areas,
+  })
+
   const item = grimoires.find((g) => g.id === Number(id))
   if (!item) return null
 
+  const areaLookup = new Map(areas.map((a) => [a.name, a]))
+
   const linkedSpell = spells.find((s: Spell) => s.name === item.spell_name)
 
-  const areas = item.areas.split(", ").filter(Boolean)
+  const areaEntries = item.areas.split(", ").filter(Boolean)
   const sources = item.sources.split(", ").filter(Boolean)
   const rates = item.drop_rates.split(", ").filter(Boolean)
 
@@ -75,23 +82,49 @@ function GrimoireDetail() {
                 Sources
               </p>
               <div className="space-y-2">
-                {areas.map((area, i) => (
-                  <div
-                    key={i}
-                    className="bg-muted/50 flex items-center justify-between rounded px-3 py-2 text-sm"
-                  >
-                    <div>
-                      <span>{area}</span>
-                      <span className="text-muted-foreground">
-                        {" "}
-                        — {sources[i] || "Unknown"}
-                      </span>
+                {areaEntries.map((areaEntry, i) => {
+                  // Parse "Area — Room" format
+                  const dashIdx = areaEntry.indexOf(" \u2014 ")
+                  const areaName =
+                    dashIdx >= 0 ? areaEntry.slice(0, dashIdx) : areaEntry
+                  const roomName =
+                    dashIdx >= 0 ? areaEntry.slice(dashIdx + 3) : ""
+                  const matchedArea = areaLookup.get(areaName)
+
+                  return (
+                    <div
+                      key={i}
+                      className="bg-muted/50 flex items-center justify-between rounded px-3 py-2 text-sm"
+                    >
+                      <div>
+                        {matchedArea ? (
+                          <Link
+                            to="/areas/$id"
+                            params={{ id: String(matchedArea.id) }}
+                            className="text-primary hover:underline"
+                          >
+                            {areaName}
+                          </Link>
+                        ) : (
+                          <span>{areaName}</span>
+                        )}
+                        {roomName && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            &mdash; {roomName}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {" "}
+                          — {sources[i] || "Unknown"}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="ml-2 shrink-0">
+                        {rates[i] || "Once"}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="ml-2 shrink-0">
-                      {rates[i] || "Once"}
-                    </Badge>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>

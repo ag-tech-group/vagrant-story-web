@@ -50,6 +50,10 @@ export function HomePage() {
     queryKey: ["workshops"],
     queryFn: gameApi.workshops,
   })
+  const { data: areas = [] } = useQuery({
+    queryKey: ["areas"],
+    queryFn: gameApi.areas,
+  })
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
@@ -158,6 +162,12 @@ export function HomePage() {
       label: "Chests",
       icon: "Chest",
       count: chests.length,
+    },
+    {
+      to: "/areas" as const,
+      label: "Areas",
+      icon: "Area",
+      count: areas.length,
     },
     {
       to: "/characters" as const,

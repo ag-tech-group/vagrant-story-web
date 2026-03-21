@@ -153,11 +153,30 @@ export interface Spell {
   grimoire: string
 }
 
+export interface Area {
+  id: number
+  name: string
+}
+
+export interface Room {
+  id: number
+  name: string
+  area_id: number
+  area_name: string
+}
+
+export interface AreaDetail {
+  id: number
+  name: string
+  rooms: Room[]
+}
+
 export interface Key {
   id: number
   name: string
   area: string
   room: string
+  room_id: number | null
   source: string
   locations_used: string
 }
@@ -167,6 +186,7 @@ export interface Sigil {
   name: string
   area: string
   room: string
+  room_id: number | null
   source: string
   door_unlocks: string
 }
@@ -187,6 +207,7 @@ export interface GrimoireDetail {
   spell_name: string
   area: string
   room: string
+  room_id: number | null
   source: string
   drop_rate: string
   repeatable: boolean
@@ -196,6 +217,7 @@ export interface Workshop {
   id: number
   name: string
   area: string
+  room_id: number | null
   available_materials: string
   description: string
 }
@@ -256,6 +278,7 @@ export interface Chest {
   id: number
   area: string
   room: string
+  room_id: number | null
   lock_type: string | null
 }
 
@@ -293,6 +316,10 @@ async function fetchApi<T>(path: string): Promise<T> {
 }
 
 export const gameApi = {
+  areas: () => fetchApi<Area[]>("/areas?limit=200"),
+  area: (id: number) => fetchApi<AreaDetail>(`/areas/${id}`),
+  rooms: () => fetchApi<Room[]>("/rooms?limit=500"),
+  room: (id: number) => fetchApi<Room>(`/rooms/${id}`),
   blades: () => fetchApi<Blade[]>("/blades?limit=200"),
   blade: (id: number) => fetchApi<Blade>(`/blades/${id}`),
   armor: () => fetchApi<Armor[]>("/armor?limit=200"),

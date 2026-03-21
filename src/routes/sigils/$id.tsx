@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
-import { gameApi } from "@/lib/game-api"
+import { gameApi, type Area } from "@/lib/game-api"
 
 export const Route = createFileRoute("/sigils/$id")({
   component: SigilDetail,
@@ -15,9 +15,15 @@ function SigilDetail() {
     queryKey: ["sigils"],
     queryFn: gameApi.sigils,
   })
+  const { data: areas = [] } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: gameApi.areas,
+  })
 
   const item = sigils.find((s) => s.id === Number(id))
   if (!item) return null
+
+  const linkedArea = areas.find((a) => a.name === item.area)
 
   return (
     <Card className="border-primary/30 mx-auto max-w-3xl">
@@ -46,7 +52,19 @@ function SigilDetail() {
                 <span className="text-muted-foreground font-medium">
                   Found in:
                 </span>{" "}
-                {item.room} ({item.area})
+                {item.room} (
+                {linkedArea ? (
+                  <Link
+                    to="/areas/$id"
+                    params={{ id: String(linkedArea.id) }}
+                    className="text-primary hover:underline"
+                  >
+                    {item.area}
+                  </Link>
+                ) : (
+                  item.area
+                )}
+                )
               </p>
               <p>
                 <span className="text-muted-foreground font-medium">
