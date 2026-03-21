@@ -42,7 +42,7 @@ const ICON_MAP: Record<string, string> = {
   Sigil: "Sigil",
   Grimoire: "Grimoire",
   Chest: "Chest",
-  Area: "Workshop",
+  Area: "Area",
   Workshop: "Workshop",
   Forge: "Forge",
   Crafting: "Crafting",
