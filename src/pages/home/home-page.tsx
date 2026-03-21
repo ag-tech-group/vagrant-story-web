@@ -84,7 +84,7 @@ export function HomePage() {
     {
       to: "/materials" as const,
       label: "Materials",
-      icon: "Material",
+      icon: "Bronze",
       count: materials.length,
     },
     {
@@ -103,13 +103,13 @@ export function HomePage() {
     {
       to: "/break-arts" as const,
       label: "Break Arts",
-      icon: "Break Art",
+      icon: "BreakArt",
       count: breakArts.length,
     },
     {
       to: "/battle-abilities" as const,
       label: "Battle Abilities",
-      icon: "Battle Ability",
+      icon: "BattleAbility",
       count: battleAbilities.length,
     },
     {
@@ -119,22 +119,17 @@ export function HomePage() {
       count: spells.length,
     },
     {
-      to: "/keys" as const,
-      label: "Keys",
-      icon: "Key",
-      count: keys.length,
+      to: "/grimoires" as const,
+      label: "Grimoires",
+      icon: "Grimoire",
+      count: grimoires.length,
     },
+    { to: "/keys" as const, label: "Keys", icon: "Key", count: keys.length },
     {
       to: "/sigils" as const,
       label: "Sigils",
       icon: "Sigil",
       count: sigils.length,
-    },
-    {
-      to: "/grimoires" as const,
-      label: "Grimoires",
-      icon: "Grimoire",
-      count: grimoires.length,
     },
     {
       to: "/workshops" as const,
