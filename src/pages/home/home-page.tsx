@@ -148,16 +148,16 @@ export function HomePage() {
       count: sigils.length,
     },
     {
-      to: "/chests" as const,
-      label: "Chests",
-      icon: "Chest",
-      count: chests.length,
-    },
-    {
       to: "/workshops" as const,
       label: "Workshops",
       icon: "Workshop",
       count: workshops.length,
+    },
+    {
+      to: "/chests" as const,
+      label: "Chests",
+      icon: "Chest",
+      count: chests.length,
     },
     {
       to: "/characters" as const,
