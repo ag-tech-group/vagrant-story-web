@@ -221,6 +221,27 @@ export interface BattleAbility {
   power: string
 }
 
+export interface Character {
+  id: number
+  name: string
+  role: string
+  description: string
+}
+
+export interface Title {
+  id: number
+  number: number
+  name: string
+  requirement: string
+}
+
+export interface Ranking {
+  id: number
+  level: number
+  name: string
+  requirement: string
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -272,6 +293,12 @@ export const gameApi = {
   grimoires: () => fetchApi<Grimoire[]>("/grimoires?limit=500"),
   grimoire: (id: number) => fetchApi<GrimoireDetail>(`/grimoires/${id}`),
   workshops: () => fetchApi<Workshop[]>("/workshops?limit=200"),
+  characters: () => fetchApi<Character[]>("/characters?limit=200"),
+  character: (id: number) => fetchApi<Character>(`/characters/${id}`),
+  titles: () => fetchApi<Title[]>("/titles?limit=200"),
+  title: (id: number) => fetchApi<Title>(`/titles/${id}`),
+  rankings: () => fetchApi<Ranking[]>("/rankings?limit=200"),
+  ranking: (id: number) => fetchApi<Ranking>(`/rankings/${id}`),
   craftingRecipes: (params?: string) =>
     fetchApi<CraftingRecipe[]>(
       `/crafting-recipes${params ? `?${params}` : "?limit=200"}`

@@ -23,6 +23,9 @@ const DATABASE_PAGES = [
   { to: "/keys", label: "Keys", icon: "Key" },
   { to: "/sigils", label: "Sigils", icon: "Sigil" },
   { to: "/workshops", label: "Workshops", icon: "Workshop" },
+  { to: "/characters", label: "Characters", icon: "Character" },
+  { to: "/titles", label: "Titles", icon: "Title" },
+  { to: "/rankings", label: "Rankings", icon: "Ranking" },
 ]
 
 export function DatabaseSelect() {
