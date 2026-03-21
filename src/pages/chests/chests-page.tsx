@@ -22,7 +22,7 @@ const columns: ColumnDef<Chest & { _display: string }>[] = [
     header: "Room",
     cell: ({ getValue }) => {
       const v = getValue<string>()
-      return <span className="text-sm">{v}</span>
+      return <span className="min-w-44 text-sm">{v}</span>
     },
   },
   {
