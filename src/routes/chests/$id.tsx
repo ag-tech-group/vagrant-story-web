@@ -148,10 +148,10 @@ function ChestDetail() {
         </div>
 
         <div className="flex flex-col gap-6 sm:flex-row">
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex shrink-0 flex-col items-center gap-3 sm:w-44">
             <ItemIcon type="Chest" size="lg" className="rounded-lg" />
             <div className="text-center">
-              <h2 className="text-2xl font-medium tracking-wide">
+              <h2 className="text-xl font-medium tracking-wide">
                 {chest.room}
               </h2>
               <p className="text-muted-foreground mt-0.5 text-sm">
