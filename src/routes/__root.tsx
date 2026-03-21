@@ -93,11 +93,11 @@ const NAV_TABS = [
   { to: "/accessories" as const, label: "Accessories", icon: "Accessory" },
   { to: "/gems" as const, label: "Gems", icon: "Gem" },
   { to: "/consumables" as const, label: "Consumables", icon: "Consumable" },
-  { to: "/break-arts" as const, label: "Break Arts", icon: "Break Art" },
+  { to: "/break-arts" as const, label: "Break Arts", icon: "BreakArt" },
   {
     to: "/battle-abilities" as const,
     label: "Battle Abilities",
-    icon: "Battle Ability",
+    icon: "BattleAbility",
   },
   { to: "/spells" as const, label: "Spells", icon: "Spell" },
   { to: "/grimoires" as const, label: "Grimoires", icon: "Grimoire" },
