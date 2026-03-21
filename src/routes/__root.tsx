@@ -203,7 +203,7 @@ function RootComponent() {
         {showTabs && (
           <>
             {/* Desktop: tab row with icons */}
-            <div className="border-border/50 hidden gap-0 overflow-x-auto border-t px-4 sm:flex">
+            <div className="border-border/50 hidden gap-0 overflow-x-auto border-t px-4 lg:flex">
               {NAV_TABS.map((tab) => {
                 const isActive =
                   currentPath === tab.to || currentPath.startsWith(tab.to + "/")
@@ -232,7 +232,7 @@ function RootComponent() {
               })}
             </div>
             {/* Mobile: select dropdown */}
-            <div className="border-border/50 border-t px-4 py-2 sm:hidden">
+            <div className="border-border/50 border-t px-4 py-2 lg:hidden">
               <Select
                 value={activeTab?.to ?? NAV_TABS[0].to}
                 onValueChange={(v) => navigate({ to: v })}
@@ -258,15 +258,14 @@ function RootComponent() {
       <div
         className={cn(
           "relative flex min-h-screen flex-col",
-          showTabs ? "pt-[6.25rem]" : "pt-14"
+          showTabs ? "pt-[6.75rem] lg:pt-[6.25rem]" : "pt-14"
         )}
       >
         <div
-          className="pointer-events-none fixed inset-0 z-0 bg-center bg-no-repeat opacity-[0.04]"
+          className="pointer-events-none fixed inset-0 z-0 bg-center bg-no-repeat opacity-[0.04] brightness-0 dark:invert"
           style={{
             backgroundImage: "url(/rood-inverse.svg)",
             backgroundSize: "auto 80vh",
-            filter: "brightness(0) invert(1)",
           }}
         />
         <div className="relative z-10 flex flex-1 flex-col">
