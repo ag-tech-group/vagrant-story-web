@@ -18,7 +18,7 @@ const MAT_BADGE_COLORS: Record<string, string> = {
 }
 
 const ABILITY_TYPE_COLORS: Record<string, string> = {
-  Chain: "bg-red-600/60 text-red-100 border-red-500/50",
+  Chain: "bg-orange-600/60 text-orange-100 border-orange-500/50",
   Defense: "bg-blue-600/60 text-blue-100 border-blue-500/50",
 }
 

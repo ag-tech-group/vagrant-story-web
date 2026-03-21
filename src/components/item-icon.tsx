@@ -22,10 +22,12 @@ const ICON_MAP: Record<string, string> = {
   Shield: "Shield",
   Accessory: "Accessory",
   // Break Arts & Battle Abilities
-  "Break Art": "Sword",
-  BreakArt: "Sword",
-  "Battle Ability": "Shield",
-  BattleAbility: "Shield",
+  "Break Art": "BreakArt",
+  BreakArt: "BreakArt",
+  "Battle Ability": "BattleAbility",
+  BattleAbility: "BattleAbility",
+  "Bare Hands": "Bare_Hands",
+  "Axe/Mace": "Axe",
   // Others
   Gem: "Gem",
   Grip: "Grip",
