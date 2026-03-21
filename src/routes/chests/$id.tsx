@@ -136,7 +136,7 @@ function ChestDetail() {
   }
 
   return (
-    <Card className="border-primary/30 mx-auto max-w-3xl">
+    <Card className="border-primary/30 mx-auto max-w-6xl">
       <CardContent className="pt-6">
         <div className="flex w-full justify-end">
           <Link
@@ -147,8 +147,8 @@ function ChestDetail() {
           </Link>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col gap-6 sm:flex-row">
+          <div className="flex shrink-0 flex-col items-center gap-3 sm:w-48">
             <ItemIcon type="Chest" size="lg" className="rounded-lg" />
             <div className="text-center">
               <h2 className="text-2xl font-medium tracking-wide">
@@ -166,58 +166,62 @@ function ChestDetail() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              Contents ({chest.items.length} items)
-            </p>
-            <div className="divide-border divide-y">
-              {chest.items.map((item) => {
-                const link = getItemLink(item)
-                const content = (
-                  <div className="flex items-center gap-3 py-2">
-                    <ItemIcon
-                      type={ICON_MAP[item.item_type] ?? "Gem"}
-                      size="sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium">
-                        {item.item_name}
-                      </span>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                        {item.material && <MaterialBadge mat={item.material} />}
-                        {item.gem_slots != null && item.gem_slots > 0 && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            {item.gem_slots} gem{" "}
-                            {item.gem_slots === 1 ? "slot" : "slots"}
-                          </Badge>
-                        )}
-                        {item.quantity > 1 && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            x{item.quantity}
-                          </Badge>
-                        )}
-                        <span className="text-muted-foreground text-[10px] capitalize">
-                          {item.item_type}
+          <div className="min-w-0 flex-1">
+            <div className="space-y-1.5">
+              <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                Contents ({chest.items.length} items)
+              </p>
+              <div className="divide-border divide-y">
+                {chest.items.map((item) => {
+                  const link = getItemLink(item)
+                  const content = (
+                    <div className="flex items-center gap-3 p-3">
+                      <ItemIcon
+                        type={ICON_MAP[item.item_type] ?? "Gem"}
+                        size="sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-medium">
+                          {item.item_name}
                         </span>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          {item.material && (
+                            <MaterialBadge mat={item.material} />
+                          )}
+                          {item.gem_slots != null && item.gem_slots > 0 && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {item.gem_slots} gem{" "}
+                              {item.gem_slots === 1 ? "slot" : "slots"}
+                            </Badge>
+                          )}
+                          {item.quantity > 1 && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              x{item.quantity}
+                            </Badge>
+                          )}
+                          <span className="text-muted-foreground text-[10px] capitalize">
+                            {item.item_type}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-
-                if (link) {
-                  return (
-                    <Link
-                      key={item.id}
-                      to={link}
-                      className="hover:bg-muted/50 -mx-2 block rounded px-2 transition-colors"
-                    >
-                      {content}
-                    </Link>
                   )
-                }
 
-                return <div key={item.id}>{content}</div>
-              })}
+                  if (link) {
+                    return (
+                      <Link
+                        key={item.id}
+                        to={link}
+                        className="hover:bg-muted/50 -mx-2 block rounded px-2 transition-colors"
+                      >
+                        {content}
+                      </Link>
+                    )
+                  }
+
+                  return <div key={item.id}>{content}</div>
+                })}
+              </div>
             </div>
           </div>
         </div>
