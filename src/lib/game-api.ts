@@ -200,6 +200,27 @@ export interface Workshop {
   description: string
 }
 
+export interface BreakArt {
+  id: number
+  name: string
+  weapon_type: string
+  hp_cost: number
+  attack_multiplier: string
+  damage_type: string
+  affinity: string
+  special_effect: string | null
+  kills_required: number
+}
+
+export interface BattleAbility {
+  id: number
+  name: string
+  ability_type: string
+  risk_cost: number
+  effect: string
+  power: string
+}
+
 export interface CraftingRecipe {
   id: number
   category: string
@@ -238,6 +259,12 @@ export const gameApi = {
   gems: () => fetchApi<Gem[]>("/gems?limit=200"),
   grips: () => fetchApi<Grip[]>("/grips?limit=200"),
   consumables: () => fetchApi<Consumable[]>("/consumables?limit=200"),
+  breakArts: () => fetchApi<BreakArt[]>("/break-arts?limit=200"),
+  breakArt: (id: number) => fetchApi<BreakArt>(`/break-arts/${id}`),
+  battleAbilities: () =>
+    fetchApi<BattleAbility[]>("/battle-abilities?limit=200"),
+  battleAbility: (id: number) =>
+    fetchApi<BattleAbility>(`/battle-abilities/${id}`),
   spells: () => fetchApi<Spell[]>("/spells?limit=200"),
   spell: (id: number) => fetchApi<Spell>(`/spells/${id}`),
   keys: () => fetchApi<Key[]>("/keys?limit=200"),

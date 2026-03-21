@@ -17,12 +17,30 @@ const MAT_BADGE_COLORS: Record<string, string> = {
   Damascus: "bg-purple-600/60 text-purple-100 border-purple-500/50",
 }
 
+const ABILITY_TYPE_COLORS: Record<string, string> = {
+  Chain: "bg-red-600/60 text-red-100 border-red-500/50",
+  Defense: "bg-blue-600/60 text-blue-100 border-blue-500/50",
+}
+
 const SPELL_CATEGORY_COLORS: Record<string, string> = {
   Warlock: "bg-orange-600/60 text-orange-100 border-orange-500/50",
   Shaman: "bg-emerald-600/60 text-emerald-100 border-emerald-500/50",
   Sorcerer: "bg-blue-600/60 text-blue-100 border-blue-500/50",
   Enchanter: "bg-purple-600/60 text-purple-100 border-purple-500/50",
   Teleportation: "bg-gray-500/60 text-gray-100 border-gray-400/50",
+}
+
+export function AbilityTypeBadge({ type }: { type: string }) {
+  const colors = ABILITY_TYPE_COLORS[type]
+  if (!colors)
+    return <span className="text-muted-foreground text-sm">{type}</span>
+  return (
+    <span
+      className={cn("rounded border px-1.5 py-0.5 text-xs font-medium", colors)}
+    >
+      {type}
+    </span>
+  )
 }
 
 export function SpellCategoryBadge({ category }: { category: string }) {

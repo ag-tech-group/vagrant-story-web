@@ -20,7 +20,9 @@ import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
 import { Route as GemsRouteRouteImport } from './routes/gems/route'
 import { Route as ForgeRouteRouteImport } from './routes/forge/route'
 import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
+import { Route as BreakArtsRouteRouteImport } from './routes/break-arts/route'
 import { Route as BladesRouteRouteImport } from './routes/blades/route'
+import { Route as BattleAbilitiesRouteRouteImport } from './routes/battle-abilities/route'
 import { Route as ArmorRouteRouteImport } from './routes/armor/route'
 import { Route as AccessoriesRouteRouteImport } from './routes/accessories/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -34,7 +36,9 @@ import { Route as GemsIndexRouteImport } from './routes/gems/index'
 import { Route as ForgeIndexRouteImport } from './routes/forge/index'
 import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
 import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
+import { Route as BreakArtsIndexRouteImport } from './routes/break-arts/index'
 import { Route as BladesIndexRouteImport } from './routes/blades/index'
+import { Route as BattleAbilitiesIndexRouteImport } from './routes/battle-abilities/index'
 import { Route as ArmorIndexRouteImport } from './routes/armor/index'
 import { Route as AccessoriesIndexRouteImport } from './routes/accessories/index'
 import { Route as WorkshopsIdRouteImport } from './routes/workshops/$id'
@@ -45,7 +49,9 @@ import { Route as GripsIdRouteImport } from './routes/grips/$id'
 import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
 import { Route as GemsIdRouteImport } from './routes/gems/$id'
 import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
+import { Route as BreakArtsIdRouteImport } from './routes/break-arts/$id'
 import { Route as BladesIdRouteImport } from './routes/blades/$id'
+import { Route as BattleAbilitiesIdRouteImport } from './routes/battle-abilities/$id'
 import { Route as ArmorIdRouteImport } from './routes/armor/$id'
 import { Route as AccessoriesIdRouteImport } from './routes/accessories/$id'
 
@@ -104,9 +110,19 @@ const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
   path: '/consumables',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BreakArtsRouteRoute = BreakArtsRouteRouteImport.update({
+  id: '/break-arts',
+  path: '/break-arts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BladesRouteRoute = BladesRouteRouteImport.update({
   id: '/blades',
   path: '/blades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BattleAbilitiesRouteRoute = BattleAbilitiesRouteRouteImport.update({
+  id: '/battle-abilities',
+  path: '/battle-abilities',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArmorRouteRoute = ArmorRouteRouteImport.update({
@@ -174,10 +190,20 @@ const ConsumablesIndexRoute = ConsumablesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ConsumablesRouteRoute,
 } as any)
+const BreakArtsIndexRoute = BreakArtsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BreakArtsRouteRoute,
+} as any)
 const BladesIndexRoute = BladesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => BladesRouteRoute,
+} as any)
+const BattleAbilitiesIndexRoute = BattleAbilitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BattleAbilitiesRouteRoute,
 } as any)
 const ArmorIndexRoute = ArmorIndexRouteImport.update({
   id: '/',
@@ -229,10 +255,20 @@ const ConsumablesIdRoute = ConsumablesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ConsumablesRouteRoute,
 } as any)
+const BreakArtsIdRoute = BreakArtsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BreakArtsRouteRoute,
+} as any)
 const BladesIdRoute = BladesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => BladesRouteRoute,
+} as any)
+const BattleAbilitiesIdRoute = BattleAbilitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BattleAbilitiesRouteRoute,
 } as any)
 const ArmorIdRoute = ArmorIdRouteImport.update({
   id: '/$id',
@@ -249,7 +285,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accessories': typeof AccessoriesRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
+  '/battle-abilities': typeof BattleAbilitiesRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
+  '/break-arts': typeof BreakArtsRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/forge': typeof ForgeRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
@@ -263,7 +301,9 @@ export interface FileRoutesByFullPath {
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
   '/armor/$id': typeof ArmorIdRoute
+  '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
   '/blades/$id': typeof BladesIdRoute
+  '/break-arts/$id': typeof BreakArtsIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -274,7 +314,9 @@ export interface FileRoutesByFullPath {
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
   '/armor/': typeof ArmorIndexRoute
+  '/battle-abilities/': typeof BattleAbilitiesIndexRoute
   '/blades/': typeof BladesIndexRoute
+  '/break-arts/': typeof BreakArtsIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/forge/': typeof ForgeIndexRoute
@@ -292,7 +334,9 @@ export interface FileRoutesByTo {
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
   '/armor/$id': typeof ArmorIdRoute
+  '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
   '/blades/$id': typeof BladesIdRoute
+  '/break-arts/$id': typeof BreakArtsIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -303,7 +347,9 @@ export interface FileRoutesByTo {
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories': typeof AccessoriesIndexRoute
   '/armor': typeof ArmorIndexRoute
+  '/battle-abilities': typeof BattleAbilitiesIndexRoute
   '/blades': typeof BladesIndexRoute
+  '/break-arts': typeof BreakArtsIndexRoute
   '/consumables': typeof ConsumablesIndexRoute
   '/crafting': typeof CraftingIndexRoute
   '/forge': typeof ForgeIndexRoute
@@ -320,7 +366,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accessories': typeof AccessoriesRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
+  '/battle-abilities': typeof BattleAbilitiesRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
+  '/break-arts': typeof BreakArtsRouteRouteWithChildren
   '/consumables': typeof ConsumablesRouteRouteWithChildren
   '/forge': typeof ForgeRouteRouteWithChildren
   '/gems': typeof GemsRouteRouteWithChildren
@@ -334,7 +382,9 @@ export interface FileRoutesById {
   '/materials': typeof MaterialsRoute
   '/accessories/$id': typeof AccessoriesIdRoute
   '/armor/$id': typeof ArmorIdRoute
+  '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
   '/blades/$id': typeof BladesIdRoute
+  '/break-arts/$id': typeof BreakArtsIdRoute
   '/consumables/$id': typeof ConsumablesIdRoute
   '/gems/$id': typeof GemsIdRoute
   '/grimoires/$id': typeof GrimoiresIdRoute
@@ -345,7 +395,9 @@ export interface FileRoutesById {
   '/workshops/$id': typeof WorkshopsIdRoute
   '/accessories/': typeof AccessoriesIndexRoute
   '/armor/': typeof ArmorIndexRoute
+  '/battle-abilities/': typeof BattleAbilitiesIndexRoute
   '/blades/': typeof BladesIndexRoute
+  '/break-arts/': typeof BreakArtsIndexRoute
   '/consumables/': typeof ConsumablesIndexRoute
   '/crafting/': typeof CraftingIndexRoute
   '/forge/': typeof ForgeIndexRoute
@@ -363,7 +415,9 @@ export interface FileRouteTypes {
     | '/'
     | '/accessories'
     | '/armor'
+    | '/battle-abilities'
     | '/blades'
+    | '/break-arts'
     | '/consumables'
     | '/forge'
     | '/gems'
@@ -377,7 +431,9 @@ export interface FileRouteTypes {
     | '/materials'
     | '/accessories/$id'
     | '/armor/$id'
+    | '/battle-abilities/$id'
     | '/blades/$id'
+    | '/break-arts/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -388,7 +444,9 @@ export interface FileRouteTypes {
     | '/workshops/$id'
     | '/accessories/'
     | '/armor/'
+    | '/battle-abilities/'
     | '/blades/'
+    | '/break-arts/'
     | '/consumables/'
     | '/crafting/'
     | '/forge/'
@@ -406,7 +464,9 @@ export interface FileRouteTypes {
     | '/materials'
     | '/accessories/$id'
     | '/armor/$id'
+    | '/battle-abilities/$id'
     | '/blades/$id'
+    | '/break-arts/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -417,7 +477,9 @@ export interface FileRouteTypes {
     | '/workshops/$id'
     | '/accessories'
     | '/armor'
+    | '/battle-abilities'
     | '/blades'
+    | '/break-arts'
     | '/consumables'
     | '/crafting'
     | '/forge'
@@ -433,7 +495,9 @@ export interface FileRouteTypes {
     | '/'
     | '/accessories'
     | '/armor'
+    | '/battle-abilities'
     | '/blades'
+    | '/break-arts'
     | '/consumables'
     | '/forge'
     | '/gems'
@@ -447,7 +511,9 @@ export interface FileRouteTypes {
     | '/materials'
     | '/accessories/$id'
     | '/armor/$id'
+    | '/battle-abilities/$id'
     | '/blades/$id'
+    | '/break-arts/$id'
     | '/consumables/$id'
     | '/gems/$id'
     | '/grimoires/$id'
@@ -458,7 +524,9 @@ export interface FileRouteTypes {
     | '/workshops/$id'
     | '/accessories/'
     | '/armor/'
+    | '/battle-abilities/'
     | '/blades/'
+    | '/break-arts/'
     | '/consumables/'
     | '/crafting/'
     | '/forge/'
@@ -475,7 +543,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccessoriesRouteRoute: typeof AccessoriesRouteRouteWithChildren
   ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
+  BattleAbilitiesRouteRoute: typeof BattleAbilitiesRouteRouteWithChildren
   BladesRouteRoute: typeof BladesRouteRouteWithChildren
+  BreakArtsRouteRoute: typeof BreakArtsRouteRouteWithChildren
   ConsumablesRouteRoute: typeof ConsumablesRouteRouteWithChildren
   ForgeRouteRoute: typeof ForgeRouteRouteWithChildren
   GemsRouteRoute: typeof GemsRouteRouteWithChildren
@@ -569,11 +639,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/break-arts': {
+      id: '/break-arts'
+      path: '/break-arts'
+      fullPath: '/break-arts'
+      preLoaderRoute: typeof BreakArtsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blades': {
       id: '/blades'
       path: '/blades'
       fullPath: '/blades'
       preLoaderRoute: typeof BladesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/battle-abilities': {
+      id: '/battle-abilities'
+      path: '/battle-abilities'
+      fullPath: '/battle-abilities'
+      preLoaderRoute: typeof BattleAbilitiesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/armor': {
@@ -667,12 +751,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesIndexRouteImport
       parentRoute: typeof ConsumablesRouteRoute
     }
+    '/break-arts/': {
+      id: '/break-arts/'
+      path: '/'
+      fullPath: '/break-arts/'
+      preLoaderRoute: typeof BreakArtsIndexRouteImport
+      parentRoute: typeof BreakArtsRouteRoute
+    }
     '/blades/': {
       id: '/blades/'
       path: '/'
       fullPath: '/blades/'
       preLoaderRoute: typeof BladesIndexRouteImport
       parentRoute: typeof BladesRouteRoute
+    }
+    '/battle-abilities/': {
+      id: '/battle-abilities/'
+      path: '/'
+      fullPath: '/battle-abilities/'
+      preLoaderRoute: typeof BattleAbilitiesIndexRouteImport
+      parentRoute: typeof BattleAbilitiesRouteRoute
     }
     '/armor/': {
       id: '/armor/'
@@ -744,12 +842,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsumablesIdRouteImport
       parentRoute: typeof ConsumablesRouteRoute
     }
+    '/break-arts/$id': {
+      id: '/break-arts/$id'
+      path: '/$id'
+      fullPath: '/break-arts/$id'
+      preLoaderRoute: typeof BreakArtsIdRouteImport
+      parentRoute: typeof BreakArtsRouteRoute
+    }
     '/blades/$id': {
       id: '/blades/$id'
       path: '/$id'
       fullPath: '/blades/$id'
       preLoaderRoute: typeof BladesIdRouteImport
       parentRoute: typeof BladesRouteRoute
+    }
+    '/battle-abilities/$id': {
+      id: '/battle-abilities/$id'
+      path: '/$id'
+      fullPath: '/battle-abilities/$id'
+      preLoaderRoute: typeof BattleAbilitiesIdRouteImport
+      parentRoute: typeof BattleAbilitiesRouteRoute
     }
     '/armor/$id': {
       id: '/armor/$id'
@@ -795,6 +907,19 @@ const ArmorRouteRouteWithChildren = ArmorRouteRoute._addFileChildren(
   ArmorRouteRouteChildren,
 )
 
+interface BattleAbilitiesRouteRouteChildren {
+  BattleAbilitiesIdRoute: typeof BattleAbilitiesIdRoute
+  BattleAbilitiesIndexRoute: typeof BattleAbilitiesIndexRoute
+}
+
+const BattleAbilitiesRouteRouteChildren: BattleAbilitiesRouteRouteChildren = {
+  BattleAbilitiesIdRoute: BattleAbilitiesIdRoute,
+  BattleAbilitiesIndexRoute: BattleAbilitiesIndexRoute,
+}
+
+const BattleAbilitiesRouteRouteWithChildren =
+  BattleAbilitiesRouteRoute._addFileChildren(BattleAbilitiesRouteRouteChildren)
+
 interface BladesRouteRouteChildren {
   BladesIdRoute: typeof BladesIdRoute
   BladesIndexRoute: typeof BladesIndexRoute
@@ -807,6 +932,20 @@ const BladesRouteRouteChildren: BladesRouteRouteChildren = {
 
 const BladesRouteRouteWithChildren = BladesRouteRoute._addFileChildren(
   BladesRouteRouteChildren,
+)
+
+interface BreakArtsRouteRouteChildren {
+  BreakArtsIdRoute: typeof BreakArtsIdRoute
+  BreakArtsIndexRoute: typeof BreakArtsIndexRoute
+}
+
+const BreakArtsRouteRouteChildren: BreakArtsRouteRouteChildren = {
+  BreakArtsIdRoute: BreakArtsIdRoute,
+  BreakArtsIndexRoute: BreakArtsIndexRoute,
+}
+
+const BreakArtsRouteRouteWithChildren = BreakArtsRouteRoute._addFileChildren(
+  BreakArtsRouteRouteChildren,
 )
 
 interface ConsumablesRouteRouteChildren {
@@ -936,7 +1075,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccessoriesRouteRoute: AccessoriesRouteRouteWithChildren,
   ArmorRouteRoute: ArmorRouteRouteWithChildren,
+  BattleAbilitiesRouteRoute: BattleAbilitiesRouteRouteWithChildren,
   BladesRouteRoute: BladesRouteRouteWithChildren,
+  BreakArtsRouteRoute: BreakArtsRouteRouteWithChildren,
   ConsumablesRouteRoute: ConsumablesRouteRouteWithChildren,
   ForgeRouteRoute: ForgeRouteRouteWithChildren,
   GemsRouteRoute: GemsRouteRouteWithChildren,
