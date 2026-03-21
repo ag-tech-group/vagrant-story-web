@@ -81,7 +81,6 @@ const ITEM_LINKS = [
   { to: "/sigils" as const, label: "Sigils" },
   { to: "/grimoires" as const, label: "Grimoires" },
   { to: "/workshops" as const, label: "Workshops" },
-  { to: "/forge" as const, label: "Forge" },
 ]
 
 const NAV_TABS = [
@@ -127,7 +126,7 @@ function RootComponent() {
             <div className="hidden items-center gap-4 text-sm md:flex">
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-                  Items
+                  Game Database
                   <ChevronDown className="size-3.5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">

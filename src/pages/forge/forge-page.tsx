@@ -17,6 +17,7 @@ import {
   gameApi,
   type Armor,
   type Blade,
+  type Gem,
   type Grip,
   type Material,
 } from "@/lib/game-api"
@@ -73,6 +74,7 @@ export function ForgePage() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null)
   const [selectedGrip, setSelectedGrip] = useState<string | null>(null)
+  const [selectedGems, setSelectedGems] = useState<(string | null)[]>([])
   const [categoryFilter, setCategoryFilter] = useState("all")
 
   const handleCategoryChange = (value: string) => {
@@ -80,6 +82,7 @@ export function ForgePage() {
     setSelectedItem(null)
     setSelectedMaterial(null)
     setSelectedGrip(null)
+    setSelectedGems([])
   }
 
   const { data: blades = [] } = useQuery({
@@ -97,6 +100,10 @@ export function ForgePage() {
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
+  })
+  const { data: gems = [] } = useQuery({
+    queryKey: ["gems"],
+    queryFn: gameApi.gems,
   })
 
   const fmt = (s: string) => s.replace(/_/g, " ")
@@ -128,6 +135,12 @@ export function ForgePage() {
     for (const m of materials) map.set(m.name, m)
     return map
   }, [materials])
+
+  const gemMap = useMemo(() => {
+    const map = new Map<string, Gem>()
+    for (const g of gems) map.set(fmt(g.field_name), g)
+    return map
+  }, [gems])
 
   // Build picker items
   const allItems: PickerItem[] = useMemo(() => {
@@ -204,6 +217,57 @@ export function ForgePage() {
     }))
   }, [mode, selectedItem, bladeMap, grips])
 
+  // Get available gem slots count
+  const gemSlotCount = useMemo(() => {
+    if (!selectedItem || !mode) return 0
+    if (mode === "blade") {
+      const grip = selectedGrip ? gripMap.get(selectedGrip) : null
+      return grip?.gem_slots ?? 0
+    }
+    const armorItem = armorMap.get(selectedItem)
+    return armorItem?.gem_slots ?? 0
+  }, [selectedItem, selectedGrip, mode, gripMap, armorMap])
+
+  // Filter gems by compatibility
+  const availableGems = useMemo(() => {
+    return gems.filter((g) => {
+      if (mode === "blade")
+        return g.gem_type === "Weapon" || g.gem_type === "Both"
+      return g.gem_type === "Armor" || g.gem_type === "Both"
+    })
+  }, [gems, mode])
+
+  // Sum selected gem stats
+  const gemTotals = useMemo(() => {
+    const totals = {
+      str: 0,
+      int: 0,
+      agi: 0,
+      human: 0,
+      beast: 0,
+      undead: 0,
+      phantom: 0,
+      dragon: 0,
+      evil: 0,
+      physical: 0,
+      fire: 0,
+      water: 0,
+      wind: 0,
+      earth: 0,
+      light: 0,
+      dark: 0,
+    }
+    for (const name of selectedGems) {
+      if (!name) continue
+      const gem = gemMap.get(name)
+      if (!gem) continue
+      for (const key of Object.keys(totals) as (keyof typeof totals)[]) {
+        totals[key] += gem[key]
+      }
+    }
+    return totals
+  }, [selectedGems, gemMap])
+
   // Compute combined stats
   const combinedStats = useMemo(() => {
     if (!selectedItem || !selectedMaterial) return null
@@ -218,9 +282,9 @@ export function ForgePage() {
 
       return {
         mode: "blade" as const,
-        str: blade.str + mat.blade_str + (grip?.str ?? 0),
-        int: blade.int + mat.blade_int + (grip?.int ?? 0),
-        agi: blade.agi + mat.blade_agi + (grip?.agi ?? 0),
+        str: blade.str + mat.blade_str + (grip?.str ?? 0) + gemTotals.str,
+        int: blade.int + mat.blade_int + (grip?.int ?? 0) + gemTotals.int,
+        agi: blade.agi + mat.blade_agi + (grip?.agi ?? 0) + gemTotals.agi,
         range: blade.range,
         risk: blade.risk,
         damage_type: blade.damage_type,
@@ -236,9 +300,9 @@ export function ForgePage() {
       if (!armorItem) return null
       return {
         mode: "armor" as const,
-        str: armorItem.str + mat.armor_str,
-        int: armorItem.int + mat.armor_int,
-        agi: armorItem.agi + mat.armor_agi,
+        str: armorItem.str + mat.armor_str + gemTotals.str,
+        int: armorItem.int + mat.armor_int + gemTotals.int,
+        agi: armorItem.agi + mat.armor_agi + gemTotals.agi,
         gem_slots: armorItem.gem_slots,
       }
     }
@@ -248,9 +312,9 @@ export function ForgePage() {
       if (!shield) return null
       return {
         mode: "shield" as const,
-        str: shield.str + mat.shield_str,
-        int: shield.int + mat.shield_int,
-        agi: shield.agi + mat.shield_agi,
+        str: shield.str + mat.shield_str + gemTotals.str,
+        int: shield.int + mat.shield_int + gemTotals.int,
+        agi: shield.agi + mat.shield_agi + gemTotals.agi,
         gem_slots: shield.gem_slots,
       }
     }
@@ -265,18 +329,35 @@ export function ForgePage() {
     armorMap,
     gripMap,
     materialMap,
+    gemTotals,
   ])
 
   function handleItemSelect(name: string | null) {
     setSelectedItem(name)
     setSelectedMaterial(null)
     setSelectedGrip(null)
+    setSelectedGems([])
+  }
+
+  function handleGripSelect(name: string | null) {
+    setSelectedGrip(name)
+    setSelectedGems([])
+  }
+
+  function handleGemSelect(slotIndex: number, gemName: string | null) {
+    setSelectedGems((prev) => {
+      const next = [...prev]
+      while (next.length <= slotIndex) next.push(null)
+      next[slotIndex] = gemName
+      return next
+    })
   }
 
   function handleReset() {
     setSelectedItem(null)
     setSelectedMaterial(null)
     setSelectedGrip(null)
+    setSelectedGems([])
     setCategoryFilter("all")
   }
 
@@ -344,10 +425,48 @@ export function ForgePage() {
                 <GripPicker
                   grips={compatibleGrips}
                   value={selectedGrip}
-                  onSelect={setSelectedGrip}
+                  onSelect={handleGripSelect}
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Gem selectors */}
+        {gemSlotCount > 0 && selectedMaterial && (
+          <div className="mx-auto max-w-xl">
+            <span className="text-muted-foreground mb-1 block text-xs font-medium">
+              Gems ({gemSlotCount} slot{gemSlotCount !== 1 ? "s" : ""})
+            </span>
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: gemSlotCount }, (_, i) => (
+                <Select
+                  key={i}
+                  value={selectedGems[i] ?? "__none__"}
+                  onValueChange={(v) =>
+                    handleGemSelect(i, v === "__none__" ? null : v)
+                  }
+                >
+                  <SelectTrigger className="h-auto min-h-12 w-full py-2">
+                    <SelectValue placeholder={`Slot ${i + 1} — empty`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Empty</SelectItem>
+                    {availableGems.map((g) => (
+                      <SelectItem key={g.id} value={fmt(g.field_name)}>
+                        <div className="flex items-center gap-2">
+                          <ItemIcon type="Gem" size="sm" />
+                          <span>{fmt(g.field_name)}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {g.affinity_type}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -415,7 +534,7 @@ export function ForgePage() {
               </>
             )}
 
-            {/* Affinities from material */}
+            {/* Affinities from material + gems */}
             {selectedMaterial &&
               (() => {
                 const mat = materialMap.get(selectedMaterial)
@@ -423,20 +542,45 @@ export function ForgePage() {
                 return (
                   <>
                     <div className="flex flex-wrap justify-center gap-1.5">
-                      <StatBox label="Hum" value={mat.human} />
-                      <StatBox label="Bst" value={mat.beast} />
-                      <StatBox label="Und" value={mat.undead} />
-                      <StatBox label="Phm" value={mat.phantom} />
-                      <StatBox label="Drg" value={mat.dragon} />
-                      <StatBox label="Evl" value={mat.evil} />
+                      <StatBox
+                        label="Hum"
+                        value={mat.human + gemTotals.human}
+                      />
+                      <StatBox
+                        label="Bst"
+                        value={mat.beast + gemTotals.beast}
+                      />
+                      <StatBox
+                        label="Und"
+                        value={mat.undead + gemTotals.undead}
+                      />
+                      <StatBox
+                        label="Phm"
+                        value={mat.phantom + gemTotals.phantom}
+                      />
+                      <StatBox
+                        label="Drg"
+                        value={mat.dragon + gemTotals.dragon}
+                      />
+                      <StatBox label="Evl" value={mat.evil + gemTotals.evil} />
                     </div>
                     <div className="flex flex-wrap justify-center gap-1.5">
-                      <StatBox label="Fir" value={mat.fire} />
-                      <StatBox label="Wat" value={mat.water} />
-                      <StatBox label="Wnd" value={mat.wind} />
-                      <StatBox label="Ear" value={mat.earth} />
-                      <StatBox label="Lit" value={mat.light} />
-                      <StatBox label="Drk" value={mat.dark} />
+                      <StatBox label="Phy" value={gemTotals.physical} />
+                      <StatBox label="Fir" value={mat.fire + gemTotals.fire} />
+                      <StatBox
+                        label="Wat"
+                        value={mat.water + gemTotals.water}
+                      />
+                      <StatBox label="Wnd" value={mat.wind + gemTotals.wind} />
+                      <StatBox
+                        label="Ear"
+                        value={mat.earth + gemTotals.earth}
+                      />
+                      <StatBox
+                        label="Lit"
+                        value={mat.light + gemTotals.light}
+                      />
+                      <StatBox label="Drk" value={mat.dark + gemTotals.dark} />
                     </div>
                   </>
                 )
