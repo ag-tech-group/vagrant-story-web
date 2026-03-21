@@ -91,6 +91,7 @@ const NAV_TABS = [
   { to: "/forge" as const, label: "Forge", icon: "Forge" },
   { to: "/crafting" as const, label: "Crafting", icon: "Crafting" },
   { to: "/material-grid" as const, label: "Material Grid", icon: "Grid" },
+  { to: "/inventory" as const, label: "Inventory", icon: "Chest" },
 ]
 
 function RootComponent() {

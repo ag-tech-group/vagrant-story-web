@@ -1,0 +1,1382 @@
+import { useCallback, useMemo, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { ArrowLeft, Package, Plus, Trash2, X } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { ItemIcon } from "@/components/item-icon"
+import { ItemPicker, type PickerItem } from "@/components/item-picker"
+import { MaterialSelect } from "@/components/material-select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { MaterialBadge } from "@/components/stat-display"
+import { useAuth } from "@/lib/auth"
+import {
+  gameApi,
+  fmt,
+  type Armor,
+  type Blade,
+  type Gem,
+  type Grip,
+  type Material,
+} from "@/lib/game-api"
+import {
+  inventoryApi,
+  type CreateInventoryItem,
+  type EquipSlot,
+  type InventoryItem,
+  type InventoryListItem,
+} from "@/lib/inventory-api"
+import { cn } from "@/lib/utils"
+
+const AUTH_URL = "https://auth.criticalbit.gg"
+const SITE_URL = "https://vagrant-story.criticalbit.gg"
+
+// ── Slot configuration ──────────────────────────────────────────────
+
+interface SlotConfig {
+  key: EquipSlot
+  label: string
+  gridArea: string
+  itemTypes: string[] // armor_type values or "blade" for blades
+  isBlade?: boolean
+  isShield?: boolean
+  isAccessory?: boolean
+}
+
+const EQUIP_SLOTS: SlotConfig[] = [
+  {
+    key: "head",
+    label: "Head",
+    gridArea: "head",
+    itemTypes: ["Helm"],
+  },
+  {
+    key: "right_hand",
+    label: "R. Hand",
+    gridArea: "rhand",
+    itemTypes: ["blade"],
+    isBlade: true,
+  },
+  {
+    key: "body",
+    label: "Body",
+    gridArea: "body",
+    itemTypes: ["Body"],
+  },
+  {
+    key: "left_hand",
+    label: "L. Hand",
+    gridArea: "lhand",
+    itemTypes: ["Shield"],
+    isShield: true,
+  },
+  {
+    key: "arms",
+    label: "Arms",
+    gridArea: "arms",
+    itemTypes: ["Arm"],
+  },
+  {
+    key: "legs",
+    label: "Legs",
+    gridArea: "legs",
+    itemTypes: ["Leg"],
+  },
+  {
+    key: "accessory",
+    label: "Accessory",
+    gridArea: "accessory",
+    itemTypes: ["Accessory"],
+    isAccessory: true,
+  },
+]
+
+const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
+const ARMOR_MATS = ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
+const SHIELD_MATS = ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
+
+// ── Main component ──────────────────────────────────────────────────
+
+export function InventoryPage() {
+  const auth = useAuth()
+  const [selectedInventoryId, setSelectedInventoryId] = useState<number | null>(
+    null
+  )
+
+  if (auth.isLoading) {
+    return (
+      <div className="text-muted-foreground py-20 text-center text-sm">
+        Loading...
+      </div>
+    )
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-20">
+        <p className="text-muted-foreground text-sm">
+          Sign in to manage your inventory
+        </p>
+        <Button asChild>
+          <a
+            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL + "/inventory")}`}
+          >
+            Sign In
+          </a>
+        </Button>
+      </div>
+    )
+  }
+
+  if (selectedInventoryId != null) {
+    return (
+      <InventoryDetailView
+        inventoryId={selectedInventoryId}
+        onBack={() => setSelectedInventoryId(null)}
+      />
+    )
+  }
+
+  return <InventoryListView onSelect={setSelectedInventoryId} />
+}
+
+// ── Inventory List ──────────────────────────────────────────────────
+
+function InventoryListView({ onSelect }: { onSelect: (id: number) => void }) {
+  const queryClient = useQueryClient()
+  const [showCreate, setShowCreate] = useState(false)
+  const [newName, setNewName] = useState("")
+
+  const {
+    data: inventories = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["inventories"],
+    queryFn: inventoryApi.list,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (name: string) => inventoryApi.create(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventories"] })
+      setShowCreate(false)
+      setNewName("")
+      toast.success("Inventory created")
+    },
+    onError: (err) => toast.error(String(err)),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => inventoryApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventories"] })
+      toast.success("Inventory deleted")
+    },
+    onError: (err) => toast.error(String(err)),
+  })
+
+  if (isLoading) {
+    return (
+      <div className="text-muted-foreground py-10 text-center text-sm">
+        Loading inventories...
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-10 text-center text-sm text-red-400">
+        Failed to load inventories. Make sure you are signed in.
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-2xl space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm">
+          {inventories.length} inventory{inventories.length !== 1 ? "ies" : ""}
+        </p>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="size-3.5" />
+          Create Inventory
+        </Button>
+      </div>
+
+      {inventories.length === 0 && (
+        <div className="text-muted-foreground py-10 text-center text-sm">
+          No inventories yet. Create one to start building your loadout.
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {inventories.map((inv) => (
+          <InventoryCard
+            key={inv.id}
+            inventory={inv}
+            onClick={() => onSelect(inv.id)}
+            onDelete={() => deleteMutation.mutate(inv.id)}
+          />
+        ))}
+      </div>
+
+      {/* Create dialog */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Inventory</DialogTitle>
+            <DialogDescription>
+              Give your inventory a name (e.g. "Main Loadout", "Undead
+              Farming").
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (newName.trim()) createMutation.mutate(newName.trim())
+            }}
+          >
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Inventory name"
+              maxLength={100}
+              autoFocus
+            />
+            <DialogFooter className="mt-4">
+              <Button
+                type="submit"
+                disabled={!newName.trim() || createMutation.isPending}
+              >
+                {createMutation.isPending ? "Creating..." : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function InventoryCard({
+  inventory,
+  onClick,
+  onDelete,
+}: {
+  inventory: InventoryListItem
+  onClick: () => void
+  onDelete: () => void
+}) {
+  return (
+    <Card
+      className="hover:border-foreground/20 cursor-pointer transition-colors"
+      onClick={onClick}
+    >
+      <CardContent className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ItemIcon type="Chest" size="sm" />
+          <div>
+            <p className="font-medium">{inventory.name}</p>
+            <p className="text-muted-foreground text-xs">
+              Created {new Date(inventory.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-red-400"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (confirm("Delete this inventory?")) onDelete()
+          }}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ── Inventory Detail ────────────────────────────────────────────────
+
+function InventoryDetailView({
+  inventoryId,
+  onBack,
+}: {
+  inventoryId: number
+  onBack: () => void
+}) {
+  const queryClient = useQueryClient()
+  const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
+  const [editingBagItem, setEditingBagItem] = useState(false)
+
+  const { data: inventory, isLoading } = useQuery({
+    queryKey: ["inventory", inventoryId],
+    queryFn: () => inventoryApi.get(inventoryId),
+  })
+
+  // Fetch game data for building items
+  const { data: blades = [] } = useQuery({
+    queryKey: ["blades"],
+    queryFn: gameApi.blades,
+  })
+  const { data: armor = [] } = useQuery({
+    queryKey: ["armor"],
+    queryFn: gameApi.armor,
+  })
+  const { data: grips = [] } = useQuery({
+    queryKey: ["grips"],
+    queryFn: gameApi.grips,
+  })
+  const { data: materials = [] } = useQuery({
+    queryKey: ["materials"],
+    queryFn: gameApi.materials,
+  })
+  const { data: gems = [] } = useQuery({
+    queryKey: ["gems"],
+    queryFn: gameApi.gems,
+  })
+
+  const bladeMap = useMemo(() => {
+    const map = new Map<string, Blade>()
+    for (const b of blades) map.set(fmt(b.field_name), b)
+    return map
+  }, [blades])
+
+  const bladeIdMap = useMemo(() => {
+    const map = new Map<number, Blade>()
+    for (const b of blades) map.set(b.id, b)
+    return map
+  }, [blades])
+
+  const armorMap = useMemo(() => {
+    const map = new Map<string, Armor>()
+    for (const a of armor) map.set(fmt(a.field_name), a)
+    return map
+  }, [armor])
+
+  const armorIdMap = useMemo(() => {
+    const map = new Map<number, Armor>()
+    for (const a of armor) map.set(a.id, a)
+    return map
+  }, [armor])
+
+  const gripMap = useMemo(() => {
+    const map = new Map<string, Grip>()
+    for (const g of grips) map.set(fmt(g.field_name), g)
+    return map
+  }, [grips])
+
+  const gripIdMap = useMemo(() => {
+    const map = new Map<number, Grip>()
+    for (const g of grips) map.set(g.id, g)
+    return map
+  }, [grips])
+
+  const materialMap = useMemo(() => {
+    const map = new Map<string, Material>()
+    for (const m of materials) map.set(m.name, m)
+    return map
+  }, [materials])
+
+  const gemIdMap = useMemo(() => {
+    const map = new Map<number, Gem>()
+    for (const g of gems) map.set(g.id, g)
+    return map
+  }, [gems])
+
+  // Mutations
+  const addItemMutation = useMutation({
+    mutationFn: (item: CreateInventoryItem) =>
+      inventoryApi.addItem(inventoryId, item),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventory", inventoryId] })
+      setEditingSlot(null)
+      setEditingBagItem(false)
+      toast.success("Item added")
+    },
+    onError: (err) => toast.error(String(err)),
+  })
+
+  const updateItemMutation = useMutation({
+    mutationFn: ({
+      itemId,
+      ...data
+    }: { itemId: number } & Record<string, unknown>) =>
+      inventoryApi.updateItem(inventoryId, itemId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventory", inventoryId] })
+      setEditingSlot(null)
+      toast.success("Item updated")
+    },
+    onError: (err) => toast.error(String(err)),
+  })
+
+  const deleteItemMutation = useMutation({
+    mutationFn: (itemId: number) =>
+      inventoryApi.deleteItem(inventoryId, itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventory", inventoryId] })
+      toast.success("Item removed")
+    },
+    onError: (err) => toast.error(String(err)),
+  })
+
+  // Get item in a specific slot
+  const getSlotItem = useCallback(
+    (slot: EquipSlot): InventoryItem | undefined =>
+      inventory?.items.find((i) => i.equip_slot === slot),
+    [inventory]
+  )
+
+  // Bag items (unequipped)
+  const bagItems = useMemo(
+    () => inventory?.items.filter((i) => i.equip_slot == null) ?? [],
+    [inventory]
+  )
+
+  // Get display info for an inventory item
+  const getItemDisplayName = useCallback(
+    (item: InventoryItem): string => {
+      if (item.item_type === "blade") {
+        const blade = bladeIdMap.get(item.item_id)
+        return blade ? fmt(blade.field_name) : `Blade #${item.item_id}`
+      }
+      const armorItem = armorIdMap.get(item.item_id)
+      return armorItem ? fmt(armorItem.field_name) : `Item #${item.item_id}`
+    },
+    [bladeIdMap, armorIdMap]
+  )
+
+  const getItemDisplayType = useCallback(
+    (item: InventoryItem): string => {
+      if (item.item_type === "blade") {
+        const blade = bladeIdMap.get(item.item_id)
+        return blade?.blade_type ?? "Blade"
+      }
+      const armorItem = armorIdMap.get(item.item_id)
+      return armorItem?.armor_type ?? "Armor"
+    },
+    [bladeIdMap, armorIdMap]
+  )
+
+  // Handle slot save
+  const handleSlotSave = useCallback(
+    (data: CreateInventoryItem, existingItemId?: number) => {
+      if (existingItemId) {
+        updateItemMutation.mutate({
+          itemId: existingItemId,
+          ...data,
+        })
+      } else {
+        addItemMutation.mutate(data)
+      }
+    },
+    [addItemMutation, updateItemMutation]
+  )
+
+  // Handle bag item save
+  const handleBagSave = useCallback(
+    (data: CreateInventoryItem) => {
+      addItemMutation.mutate(data)
+    },
+    [addItemMutation]
+  )
+
+  // Compute combined stats
+  const combinedStats = useMemo(() => {
+    if (!inventory) return null
+
+    const totals = {
+      str: 0,
+      int: 0,
+      agi: 0,
+      human: 0,
+      beast: 0,
+      undead: 0,
+      phantom: 0,
+      dragon: 0,
+      evil: 0,
+      physical: 0,
+      fire: 0,
+      water: 0,
+      wind: 0,
+      earth: 0,
+      light: 0,
+      dark: 0,
+    }
+
+    let bladeRange = 0
+    let bladeRisk = 0
+    let bladeDamageType = ""
+    let gripBlunt = 0
+    let gripEdged = 0
+    let gripPiercing = 0
+    let hasBlade = false
+
+    for (const item of inventory.items) {
+      if (!item.equip_slot) continue
+
+      if (item.item_type === "blade") {
+        const blade = bladeIdMap.get(item.item_id)
+        if (!blade) continue
+        hasBlade = true
+        const mat = item.material ? materialMap.get(item.material) : null
+
+        totals.str += blade.str + (mat?.blade_str ?? 0)
+        totals.int += blade.int + (mat?.blade_int ?? 0)
+        totals.agi += blade.agi + (mat?.blade_agi ?? 0)
+        bladeRange = blade.range
+        bladeRisk = blade.risk
+        bladeDamageType = blade.damage_type
+
+        if (mat) {
+          totals.human += mat.human
+          totals.beast += mat.beast
+          totals.undead += mat.undead
+          totals.phantom += mat.phantom
+          totals.dragon += mat.dragon
+          totals.evil += mat.evil
+          totals.fire += mat.fire
+          totals.water += mat.water
+          totals.wind += mat.wind
+          totals.earth += mat.earth
+          totals.light += mat.light
+          totals.dark += mat.dark
+        }
+
+        // Grip stats
+        const grip = item.grip_id ? gripIdMap.get(item.grip_id) : null
+        if (grip) {
+          totals.str += grip.str
+          totals.int += grip.int
+          totals.agi += grip.agi
+          gripBlunt = grip.blunt
+          gripEdged = grip.edged
+          gripPiercing = grip.piercing
+        }
+
+        // Grip gems (gem_1, gem_2, gem_3 on the blade item hold the grip's gems)
+        for (const gemId of [item.gem_1_id, item.gem_2_id, item.gem_3_id]) {
+          if (!gemId) continue
+          const gem = gemIdMap.get(gemId)
+          if (!gem) continue
+          totals.str += gem.str
+          totals.int += gem.int
+          totals.agi += gem.agi
+          totals.human += gem.human
+          totals.beast += gem.beast
+          totals.undead += gem.undead
+          totals.phantom += gem.phantom
+          totals.dragon += gem.dragon
+          totals.evil += gem.evil
+          totals.physical += gem.physical
+          totals.fire += gem.fire
+          totals.water += gem.water
+          totals.wind += gem.wind
+          totals.earth += gem.earth
+          totals.light += gem.light
+          totals.dark += gem.dark
+        }
+      } else {
+        // armor / shield / accessory
+        const armorItem = armorIdMap.get(item.item_id)
+        if (!armorItem) continue
+
+        const isShield = armorItem.armor_type === "Shield"
+        const isAccessory = armorItem.armor_type === "Accessory"
+        const mat = item.material ? materialMap.get(item.material) : null
+
+        if (isAccessory) {
+          // Accessories have no material
+          totals.str += armorItem.str
+          totals.int += armorItem.int
+          totals.agi += armorItem.agi
+        } else if (isShield) {
+          totals.str += armorItem.str + (mat?.shield_str ?? 0)
+          totals.int += armorItem.int + (mat?.shield_int ?? 0)
+          totals.agi += armorItem.agi + (mat?.shield_agi ?? 0)
+        } else {
+          totals.str += armorItem.str + (mat?.armor_str ?? 0)
+          totals.int += armorItem.int + (mat?.armor_int ?? 0)
+          totals.agi += armorItem.agi + (mat?.armor_agi ?? 0)
+        }
+
+        if (mat && !isAccessory) {
+          totals.human += mat.human
+          totals.beast += mat.beast
+          totals.undead += mat.undead
+          totals.phantom += mat.phantom
+          totals.dragon += mat.dragon
+          totals.evil += mat.evil
+          totals.fire += mat.fire
+          totals.water += mat.water
+          totals.wind += mat.wind
+          totals.earth += mat.earth
+          totals.light += mat.light
+          totals.dark += mat.dark
+        }
+
+        // Shield gems
+        if (isShield) {
+          for (const gemId of [item.gem_1_id, item.gem_2_id, item.gem_3_id]) {
+            if (!gemId) continue
+            const gem = gemIdMap.get(gemId)
+            if (!gem) continue
+            totals.str += gem.str
+            totals.int += gem.int
+            totals.agi += gem.agi
+            totals.human += gem.human
+            totals.beast += gem.beast
+            totals.undead += gem.undead
+            totals.phantom += gem.phantom
+            totals.dragon += gem.dragon
+            totals.evil += gem.evil
+            totals.physical += gem.physical
+            totals.fire += gem.fire
+            totals.water += gem.water
+            totals.wind += gem.wind
+            totals.earth += gem.earth
+            totals.light += gem.light
+            totals.dark += gem.dark
+          }
+        }
+      }
+    }
+
+    return {
+      ...totals,
+      range: bladeRange,
+      risk: bladeRisk,
+      damage_type: bladeDamageType,
+      blunt: gripBlunt,
+      edged: gripEdged,
+      piercing: gripPiercing,
+      hasBlade,
+    }
+  }, [inventory, bladeIdMap, armorIdMap, gripIdMap, materialMap, gemIdMap])
+
+  if (isLoading || !inventory) {
+    return (
+      <div className="text-muted-foreground py-10 text-center text-sm">
+        Loading inventory...
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="size-4" />
+          Back
+        </Button>
+        <h2 className="text-lg font-medium">{inventory.name}</h2>
+      </div>
+
+      {/* Equipment Grid */}
+      <div className="mx-auto max-w-md">
+        <EquipmentGrid
+          getSlotItem={getSlotItem}
+          getItemDisplayName={getItemDisplayName}
+          getItemDisplayType={getItemDisplayType}
+          onSlotClick={setEditingSlot}
+          onClearSlot={(slotItem) => deleteItemMutation.mutate(slotItem.id)}
+        />
+      </div>
+
+      {/* Combined Stats */}
+      {combinedStats && inventory.items.some((i) => i.equip_slot != null) && (
+        <CombinedStatsCard stats={combinedStats} />
+      )}
+
+      {/* Item Bag */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">
+            <Package className="mr-1.5 inline size-4" />
+            Item Bag ({bagItems.length})
+          </h3>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setEditingBagItem(true)}
+          >
+            <Plus className="size-3.5" />
+            Add Item
+          </Button>
+        </div>
+        {bagItems.length === 0 ? (
+          <p className="text-muted-foreground py-4 text-center text-xs">
+            No items in the bag
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {bagItems.map((item) => (
+              <BagItemRow
+                key={item.id}
+                item={item}
+                name={getItemDisplayName(item)}
+                type={getItemDisplayType(item)}
+                onDelete={() => deleteItemMutation.mutate(item.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Slot Editor Dialog */}
+      {editingSlot && (
+        <SlotEditorDialog
+          slot={editingSlot}
+          existingItem={getSlotItem(editingSlot.key)}
+          blades={blades}
+          armor={armor}
+          grips={grips}
+          gems={gems}
+          bladeMap={bladeMap}
+          armorMap={armorMap}
+          gripMap={gripMap}
+          onSave={handleSlotSave}
+          onClose={() => setEditingSlot(null)}
+          isPending={addItemMutation.isPending || updateItemMutation.isPending}
+        />
+      )}
+
+      {/* Bag Item Editor Dialog */}
+      {editingBagItem && (
+        <SlotEditorDialog
+          slot={null}
+          existingItem={undefined}
+          blades={blades}
+          armor={armor}
+          grips={grips}
+          gems={gems}
+          bladeMap={bladeMap}
+          armorMap={armorMap}
+          gripMap={gripMap}
+          onSave={handleBagSave}
+          onClose={() => setEditingBagItem(false)}
+          isPending={addItemMutation.isPending}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Equipment Grid ──────────────────────────────────────────────────
+
+function EquipmentGrid({
+  getSlotItem,
+  getItemDisplayName,
+  getItemDisplayType,
+  onSlotClick,
+  onClearSlot,
+}: {
+  getSlotItem: (slot: EquipSlot) => InventoryItem | undefined
+  getItemDisplayName: (item: InventoryItem) => string
+  getItemDisplayType: (item: InventoryItem) => string
+  onSlotClick: (slot: SlotConfig) => void
+  onClearSlot: (item: InventoryItem) => void
+}) {
+  return (
+    <div
+      className="grid gap-2"
+      style={{
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gridTemplateRows: "auto auto auto auto auto",
+        gridTemplateAreas: `
+          ".        head      ."
+          "rhand    body      lhand"
+          ".        arms      ."
+          ".        legs      ."
+          ".        accessory ."
+        `,
+      }}
+    >
+      {EQUIP_SLOTS.map((slot) => {
+        const item = getSlotItem(slot.key)
+        return (
+          <div key={slot.key} style={{ gridArea: slot.gridArea }}>
+            <EquipSlotCard
+              slot={slot}
+              item={item}
+              displayName={item ? getItemDisplayName(item) : undefined}
+              displayType={item ? getItemDisplayType(item) : undefined}
+              onClick={() => onSlotClick(slot)}
+              onClear={item ? () => onClearSlot(item) : undefined}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function EquipSlotCard({
+  slot,
+  item,
+  displayName,
+  displayType,
+  onClick,
+  onClear,
+}: {
+  slot: SlotConfig
+  item?: InventoryItem
+  displayName?: string
+  displayType?: string
+  onClick: () => void
+  onClear?: () => void
+}) {
+  if (!item) {
+    // Empty slot
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="border-border/50 hover:border-foreground/30 hover:bg-muted/30 flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors"
+      >
+        <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+          {slot.label}
+        </span>
+        <Plus className="text-muted-foreground/50 size-5" />
+      </button>
+    )
+  }
+
+  // Filled slot
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="border-border hover:border-foreground/30 group bg-card/50 relative flex w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors"
+    >
+      <ItemIcon type={displayType} size="sm" />
+      <span className="max-w-full truncate text-xs leading-tight font-medium">
+        {displayName}
+      </span>
+      {item.material && <MaterialBadge mat={item.material} />}
+      {onClear && (
+        <span
+          role="button"
+          tabIndex={0}
+          className="text-muted-foreground absolute top-1 right-1 hidden group-hover:block hover:text-red-400"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClear()
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.stopPropagation()
+              onClear()
+            }
+          }}
+        >
+          <X className="size-3.5" />
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ── Bag Item Row ────────────────────────────────────────────────────
+
+function BagItemRow({
+  item,
+  name,
+  type,
+  onDelete,
+}: {
+  item: InventoryItem
+  name: string
+  type: string
+  onDelete: () => void
+}) {
+  return (
+    <div className="border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2">
+      <ItemIcon type={type} size="sm" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{name}</p>
+        {item.material && <MaterialBadge mat={item.material} />}
+      </div>
+      {item.quantity > 1 && (
+        <span className="text-muted-foreground text-xs">x{item.quantity}</span>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground shrink-0 hover:text-red-400"
+        onClick={onDelete}
+      >
+        <Trash2 className="size-3.5" />
+      </Button>
+    </div>
+  )
+}
+
+// ── Combined Stats Card ─────────────────────────────────────────────
+
+function CombinedStatsCard({
+  stats,
+}: {
+  stats: {
+    str: number
+    int: number
+    agi: number
+    range: number
+    risk: number
+    damage_type: string
+    blunt: number
+    edged: number
+    piercing: number
+    human: number
+    beast: number
+    undead: number
+    phantom: number
+    dragon: number
+    evil: number
+    physical: number
+    fire: number
+    water: number
+    wind: number
+    earth: number
+    light: number
+    dark: number
+    hasBlade: boolean
+  }
+}) {
+  return (
+    <Card className="mx-auto max-w-md">
+      <CardContent className="space-y-3">
+        <p className="text-muted-foreground text-center text-xs font-semibold tracking-wider uppercase">
+          Combined Stats
+        </p>
+
+        {/* Core stats */}
+        <div className="flex flex-wrap justify-center gap-1.5">
+          <StatBox label="STR" value={stats.str} />
+          <StatBox label="INT" value={stats.int} />
+          <StatBox label="AGI" value={stats.agi} />
+          {stats.hasBlade && (
+            <>
+              <StatBox label="RNG" value={stats.range} />
+              <StatBox label="RSK" value={stats.risk} />
+            </>
+          )}
+        </div>
+
+        {/* Damage type stats */}
+        {stats.hasBlade && (stats.blunt || stats.edged || stats.piercing) ? (
+          <div className="flex flex-wrap justify-center gap-1.5">
+            <StatBox label="Blt" value={stats.blunt} />
+            <StatBox label="Edg" value={stats.edged} />
+            <StatBox label="Prc" value={stats.piercing} />
+          </div>
+        ) : null}
+
+        {/* Class affinities */}
+        <div className="flex flex-wrap justify-center gap-1.5">
+          <StatBox label="Hum" value={stats.human} />
+          <StatBox label="Bst" value={stats.beast} />
+          <StatBox label="Und" value={stats.undead} />
+          <StatBox label="Phm" value={stats.phantom} />
+          <StatBox label="Drg" value={stats.dragon} />
+          <StatBox label="Evl" value={stats.evil} />
+        </div>
+
+        {/* Elemental affinities */}
+        <div className="flex flex-wrap justify-center gap-1.5">
+          <StatBox label="Phy" value={stats.physical} />
+          <StatBox label="Fir" value={stats.fire} />
+          <StatBox label="Wat" value={stats.water} />
+          <StatBox label="Wnd" value={stats.wind} />
+          <StatBox label="Ear" value={stats.earth} />
+          <StatBox label="Lit" value={stats.light} />
+          <StatBox label="Drk" value={stats.dark} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function StatBox({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-muted/50 flex min-w-11 flex-col items-center rounded px-2 py-1.5">
+      <span className="text-muted-foreground text-xs leading-none">
+        {label}
+      </span>
+      <span
+        className={cn(
+          "text-sm leading-tight font-medium",
+          value > 0 && "text-green-400",
+          value < 0 && "text-red-400",
+          value === 0 && "text-muted-foreground"
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+// ── Slot Editor Dialog ──────────────────────────────────────────────
+
+function bladeTypeToCompatible(bladeType: string): string {
+  if (bladeType === "Axe / Mace") return "Axe/Mace"
+  return bladeType
+}
+
+function getCompatibleGrips(allGrips: Grip[], bladeType: string): Grip[] {
+  const compatKey = bladeTypeToCompatible(bladeType)
+  return allGrips.filter((g) => {
+    const weapons = g.compatible_weapons.split("/")
+    return weapons.includes(compatKey)
+  })
+}
+
+function SlotEditorDialog({
+  slot,
+  existingItem,
+  blades,
+  armor,
+  grips,
+  gems,
+  bladeMap,
+  armorMap,
+  gripMap,
+  onSave,
+  onClose,
+  isPending,
+}: {
+  slot: SlotConfig | null // null = bag item
+  existingItem?: InventoryItem
+  blades: Blade[]
+  armor: Armor[]
+  grips: Grip[]
+  gems: Gem[]
+  bladeMap: Map<string, Blade>
+  armorMap: Map<string, Armor>
+  gripMap: Map<string, Grip>
+  onSave: (data: CreateInventoryItem, existingItemId?: number) => void
+  onClose: () => void
+  isPending: boolean
+}) {
+  const [selectedItem, setSelectedItem] = useState<string | null>(null)
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null)
+  const [selectedGrip, setSelectedGrip] = useState<string | null>(null)
+  const [selectedGems, setSelectedGems] = useState<(string | null)[]>([])
+
+  // Build picker items based on slot type
+  const pickerItems: PickerItem[] = useMemo(() => {
+    const items: PickerItem[] = []
+
+    if (!slot) {
+      // Bag: show all equipment
+      for (const b of blades) {
+        items.push({
+          name: fmt(b.field_name),
+          type: b.blade_type,
+          level: b.game_id,
+        })
+      }
+      for (const a of armor) {
+        items.push({
+          name: fmt(a.field_name),
+          type: a.armor_type,
+          level: a.game_id,
+        })
+      }
+      return items
+    }
+
+    if (slot.isBlade) {
+      for (const b of blades) {
+        items.push({
+          name: fmt(b.field_name),
+          type: b.blade_type,
+          level: b.game_id,
+        })
+      }
+    } else if (slot.isShield) {
+      for (const a of armor) {
+        if (a.armor_type === "Shield") {
+          items.push({
+            name: fmt(a.field_name),
+            type: "Shield",
+            level: a.game_id,
+          })
+        }
+      }
+    } else if (slot.isAccessory) {
+      for (const a of armor) {
+        if (a.armor_type === "Accessory") {
+          items.push({
+            name: fmt(a.field_name),
+            type: "Accessory",
+            level: a.game_id,
+          })
+        }
+      }
+    } else {
+      // Armor slot (Helm, Body, Leg, Arm)
+      for (const a of armor) {
+        if (slot.itemTypes.includes(a.armor_type)) {
+          items.push({
+            name: fmt(a.field_name),
+            type: a.armor_type,
+            level: a.game_id,
+          })
+        }
+      }
+    }
+
+    return items
+  }, [slot, blades, armor])
+
+  // Determine mode of selected item
+  const isBlade = selectedItem ? bladeMap.has(selectedItem) : false
+  const isShield =
+    selectedItem && !isBlade
+      ? armorMap.get(selectedItem)?.armor_type === "Shield"
+      : false
+  const isAccessory =
+    selectedItem && !isBlade
+      ? armorMap.get(selectedItem)?.armor_type === "Accessory"
+      : false
+
+  // Materials
+  const availableMaterials = useMemo(() => {
+    if (!selectedItem) return []
+    if (isBlade) return BLADE_MATS
+    if (isShield) return SHIELD_MATS
+    if (isAccessory) return []
+    return ARMOR_MATS
+  }, [selectedItem, isBlade, isShield, isAccessory])
+
+  // Compatible grips (blade only)
+  const compatibleGripItems: PickerItem[] = useMemo(() => {
+    if (!isBlade || !selectedItem) return []
+    const blade = bladeMap.get(selectedItem)
+    if (!blade) return []
+    const compatible = getCompatibleGrips(grips, blade.blade_type)
+    return compatible.map((g, i) => ({
+      name: fmt(g.field_name),
+      type: g.grip_type,
+      level: i + 1,
+    }))
+  }, [isBlade, selectedItem, bladeMap, grips])
+
+  // Gem slots count
+  const gemSlotCount = useMemo(() => {
+    if (!selectedItem) return 0
+    if (isBlade) {
+      const grip = selectedGrip ? gripMap.get(selectedGrip) : null
+      return grip?.gem_slots ?? 0
+    }
+    if (isShield) {
+      const shield = armorMap.get(selectedItem)
+      return shield?.gem_slots ?? 0
+    }
+    return 0
+  }, [selectedItem, isBlade, isShield, selectedGrip, gripMap, armorMap])
+
+  // Available gems (weapon vs armor type)
+  const availableGems = useMemo(() => {
+    return gems.filter((g) => {
+      if (isBlade) return g.gem_type === "Weapon" || g.gem_type === "Both"
+      return g.gem_type === "Armor" || g.gem_type === "Both"
+    })
+  }, [gems, isBlade])
+
+  const handleItemSelect = (name: string | null) => {
+    setSelectedItem(name)
+    setSelectedMaterial(null)
+    setSelectedGrip(null)
+    setSelectedGems([])
+  }
+
+  const handleGripSelect = (name: string | null) => {
+    setSelectedGrip(name)
+    setSelectedGems([])
+  }
+
+  const handleGemSelect = (index: number, gemName: string | null) => {
+    setSelectedGems((prev) => {
+      const next = [...prev]
+      while (next.length <= index) next.push(null)
+      next[index] = gemName
+      return next
+    })
+  }
+
+  const handleConfirm = () => {
+    if (!selectedItem) return
+
+    // Resolve IDs
+    let item_type: string
+    let item_id: number
+
+    if (bladeMap.has(selectedItem)) {
+      item_type = "blade"
+      item_id = bladeMap.get(selectedItem)!.id
+    } else {
+      item_type = "armor"
+      item_id = armorMap.get(selectedItem)!.id
+    }
+
+    const grip = selectedGrip ? gripMap.get(selectedGrip) : null
+
+    // Resolve gem IDs
+    const gemIds = selectedGems.map((name) => {
+      if (!name) return null
+      const gem = gems.find((g) => fmt(g.field_name) === name)
+      return gem?.id ?? null
+    })
+
+    const data: CreateInventoryItem = {
+      item_type,
+      item_id,
+      material: isAccessory ? null : selectedMaterial || null,
+      grip_id: grip?.id ?? null,
+      gem_1_id: gemIds[0] ?? null,
+      gem_2_id: gemIds[1] ?? null,
+      gem_3_id: gemIds[2] ?? null,
+      equip_slot: slot?.key ?? null,
+    }
+
+    onSave(data, existingItem?.id)
+  }
+
+  // Can confirm?
+  const canConfirm = useMemo(() => {
+    if (!selectedItem) return false
+    if (!isAccessory && availableMaterials.length > 0 && !selectedMaterial)
+      return false
+    return true
+  }, [selectedItem, isAccessory, availableMaterials, selectedMaterial])
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {slot ? `Equip: ${slot.label}` : "Add to Bag"}
+          </DialogTitle>
+          <DialogDescription>
+            {slot
+              ? `Select an item for the ${slot.label.toLowerCase()} slot`
+              : "Select an item to add to your bag"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Item picker */}
+          <ItemPicker
+            items={pickerItems}
+            value={selectedItem}
+            onSelect={handleItemSelect}
+            placeholder={
+              slot?.isBlade
+                ? "Select a blade..."
+                : slot?.isShield
+                  ? "Select a shield..."
+                  : slot?.isAccessory
+                    ? "Select an accessory..."
+                    : slot
+                      ? `Select ${slot.label.toLowerCase()} armor...`
+                      : "Select any item..."
+            }
+          />
+
+          {/* Material */}
+          {selectedItem && availableMaterials.length > 0 && (
+            <MaterialSelect
+              materials={availableMaterials}
+              value={selectedMaterial}
+              onSelect={setSelectedMaterial}
+              label="Material"
+            />
+          )}
+
+          {/* Grip (blade only) */}
+          {isBlade && selectedMaterial && (
+            <div>
+              <ItemPicker
+                items={compatibleGripItems}
+                value={selectedGrip}
+                onSelect={handleGripSelect}
+                placeholder="Select grip..."
+                label="Grip"
+              />
+            </div>
+          )}
+
+          {/* Gems */}
+          {gemSlotCount > 0 && selectedMaterial && (
+            <div>
+              <span className="text-muted-foreground mb-1 block text-xs font-medium">
+                Gems ({gemSlotCount} slot{gemSlotCount !== 1 ? "s" : ""})
+              </span>
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: gemSlotCount }, (_, i) => (
+                  <Select
+                    key={i}
+                    value={selectedGems[i] ?? "__none__"}
+                    onValueChange={(v) =>
+                      handleGemSelect(i, v === "__none__" ? null : v)
+                    }
+                  >
+                    <SelectTrigger className="h-auto min-h-10 w-full py-2">
+                      <SelectValue placeholder={`Slot ${i + 1} - empty`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Empty</SelectItem>
+                      {availableGems.map((g) => (
+                        <SelectItem key={g.id} value={fmt(g.field_name)}>
+                          <div className="flex items-center gap-2">
+                            <ItemIcon type="Gem" size="sm" />
+                            <span>{fmt(g.field_name)}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {g.affinity_type}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={!canConfirm || isPending}>
+            {isPending ? "Saving..." : existingItem ? "Update" : "Equip"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
