@@ -58,6 +58,18 @@ export function HomePage() {
     queryKey: ["battle-abilities"],
     queryFn: gameApi.battleAbilities,
   })
+  const { data: characters = [] } = useQuery({
+    queryKey: ["characters"],
+    queryFn: gameApi.characters,
+  })
+  const { data: titles = [] } = useQuery({
+    queryKey: ["titles"],
+    queryFn: gameApi.titles,
+  })
+  const { data: rankings = [] } = useQuery({
+    queryKey: ["rankings"],
+    queryFn: gameApi.rankings,
+  })
 
   const accessories = armor.filter((a) => a.armor_type === "Accessory")
   const armorOnly = armor.filter((a) => a.armor_type !== "Accessory")
@@ -136,6 +148,24 @@ export function HomePage() {
       label: "Workshops",
       icon: "Workshop",
       count: workshops.length,
+    },
+    {
+      to: "/characters" as const,
+      label: "Characters",
+      icon: "Character",
+      count: characters.length,
+    },
+    {
+      to: "/titles" as const,
+      label: "Titles",
+      icon: "Title",
+      count: titles.length,
+    },
+    {
+      to: "/rankings" as const,
+      label: "Rankings",
+      icon: "Ranking",
+      count: rankings.length,
     },
   ]
 
