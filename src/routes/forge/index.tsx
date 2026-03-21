@@ -6,8 +6,8 @@ export const Route = createFileRoute("/forge/")({
 
 function ForgeIndex() {
   return (
-    <div>
-      <h1 className="text-3xl tracking-wide sm:text-4xl">Forge</h1>
+    <div className="text-center">
+      <h1 className="text-4xl tracking-wide sm:text-5xl lg:text-6xl">Forge</h1>
       <p className="text-muted-foreground mt-1 text-sm">
         Build equipment by combining a blade, armor, or shield with a material
         and grip

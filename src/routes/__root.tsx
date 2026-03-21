@@ -68,23 +68,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 const AUTH_URL = "https://auth.criticalbit.gg"
 const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
-const ITEM_LINKS = [
-  { to: "/blades" as const, label: "Blades" },
-  { to: "/grips" as const, label: "Grips" },
-  { to: "/armor" as const, label: "Armor" },
-  { to: "/materials" as const, label: "Materials" },
-  { to: "/accessories" as const, label: "Accessories" },
-  { to: "/gems" as const, label: "Gems" },
-  { to: "/consumables" as const, label: "Consumables" },
-  { to: "/break-arts" as const, label: "Break Arts" },
-  { to: "/battle-abilities" as const, label: "Battle Abilities" },
-  { to: "/spells" as const, label: "Spells" },
-  { to: "/grimoires" as const, label: "Grimoires" },
-  { to: "/keys" as const, label: "Keys" },
-  { to: "/sigils" as const, label: "Sigils" },
-  { to: "/workshops" as const, label: "Workshops" },
-]
-
 const DATABASE_ROUTES = [
   "/blades",
   "/grips",
@@ -136,39 +119,6 @@ function RootComponent() {
             >
               Vagrant Story
             </Link>
-            <div className="hidden items-center gap-4 text-sm md:flex">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-                  Game Database
-                  <ChevronDown className="size-3.5" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {ITEM_LINKS.map((link) => (
-                    <DropdownMenuItem key={link.to} asChild>
-                      <Link to={link.to}>{link.label}</Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Link
-                to="/forge"
-                className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
-              >
-                Forge
-              </Link>
-              <Link
-                to="/crafting"
-                className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
-              >
-                Crafting
-              </Link>
-              <Link
-                to="/material-grid"
-                className="text-muted-foreground hover:text-foreground [&.active]:text-foreground transition-colors"
-              >
-                Material Grid
-              </Link>
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
