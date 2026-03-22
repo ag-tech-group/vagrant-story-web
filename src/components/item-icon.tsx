@@ -35,6 +35,10 @@ const ICON_MAP: Record<string, string> = {
   // Others
   Gem: "Gem",
   Grip: "Grip",
+  Hilt: "Grip",
+  Haft: "Grip",
+  Shaft: "Grip",
+  Bolt: "Grip",
   Consumable: "Consumable",
   Material: "Bronze",
   Spell: "Spell",
