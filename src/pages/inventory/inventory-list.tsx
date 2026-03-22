@@ -1,7 +1,13 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { Plus, Trash2 } from "lucide-react"
+import {
+  ArrowDownAZ,
+  ArrowDownWideNarrow,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -20,6 +26,8 @@ import { inventoryApi, type InventoryListItem } from "@/lib/inventory-api"
 
 const AUTH_URL = "https://auth.criticalbit.gg"
 const SITE_URL = "https://vagrant-story.criticalbit.gg"
+
+type SortKey = "name" | "created" | "updated"
 
 export function InventoryListPage() {
   const auth = useAuth()
@@ -59,6 +67,8 @@ function InventoryList() {
   const [deleteTarget, setDeleteTarget] = useState<InventoryListItem | null>(
     null
   )
+  const [search, setSearch] = useState("")
+  const [sortKey, setSortKey] = useState<SortKey>("updated")
 
   const {
     data: inventories = [],
@@ -90,6 +100,22 @@ function InventoryList() {
     onError: (err) => toast.error(String(err)),
   })
 
+  const filtered = useMemo(() => {
+    let list = inventories
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      list = list.filter((inv) => inv.name.toLowerCase().includes(q))
+    }
+    return [...list].sort((a, b) => {
+      if (sortKey === "name") return a.name.localeCompare(b.name)
+      if (sortKey === "created")
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    })
+  }, [inventories, search, sortKey])
+
   if (isLoading) {
     return (
       <div className="text-muted-foreground py-10 text-center text-sm">
@@ -100,14 +126,20 @@ function InventoryList() {
 
   if (error) {
     return (
-      <div className="py-10 text-center text-sm text-red-400">
+      <div className="text-destructive py-10 text-center text-sm">
         Failed to load inventories. Make sure you are signed in.
       </div>
     )
   }
 
+  const nextSort = (): SortKey =>
+    sortKey === "updated" ? "name" : sortKey === "name" ? "created" : "updated"
+
+  const sortLabel =
+    sortKey === "name" ? "Name" : sortKey === "created" ? "Created" : "Updated"
+
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground text-sm">
           {inventories.length}{" "}
@@ -119,14 +151,47 @@ function InventoryList() {
         </Button>
       </div>
 
+      {inventories.length > 1 && (
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter inventories..."
+              className="pl-9"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={() => setSortKey(nextSort())}
+          >
+            {sortKey === "name" ? (
+              <ArrowDownAZ className="size-3.5" />
+            ) : (
+              <ArrowDownWideNarrow className="size-3.5" />
+            )}
+            {sortLabel}
+          </Button>
+        </div>
+      )}
+
       {inventories.length === 0 && (
         <div className="text-muted-foreground py-10 text-center text-sm">
           No inventories yet. Create one to start building your loadout.
         </div>
       )}
 
-      <div className="space-y-4">
-        {inventories.map((inv) => (
+      {inventories.length > 0 && filtered.length === 0 && (
+        <div className="text-muted-foreground py-10 text-center text-sm">
+          No inventories match "{search}"
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4">
+        {filtered.map((inv) => (
           <InventoryCard
             key={inv.id}
             inventory={inv}
@@ -229,7 +294,7 @@ function InventoryCard({
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-red-400"
+            className="text-muted-foreground hover:text-destructive"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()

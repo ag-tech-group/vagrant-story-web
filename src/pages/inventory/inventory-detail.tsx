@@ -767,7 +767,7 @@ function EquipSlotCard({
         <span
           role="button"
           tabIndex={0}
-          className="text-muted-foreground absolute top-1 right-1 hidden group-hover:block hover:text-red-400"
+          className="text-muted-foreground hover:text-destructive absolute top-1 right-1 hidden group-hover:block"
           onClick={(e) => {
             e.stopPropagation()
             onClear()
@@ -812,7 +812,7 @@ function BagItemRow({
       <Button
         variant="ghost"
         size="sm"
-        className="text-muted-foreground shrink-0 hover:text-red-400"
+        className="text-muted-foreground hover:text-destructive shrink-0"
         onClick={onDelete}
       >
         <Trash2 className="size-3.5" />
