@@ -1,7 +1,15 @@
 import { useCallback, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
-import { ArrowLeft, Package, Plus, Trash2 } from "lucide-react"
+import {
+  ArrowDownAZ,
+  ArrowDownWideNarrow,
+  ArrowLeft,
+  Package,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { ItemIcon } from "@/components/item-icon"
 import { ItemPicker, type PickerItem } from "@/components/item-picker"
 import { MaterialSelect } from "@/components/material-select"
@@ -118,10 +127,14 @@ export function InventoryDetailPage() {
   return <InventoryDetail inventoryId={Number(inventoryId)} />
 }
 
+type BagSort = "equipped" | "added" | "name"
+
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
+  const [bagSearch, setBagSearch] = useState("")
+  const [bagSort, setBagSort] = useState<BagSort>("equipped")
 
   const { data: inventory, isLoading } = useQuery({
     queryKey: ["inventory", inventoryId],
@@ -346,6 +359,28 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     },
     [armorIdMap]
   )
+
+  // Filtered and sorted bag items
+  const filteredBagItems = useMemo(() => {
+    let list = allItems
+    if (bagSearch.trim()) {
+      const q = bagSearch.trim().toLowerCase()
+      list = list.filter((item) =>
+        getItemDisplayName(item).toLowerCase().includes(q)
+      )
+    }
+    return [...list].sort((a, b) => {
+      if (bagSort === "equipped") {
+        const aEquipped = a.equip_slot ? 0 : 1
+        const bEquipped = b.equip_slot ? 0 : 1
+        if (aEquipped !== bEquipped) return aEquipped - bEquipped
+        return b.id - a.id
+      }
+      if (bagSort === "name")
+        return getItemDisplayName(a).localeCompare(getItemDisplayName(b))
+      return b.id - a.id
+    })
+  }, [allItems, bagSearch, bagSort, getItemDisplayName])
 
   // Handle slot save
   const handleSlotSave = useCallback(
@@ -601,13 +636,55 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             Add Item
           </Button>
         </div>
+        {allItems.length > 1 && (
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={bagSearch}
+                onChange={(e) => setBagSearch(e.target.value)}
+                placeholder="Filter items..."
+                className="pl-9"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() =>
+                setBagSort((s) =>
+                  s === "equipped"
+                    ? "added"
+                    : s === "added"
+                      ? "name"
+                      : "equipped"
+                )
+              }
+            >
+              {bagSort === "name" ? (
+                <ArrowDownAZ className="size-3.5" />
+              ) : (
+                <ArrowDownWideNarrow className="size-3.5" />
+              )}
+              {bagSort === "equipped"
+                ? "Equipped"
+                : bagSort === "added"
+                  ? "Added"
+                  : "Name"}
+            </Button>
+          </div>
+        )}
         {allItems.length === 0 ? (
           <p className="text-muted-foreground py-4 text-center text-xs">
             No items in the bag
           </p>
+        ) : filteredBagItems.length === 0 ? (
+          <p className="text-muted-foreground py-4 text-center text-xs">
+            No items match "{bagSearch}"
+          </p>
         ) : (
           <div className="space-y-1">
-            {allItems.map((item) => {
+            {filteredBagItems.map((item) => {
               const targetSlot = !item.equip_slot
                 ? getEquipSlotForItem(item)
                 : null
