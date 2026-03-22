@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { MaterialBadge } from "@/components/stat-display"
 import { useAuth } from "@/lib/auth"
+import { loginUrl } from "@/lib/config"
 import {
   gameApi,
   fmt,
@@ -42,8 +43,6 @@ import {
   type InventoryItem,
 } from "@/lib/inventory-api"
 import { cn } from "@/lib/utils"
-
-const AUTH_URL = "https://auth.criticalbit.gg"
 
 // ── Slot configuration ──────────────────────────────────────────────
 
@@ -110,11 +109,7 @@ export function InventoryDetailPage() {
           Sign in to manage your inventory
         </p>
         <Button asChild>
-          <a
-            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(window.location.origin + "/inventory")}`}
-          >
-            Sign In
-          </a>
+          <a href={loginUrl("/inventory")}>Sign In</a>
         </Button>
       </div>
     )

@@ -28,6 +28,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
+import { loginUrl, profileUrl } from "@/lib/config"
 import { cn } from "@/lib/utils"
 
 const TanStackRouterDevtools = import.meta.env.PROD
@@ -64,9 +65,6 @@ interface RouterContext {
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
 })
-
-const AUTH_URL = "https://auth.criticalbit.gg"
-const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
 const DATABASE_ROUTES = [
   "/blades",
@@ -137,7 +135,7 @@ function RootComponent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <a href={`${AUTH_URL}/profile`}>
+                    <a href={profileUrl()}>
                       <ExternalLink className="size-4" />
                       Profile
                     </a>
@@ -156,11 +154,7 @@ function RootComponent() {
               </DropdownMenu>
             ) : (
               <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL)}`}
-                >
-                  Sign in
-                </a>
+                <a href={loginUrl("/")}>Sign in</a>
               </Button>
             )}
           </div>

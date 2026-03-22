@@ -22,9 +22,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { ItemIcon } from "@/components/item-icon"
 import { useAuth } from "@/lib/auth"
+import { loginUrl } from "@/lib/config"
 import { inventoryApi, type InventoryListItem } from "@/lib/inventory-api"
-
-const AUTH_URL = "https://auth.criticalbit.gg"
 
 type SortKey = "name" | "created" | "updated"
 
@@ -46,11 +45,7 @@ export function InventoryListPage() {
           Sign in to manage your inventory
         </p>
         <Button asChild>
-          <a
-            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(window.location.origin + "/inventory")}`}
-          >
-            Sign In
-          </a>
+          <a href={loginUrl("/inventory")}>Sign In</a>
         </Button>
       </div>
     )
