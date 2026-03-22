@@ -325,6 +325,28 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     [bladeIdMap, armorIdMap, gripIdMap, gemIdMap]
   )
 
+  // Determine the equip slot for an item (null = not equippable)
+  const getEquipSlotForItem = useCallback(
+    (item: InventoryItem): EquipSlot | null => {
+      if (item.item_type === "blade") return "right_hand"
+      if (item.item_type === "armor") {
+        const armorItem = armorIdMap.get(item.item_id)
+        if (!armorItem) return null
+        const slotMap: Record<string, EquipSlot> = {
+          Helm: "head",
+          Body: "body",
+          Leg: "legs",
+          Arm: "arms",
+          Shield: "left_hand",
+          Accessory: "accessory",
+        }
+        return slotMap[armorItem.armor_type] ?? null
+      }
+      return null
+    },
+    [armorIdMap]
+  )
+
   // Handle slot save
   const handleSlotSave = useCallback(
     (data: CreateInventoryItem, existingItemId?: number) => {
@@ -585,24 +607,38 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           </p>
         ) : (
           <div className="space-y-1">
-            {allItems.map((item) => (
-              <BagItemRow
-                key={item.id}
-                item={item}
-                name={getItemDisplayName(item)}
-                type={getItemDisplayType(item)}
-                onDelete={() => deleteItemMutation.mutate(item.id)}
-                onUnequip={
-                  item.equip_slot
-                    ? () =>
-                        updateItemMutation.mutate({
-                          itemId: item.id,
-                          equip_slot: null,
-                        })
-                    : undefined
-                }
-              />
-            ))}
+            {allItems.map((item) => {
+              const targetSlot = !item.equip_slot
+                ? getEquipSlotForItem(item)
+                : null
+              return (
+                <BagItemRow
+                  key={item.id}
+                  item={item}
+                  name={getItemDisplayName(item)}
+                  type={getItemDisplayType(item)}
+                  onDelete={() => deleteItemMutation.mutate(item.id)}
+                  onUnequip={
+                    item.equip_slot
+                      ? () =>
+                          updateItemMutation.mutate({
+                            itemId: item.id,
+                            equip_slot: null,
+                          })
+                      : undefined
+                  }
+                  onEquip={
+                    targetSlot
+                      ? () =>
+                          updateItemMutation.mutate({
+                            itemId: item.id,
+                            equip_slot: targetSlot,
+                          })
+                      : undefined
+                  }
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -810,12 +846,14 @@ function BagItemRow({
   type,
   onDelete,
   onUnequip,
+  onEquip,
 }: {
   item: InventoryItem
   name: string
   type: string
   onDelete: () => void
   onUnequip?: () => void
+  onEquip?: () => void
 }) {
   return (
     <div className="border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2">
@@ -834,11 +872,26 @@ function BagItemRow({
       {item.quantity > 1 && (
         <span className="text-muted-foreground text-xs">x{item.quantity}</span>
       )}
+      {onEquip && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary shrink-0"
+          title="Equip"
+          onClick={onEquip}
+        >
+          <img
+            src="/images/icons/Equip.svg"
+            alt="Equip"
+            className="size-3.5 dark:invert"
+          />
+        </Button>
+      )}
       {onUnequip && (
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground shrink-0"
+          className="text-muted-foreground hover:text-destructive shrink-0"
           title="Unequip"
           onClick={onUnequip}
         >
