@@ -56,6 +56,9 @@ function InventoryList() {
   const queryClient = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<InventoryListItem | null>(
+    null
+  )
 
   const {
     data: inventories = [],
@@ -81,6 +84,7 @@ function InventoryList() {
     mutationFn: (id: number) => inventoryApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventories"] })
+      setDeleteTarget(null)
       toast.success("Inventory deleted")
     },
     onError: (err) => toast.error(String(err)),
@@ -125,7 +129,7 @@ function InventoryList() {
           <InventoryCard
             key={inv.id}
             inventory={inv}
-            onDelete={() => deleteMutation.mutate(inv.id)}
+            onDelete={() => setDeleteTarget(inv)}
           />
         ))}
       </div>
@@ -164,6 +168,36 @@ function InventoryList() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteTarget != null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Inventory</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteTarget?.name}"? This will
+              remove all items in this inventory.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() =>
+                deleteTarget && deleteMutation.mutate(deleteTarget.id)
+              }
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -198,7 +232,7 @@ function InventoryCard({
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              if (confirm("Delete this inventory?")) onDelete()
+              onDelete()
             }}
           >
             <Trash2 className="size-4" />
