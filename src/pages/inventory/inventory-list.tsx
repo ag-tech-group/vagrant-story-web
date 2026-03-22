@@ -120,7 +120,7 @@ function InventoryList() {
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         {inventories.map((inv) => (
           <InventoryCard
             key={inv.id}
