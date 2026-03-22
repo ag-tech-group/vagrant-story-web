@@ -110,7 +110,8 @@ function InventoryList() {
     <div className="mx-auto w-full max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground text-sm">
-          {inventories.length} inventory{inventories.length !== 1 ? "ies" : ""}
+          {inventories.length}{" "}
+          {inventories.length === 1 ? "inventory" : "inventories"}
         </p>
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="size-3.5" />
