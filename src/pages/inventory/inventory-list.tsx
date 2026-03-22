@@ -25,7 +25,6 @@ import { useAuth } from "@/lib/auth"
 import { inventoryApi, type InventoryListItem } from "@/lib/inventory-api"
 
 const AUTH_URL = "https://auth.criticalbit.gg"
-const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
 type SortKey = "name" | "created" | "updated"
 
@@ -48,7 +47,7 @@ export function InventoryListPage() {
         </p>
         <Button asChild>
           <a
-            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL + "/inventory")}`}
+            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(window.location.origin + "/inventory")}`}
           >
             Sign In
           </a>

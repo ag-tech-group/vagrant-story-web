@@ -44,7 +44,6 @@ import {
 import { cn } from "@/lib/utils"
 
 const AUTH_URL = "https://auth.criticalbit.gg"
-const SITE_URL = "https://vagrant-story.criticalbit.gg"
 
 // ── Slot configuration ──────────────────────────────────────────────
 
@@ -59,7 +58,6 @@ interface SlotConfig {
 }
 
 const EQUIP_SLOTS: SlotConfig[] = [
-  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
   {
     key: "right_hand",
     label: "R. Hand",
@@ -67,6 +65,15 @@ const EQUIP_SLOTS: SlotConfig[] = [
     itemTypes: ["blade"],
     isBlade: true,
   },
+  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
+  {
+    key: "accessory",
+    label: "Accessory",
+    gridArea: "accessory",
+    itemTypes: ["Accessory"],
+    isAccessory: true,
+  },
+  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
   { key: "body", label: "Body", gridArea: "body", itemTypes: ["Body"] },
   {
     key: "left_hand",
@@ -75,15 +82,7 @@ const EQUIP_SLOTS: SlotConfig[] = [
     itemTypes: ["Shield"],
     isShield: true,
   },
-  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
   { key: "legs", label: "Legs", gridArea: "legs", itemTypes: ["Leg"] },
-  {
-    key: "accessory",
-    label: "Accessory",
-    gridArea: "accessory",
-    itemTypes: ["Accessory"],
-    isAccessory: true,
-  },
 ]
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
@@ -112,7 +111,7 @@ export function InventoryDetailPage() {
         </p>
         <Button asChild>
           <a
-            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL + "/inventory")}`}
+            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(window.location.origin + "/inventory")}`}
           >
             Sign In
           </a>
@@ -278,11 +277,8 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     return blade?.hands === "2H"
   }, [inventory, bladeIdMap])
 
-  // Bag items (unequipped)
-  const bagItems = useMemo(
-    () => inventory?.items.filter((i) => i.equip_slot == null) ?? [],
-    [inventory]
-  )
+  // All items for the bag view (equipped items shown with badge)
+  const allItems = useMemo(() => inventory?.items ?? [], [inventory])
 
   // Get display info for an inventory item
   const getItemDisplayName = useCallback(
@@ -557,7 +553,12 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           getItemDisplayName={getItemDisplayName}
           getItemDisplayType={getItemDisplayType}
           onSlotClick={setEditingSlot}
-          onClearSlot={(slotItem) => deleteItemMutation.mutate(slotItem.id)}
+          onUnequip={(slotItem) =>
+            updateItemMutation.mutate({
+              itemId: slotItem.id,
+              equip_slot: null,
+            })
+          }
           equippedBladeIs2H={equippedBladeIs2H}
         />
       </div>
@@ -572,7 +573,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">
             <Package className="mr-1.5 inline size-4" />
-            Item Bag ({bagItems.length})
+            Item Bag ({allItems.length})
           </h3>
           <Button
             size="sm"
@@ -583,13 +584,13 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             Add Item
           </Button>
         </div>
-        {bagItems.length === 0 ? (
+        {allItems.length === 0 ? (
           <p className="text-muted-foreground py-4 text-center text-xs">
             No items in the bag
           </p>
         ) : (
           <div className="space-y-1">
-            {bagItems.map((item) => (
+            {allItems.map((item) => (
               <BagItemRow
                 key={item.id}
                 item={item}
@@ -664,14 +665,14 @@ function EquipmentGrid({
   getItemDisplayName,
   getItemDisplayType,
   onSlotClick,
-  onClearSlot,
+  onUnequip,
   equippedBladeIs2H,
 }: {
   getSlotItem: (slot: EquipSlot) => InventoryItem | undefined
   getItemDisplayName: (item: InventoryItem) => string
   getItemDisplayType: (item: InventoryItem) => string
   onSlotClick: (slot: SlotConfig) => void
-  onClearSlot: (item: InventoryItem) => void
+  onUnequip: (item: InventoryItem) => void
   equippedBladeIs2H: boolean
 }) {
   return (
@@ -679,13 +680,10 @@ function EquipmentGrid({
       className="grid gap-2"
       style={{
         gridTemplateColumns: "1fr 1fr 1fr",
-        gridTemplateRows: "auto auto auto auto auto",
         gridTemplateAreas: `
-          ".        head      ."
-          "rhand    body      lhand"
-          ".        arms      ."
+          "rhand    head      accessory"
+          "arms     body      lhand"
           ".        legs      ."
-          ".        accessory ."
         `,
       }}
     >
@@ -700,7 +698,7 @@ function EquipmentGrid({
               displayName={item ? getItemDisplayName(item) : undefined}
               displayType={item ? getItemDisplayType(item) : undefined}
               onClick={() => !disabled && onSlotClick(slot)}
-              onClear={item ? () => onClearSlot(item) : undefined}
+              onClear={item ? () => onUnequip(item) : undefined}
               disabled={disabled}
             />
           </div>
@@ -788,6 +786,16 @@ function EquipSlotCard({
 
 // ── Bag Item Row ────────────────────────────────────────────────────
 
+const SLOT_LABELS: Record<string, string> = {
+  right_hand: "R. Hand",
+  left_hand: "L. Hand",
+  head: "Head",
+  body: "Body",
+  legs: "Legs",
+  arms: "Arms",
+  accessory: "Accessory",
+}
+
 function BagItemRow({
   item,
   name,
@@ -803,7 +811,14 @@ function BagItemRow({
     <div className="border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2">
       <ItemIcon type={type} size="sm" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-medium">{name}</p>
+          {item.equip_slot && (
+            <span className="bg-primary/15 text-primary shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold">
+              {SLOT_LABELS[item.equip_slot] ?? "Equipped"}
+            </span>
+          )}
+        </div>
         {item.material && <MaterialBadge mat={item.material} />}
       </div>
       {item.quantity > 1 && (
