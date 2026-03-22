@@ -339,14 +339,12 @@ export function ForgePage() {
     for (const b of blades) {
       const type = b.blade_type
       if (!byType.has(type)) byType.set(type, [])
-      byType
-        .get(type)!
-        .push({
-          name: fmt(b.field_name),
-          type,
-          gameId: b.game_id,
-          suffix: b.hands,
-        })
+      byType.get(type)!.push({
+        name: fmt(b.field_name),
+        type,
+        gameId: b.game_id,
+        suffix: b.hands,
+      })
     }
     for (const a of armor) {
       if (a.armor_type === "Accessory") continue
