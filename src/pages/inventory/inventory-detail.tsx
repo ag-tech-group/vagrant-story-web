@@ -664,6 +664,17 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           consumableMap={consumableMap}
           consumableIdMap={consumableIdMap}
           onSave={handleSlotSave}
+          onUnequip={
+            getSlotItem(editingSlot.key)
+              ? () => {
+                  const item = getSlotItem(editingSlot.key)!
+                  updateItemMutation.mutate(
+                    { itemId: item.id, equip_slot: null },
+                    { onSuccess: () => setEditingSlot(null) }
+                  )
+                }
+              : undefined
+          }
           onClose={() => setEditingSlot(null)}
           isPending={addItemMutation.isPending || updateItemMutation.isPending}
         />
@@ -1063,6 +1074,7 @@ function SlotEditorDialog({
   consumableMap,
   consumableIdMap,
   onSave,
+  onUnequip,
   onClose,
   isPending,
 }: {
@@ -1084,6 +1096,7 @@ function SlotEditorDialog({
   consumableMap: Map<string, Consumable>
   consumableIdMap: Map<number, Consumable>
   onSave: (data: CreateInventoryItem, existingItemId?: number) => void
+  onUnequip?: () => void
   onClose: () => void
   isPending: boolean
 }) {
@@ -1480,6 +1493,24 @@ function SlotEditorDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
+          {onUnequip && (
+            <Button
+              variant="outline"
+              className="text-muted-foreground hover:text-destructive"
+              disabled={isPending}
+              onClick={onUnequip}
+            >
+              <span
+                className="size-3.5 bg-current"
+                style={{
+                  mask: "url(/images/icons/Unequip.svg) center / contain no-repeat",
+                  WebkitMask:
+                    "url(/images/icons/Unequip.svg) center / contain no-repeat",
+                }}
+              />
+              Unequip
+            </Button>
+          )}
           <Button onClick={handleConfirm} disabled={!canConfirm || isPending}>
             {isPending
               ? "Saving..."
