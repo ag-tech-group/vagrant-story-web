@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
-import { ArrowLeft, Package, Plus, Trash2, X } from "lucide-react"
+import { ArrowLeft, Package, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { MaterialBadge } from "@/components/stat-display"
 import { useAuth } from "@/lib/auth"
+import { loginUrl } from "@/lib/config"
 import {
   gameApi,
   fmt,
@@ -43,9 +44,6 @@ import {
 } from "@/lib/inventory-api"
 import { cn } from "@/lib/utils"
 
-const AUTH_URL = "https://auth.criticalbit.gg"
-const SITE_URL = "https://vagrant-story.criticalbit.gg"
-
 // ── Slot configuration ──────────────────────────────────────────────
 
 interface SlotConfig {
@@ -59,7 +57,6 @@ interface SlotConfig {
 }
 
 const EQUIP_SLOTS: SlotConfig[] = [
-  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
   {
     key: "right_hand",
     label: "R. Hand",
@@ -67,6 +64,15 @@ const EQUIP_SLOTS: SlotConfig[] = [
     itemTypes: ["blade"],
     isBlade: true,
   },
+  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
+  {
+    key: "accessory",
+    label: "Accessory",
+    gridArea: "accessory",
+    itemTypes: ["Accessory"],
+    isAccessory: true,
+  },
+  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
   { key: "body", label: "Body", gridArea: "body", itemTypes: ["Body"] },
   {
     key: "left_hand",
@@ -75,15 +81,7 @@ const EQUIP_SLOTS: SlotConfig[] = [
     itemTypes: ["Shield"],
     isShield: true,
   },
-  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
   { key: "legs", label: "Legs", gridArea: "legs", itemTypes: ["Leg"] },
-  {
-    key: "accessory",
-    label: "Accessory",
-    gridArea: "accessory",
-    itemTypes: ["Accessory"],
-    isAccessory: true,
-  },
 ]
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
@@ -111,11 +109,7 @@ export function InventoryDetailPage() {
           Sign in to manage your inventory
         </p>
         <Button asChild>
-          <a
-            href={`${AUTH_URL}/login?redirect=${encodeURIComponent(SITE_URL + "/inventory")}`}
-          >
-            Sign In
-          </a>
+          <a href={loginUrl("/inventory")}>Sign In</a>
         </Button>
       </div>
     )
@@ -278,11 +272,8 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     return blade?.hands === "2H"
   }, [inventory, bladeIdMap])
 
-  // Bag items (unequipped)
-  const bagItems = useMemo(
-    () => inventory?.items.filter((i) => i.equip_slot == null) ?? [],
-    [inventory]
-  )
+  // All items for the bag view (equipped items shown with badge)
+  const allItems = useMemo(() => inventory?.items ?? [], [inventory])
 
   // Get display info for an inventory item
   const getItemDisplayName = useCallback(
@@ -332,6 +323,28 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       return armorItem?.armor_type ?? "Armor"
     },
     [bladeIdMap, armorIdMap, gripIdMap, gemIdMap]
+  )
+
+  // Determine the equip slot for an item (null = not equippable)
+  const getEquipSlotForItem = useCallback(
+    (item: InventoryItem): EquipSlot | null => {
+      if (item.item_type === "blade") return "right_hand"
+      if (item.item_type === "armor") {
+        const armorItem = armorIdMap.get(item.item_id)
+        if (!armorItem) return null
+        const slotMap: Record<string, EquipSlot> = {
+          Helm: "head",
+          Body: "body",
+          Leg: "legs",
+          Arm: "arms",
+          Shield: "left_hand",
+          Accessory: "accessory",
+        }
+        return slotMap[armorItem.armor_type] ?? null
+      }
+      return null
+    },
+    [armorIdMap]
   )
 
   // Handle slot save
@@ -557,7 +570,12 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           getItemDisplayName={getItemDisplayName}
           getItemDisplayType={getItemDisplayType}
           onSlotClick={setEditingSlot}
-          onClearSlot={(slotItem) => deleteItemMutation.mutate(slotItem.id)}
+          onUnequip={(slotItem) =>
+            updateItemMutation.mutate({
+              itemId: slotItem.id,
+              equip_slot: null,
+            })
+          }
           equippedBladeIs2H={equippedBladeIs2H}
         />
       </div>
@@ -572,7 +590,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">
             <Package className="mr-1.5 inline size-4" />
-            Item Bag ({bagItems.length})
+            Item Bag ({allItems.length})
           </h3>
           <Button
             size="sm"
@@ -583,21 +601,44 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             Add Item
           </Button>
         </div>
-        {bagItems.length === 0 ? (
+        {allItems.length === 0 ? (
           <p className="text-muted-foreground py-4 text-center text-xs">
             No items in the bag
           </p>
         ) : (
           <div className="space-y-1">
-            {bagItems.map((item) => (
-              <BagItemRow
-                key={item.id}
-                item={item}
-                name={getItemDisplayName(item)}
-                type={getItemDisplayType(item)}
-                onDelete={() => deleteItemMutation.mutate(item.id)}
-              />
-            ))}
+            {allItems.map((item) => {
+              const targetSlot = !item.equip_slot
+                ? getEquipSlotForItem(item)
+                : null
+              return (
+                <BagItemRow
+                  key={item.id}
+                  item={item}
+                  name={getItemDisplayName(item)}
+                  type={getItemDisplayType(item)}
+                  onDelete={() => deleteItemMutation.mutate(item.id)}
+                  onUnequip={
+                    item.equip_slot
+                      ? () =>
+                          updateItemMutation.mutate({
+                            itemId: item.id,
+                            equip_slot: null,
+                          })
+                      : undefined
+                  }
+                  onEquip={
+                    targetSlot
+                      ? () =>
+                          updateItemMutation.mutate({
+                            itemId: item.id,
+                            equip_slot: targetSlot,
+                          })
+                      : undefined
+                  }
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -623,6 +664,17 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           consumableMap={consumableMap}
           consumableIdMap={consumableIdMap}
           onSave={handleSlotSave}
+          onUnequip={
+            getSlotItem(editingSlot.key)
+              ? () => {
+                  const item = getSlotItem(editingSlot.key)!
+                  updateItemMutation.mutate(
+                    { itemId: item.id, equip_slot: null },
+                    { onSuccess: () => setEditingSlot(null) }
+                  )
+                }
+              : undefined
+          }
           onClose={() => setEditingSlot(null)}
           isPending={addItemMutation.isPending || updateItemMutation.isPending}
         />
@@ -664,14 +716,14 @@ function EquipmentGrid({
   getItemDisplayName,
   getItemDisplayType,
   onSlotClick,
-  onClearSlot,
+  onUnequip,
   equippedBladeIs2H,
 }: {
   getSlotItem: (slot: EquipSlot) => InventoryItem | undefined
   getItemDisplayName: (item: InventoryItem) => string
   getItemDisplayType: (item: InventoryItem) => string
   onSlotClick: (slot: SlotConfig) => void
-  onClearSlot: (item: InventoryItem) => void
+  onUnequip: (item: InventoryItem) => void
   equippedBladeIs2H: boolean
 }) {
   return (
@@ -679,13 +731,10 @@ function EquipmentGrid({
       className="grid gap-2"
       style={{
         gridTemplateColumns: "1fr 1fr 1fr",
-        gridTemplateRows: "auto auto auto auto auto",
         gridTemplateAreas: `
-          ".        head      ."
-          "rhand    body      lhand"
-          ".        arms      ."
+          "rhand    head      accessory"
+          "arms     body      lhand"
           ".        legs      ."
-          ".        accessory ."
         `,
       }}
     >
@@ -700,7 +749,7 @@ function EquipmentGrid({
               displayName={item ? getItemDisplayName(item) : undefined}
               displayType={item ? getItemDisplayType(item) : undefined}
               onClick={() => !disabled && onSlotClick(slot)}
-              onClear={item ? () => onClearSlot(item) : undefined}
+              onClear={item ? () => onUnequip(item) : undefined}
               disabled={disabled}
             />
           </div>
@@ -734,7 +783,7 @@ function EquipSlotCard({
         onClick={onClick}
         disabled={disabled}
         className={cn(
-          "flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
+          "flex h-full w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
           disabled
             ? "border-border/30 cursor-not-allowed opacity-40"
             : "border-border/50 hover:border-foreground/30 hover:bg-muted/30"
@@ -756,7 +805,7 @@ function EquipSlotCard({
     <button
       type="button"
       onClick={onClick}
-      className="border-border hover:border-foreground/30 group bg-card/50 relative flex w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors"
+      className="border-border hover:border-foreground/30 group bg-card/50 relative flex h-full w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors"
     >
       <ItemIcon type={displayType} size="sm" />
       <span className="max-w-full truncate text-xs leading-tight font-medium">
@@ -779,7 +828,14 @@ function EquipSlotCard({
             }
           }}
         >
-          <X className="size-3.5" />
+          <span
+            className="size-3.5 bg-current"
+            style={{
+              mask: "url(/images/icons/Unequip.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Unequip.svg) center / contain no-repeat",
+            }}
+          />
         </span>
       )}
     </button>
@@ -788,31 +844,89 @@ function EquipSlotCard({
 
 // ── Bag Item Row ────────────────────────────────────────────────────
 
+const SLOT_LABELS: Record<string, string> = {
+  right_hand: "R. Hand",
+  left_hand: "L. Hand",
+  head: "Head",
+  body: "Body",
+  legs: "Legs",
+  arms: "Arms",
+  accessory: "Accessory",
+}
+
 function BagItemRow({
   item,
   name,
   type,
   onDelete,
+  onUnequip,
+  onEquip,
 }: {
   item: InventoryItem
   name: string
   type: string
   onDelete: () => void
+  onUnequip?: () => void
+  onEquip?: () => void
 }) {
   return (
     <div className="border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2">
       <ItemIcon type={type} size="sm" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-medium">{name}</p>
+          {item.equip_slot && (
+            <span className="bg-primary/15 text-primary shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold">
+              {SLOT_LABELS[item.equip_slot] ?? "Equipped"}
+            </span>
+          )}
+        </div>
         {item.material && <MaterialBadge mat={item.material} />}
       </div>
       {item.quantity > 1 && (
         <span className="text-muted-foreground text-xs">x{item.quantity}</span>
       )}
+      {onEquip && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary shrink-0"
+          onClick={onEquip}
+        >
+          <span
+            className="bg-primary size-3.5"
+            style={{
+              mask: "url(/images/icons/Equip.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Equip.svg) center / contain no-repeat",
+            }}
+          />
+          Equip
+        </Button>
+      )}
+      {onUnequip && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-destructive shrink-0"
+          onClick={onUnequip}
+        >
+          <span
+            className="size-3.5 bg-current"
+            style={{
+              mask: "url(/images/icons/Unequip.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Unequip.svg) center / contain no-repeat",
+            }}
+          />
+          Unequip
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
         className="text-muted-foreground hover:text-destructive shrink-0"
+        title="Delete"
         onClick={onDelete}
       >
         <Trash2 className="size-3.5" />
@@ -960,6 +1074,7 @@ function SlotEditorDialog({
   consumableMap,
   consumableIdMap,
   onSave,
+  onUnequip,
   onClose,
   isPending,
 }: {
@@ -981,6 +1096,7 @@ function SlotEditorDialog({
   consumableMap: Map<string, Consumable>
   consumableIdMap: Map<number, Consumable>
   onSave: (data: CreateInventoryItem, existingItemId?: number) => void
+  onUnequip?: () => void
   onClose: () => void
   isPending: boolean
 }) {
@@ -1377,6 +1493,24 @@ function SlotEditorDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
+          {onUnequip && (
+            <Button
+              variant="outline"
+              className="text-muted-foreground hover:text-destructive"
+              disabled={isPending}
+              onClick={onUnequip}
+            >
+              <span
+                className="size-3.5 bg-current"
+                style={{
+                  mask: "url(/images/icons/Unequip.svg) center / contain no-repeat",
+                  WebkitMask:
+                    "url(/images/icons/Unequip.svg) center / contain no-repeat",
+                }}
+              />
+              Unequip
+            </Button>
+          )}
           <Button onClick={handleConfirm} disabled={!canConfirm || isPending}>
             {isPending
               ? "Saving..."
