@@ -817,10 +817,13 @@ function EquipSlotCard({
             }
           }}
         >
-          <img
-            src="/images/icons/Unequip.svg"
-            alt="Unequip"
-            className="size-3.5 dark:invert"
+          <span
+            className="size-3.5 bg-current"
+            style={{
+              mask: "url(/images/icons/Unequip.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Unequip.svg) center / contain no-repeat",
+            }}
           />
         </span>
       )}
@@ -876,14 +879,17 @@ function BagItemRow({
         <Button
           variant="ghost"
           size="sm"
-          className="text-primary shrink-0"
+          className="shrink-0"
           title="Equip"
           onClick={onEquip}
         >
-          <img
-            src="/images/icons/Equip.svg"
-            alt="Equip"
-            className="size-3.5 dark:invert"
+          <span
+            className="bg-primary size-3.5"
+            style={{
+              mask: "url(/images/icons/Equip.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Equip.svg) center / contain no-repeat",
+            }}
           />
         </Button>
       )}
@@ -895,10 +901,13 @@ function BagItemRow({
           title="Unequip"
           onClick={onUnequip}
         >
-          <img
-            src="/images/icons/Unequip.svg"
-            alt="Unequip"
-            className="size-3.5 dark:invert"
+          <span
+            className="size-3.5 bg-current"
+            style={{
+              mask: "url(/images/icons/Unequip.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Unequip.svg) center / contain no-repeat",
+            }}
           />
         </Button>
       )}
