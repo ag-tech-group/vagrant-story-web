@@ -879,8 +879,7 @@ function BagItemRow({
         <Button
           variant="ghost"
           size="sm"
-          className="shrink-0"
-          title="Equip"
+          className="text-primary shrink-0"
           onClick={onEquip}
         >
           <span
@@ -891,6 +890,7 @@ function BagItemRow({
                 "url(/images/icons/Equip.svg) center / contain no-repeat",
             }}
           />
+          Equip
         </Button>
       )}
       {onUnequip && (
@@ -898,7 +898,6 @@ function BagItemRow({
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-destructive shrink-0"
-          title="Unequip"
           onClick={onUnequip}
         >
           <span
@@ -909,6 +908,7 @@ function BagItemRow({
                 "url(/images/icons/Unequip.svg) center / contain no-repeat",
             }}
           />
+          Unequip
         </Button>
       )}
       <Button
