@@ -115,10 +115,11 @@ export function ItemPicker({
         <PopoverContent
           className="w-[var(--radix-popover-trigger-width)] p-0"
           align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Command>
             <CommandInput placeholder="Search items..." />
-            <CommandList>
+            <CommandList className="[&]:touch-action-pan-y max-h-[min(300px,60vh)] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
               <CommandEmpty>No items found.</CommandEmpty>
               {Object.entries(groups).map(([type, groupItems]) => (
                 <CommandGroup key={type} heading={type}>

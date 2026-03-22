@@ -30,6 +30,7 @@ import {
   fmt,
   type Armor,
   type Blade,
+  type Consumable,
   type Gem,
   type Grip,
   type Material,
@@ -353,6 +354,10 @@ function InventoryDetailView({
     queryKey: ["gems"],
     queryFn: gameApi.gems,
   })
+  const { data: consumables = [] } = useQuery({
+    queryKey: ["consumables"],
+    queryFn: gameApi.consumables,
+  })
 
   const bladeMap = useMemo(() => {
     const map = new Map<string, Blade>()
@@ -396,11 +401,29 @@ function InventoryDetailView({
     return map
   }, [materials])
 
+  const gemMap = useMemo(() => {
+    const map = new Map<string, Gem>()
+    for (const g of gems) map.set(fmt(g.field_name), g)
+    return map
+  }, [gems])
+
   const gemIdMap = useMemo(() => {
     const map = new Map<number, Gem>()
     for (const g of gems) map.set(g.id, g)
     return map
   }, [gems])
+
+  const consumableMap = useMemo(() => {
+    const map = new Map<string, Consumable>()
+    for (const c of consumables) map.set(fmt(c.field_name), c)
+    return map
+  }, [consumables])
+
+  const consumableIdMap = useMemo(() => {
+    const map = new Map<number, Consumable>()
+    for (const c of consumables) map.set(c.id, c)
+    return map
+  }, [consumables])
 
   // Mutations
   const addItemMutation = useMutation({
@@ -459,10 +482,24 @@ function InventoryDetailView({
         const blade = bladeIdMap.get(item.item_id)
         return blade ? fmt(blade.field_name) : `Blade #${item.item_id}`
       }
+      if (item.item_type === "grip") {
+        const grip = gripIdMap.get(item.item_id)
+        return grip ? fmt(grip.field_name) : `Grip #${item.item_id}`
+      }
+      if (item.item_type === "gem") {
+        const gem = gemIdMap.get(item.item_id)
+        return gem ? fmt(gem.field_name) : `Gem #${item.item_id}`
+      }
+      if (item.item_type === "consumable") {
+        const consumable = consumableIdMap.get(item.item_id)
+        return consumable
+          ? fmt(consumable.field_name)
+          : `Consumable #${item.item_id}`
+      }
       const armorItem = armorIdMap.get(item.item_id)
       return armorItem ? fmt(armorItem.field_name) : `Item #${item.item_id}`
     },
-    [bladeIdMap, armorIdMap]
+    [bladeIdMap, armorIdMap, gripIdMap, gemIdMap, consumableIdMap]
   )
 
   const getItemDisplayType = useCallback(
@@ -471,10 +508,21 @@ function InventoryDetailView({
         const blade = bladeIdMap.get(item.item_id)
         return blade?.blade_type ?? "Blade"
       }
+      if (item.item_type === "grip") {
+        const grip = gripIdMap.get(item.item_id)
+        return grip?.grip_type ?? "Grip"
+      }
+      if (item.item_type === "gem") {
+        const gem = gemIdMap.get(item.item_id)
+        return gem?.gem_type ?? "Gem"
+      }
+      if (item.item_type === "consumable") {
+        return "Consumable"
+      }
       const armorItem = armorIdMap.get(item.item_id)
       return armorItem?.armor_type ?? "Armor"
     },
-    [bladeIdMap, armorIdMap]
+    [bladeIdMap, armorIdMap, gripIdMap, gemIdMap]
   )
 
   // Handle slot save
@@ -752,9 +800,17 @@ function InventoryDetailView({
           armor={armor}
           grips={grips}
           gems={gems}
+          consumables={consumables}
           bladeMap={bladeMap}
+          bladeIdMap={bladeIdMap}
           armorMap={armorMap}
+          armorIdMap={armorIdMap}
           gripMap={gripMap}
+          gripIdMap={gripIdMap}
+          gemMap={gemMap}
+          gemIdMap={gemIdMap}
+          consumableMap={consumableMap}
+          consumableIdMap={consumableIdMap}
           onSave={handleSlotSave}
           onClose={() => setEditingSlot(null)}
           isPending={addItemMutation.isPending || updateItemMutation.isPending}
@@ -770,9 +826,17 @@ function InventoryDetailView({
           armor={armor}
           grips={grips}
           gems={gems}
+          consumables={consumables}
           bladeMap={bladeMap}
+          bladeIdMap={bladeIdMap}
           armorMap={armorMap}
+          armorIdMap={armorIdMap}
           gripMap={gripMap}
+          gripIdMap={gripIdMap}
+          gemMap={gemMap}
+          gemIdMap={gemIdMap}
+          consumableMap={consumableMap}
+          consumableIdMap={consumableIdMap}
           onSave={handleBagSave}
           onClose={() => setEditingBagItem(false)}
           isPending={addItemMutation.isPending}
@@ -1059,9 +1123,17 @@ function SlotEditorDialog({
   armor,
   grips,
   gems,
+  consumables,
   bladeMap,
+  bladeIdMap,
   armorMap,
+  armorIdMap,
   gripMap,
+  gripIdMap,
+  gemMap,
+  gemIdMap,
+  consumableMap,
+  consumableIdMap,
   onSave,
   onClose,
   isPending,
@@ -1072,24 +1144,89 @@ function SlotEditorDialog({
   armor: Armor[]
   grips: Grip[]
   gems: Gem[]
+  consumables: Consumable[]
   bladeMap: Map<string, Blade>
+  bladeIdMap: Map<number, Blade>
   armorMap: Map<string, Armor>
+  armorIdMap: Map<number, Armor>
   gripMap: Map<string, Grip>
+  gripIdMap: Map<number, Grip>
+  gemMap: Map<string, Gem>
+  gemIdMap: Map<number, Gem>
+  consumableMap: Map<string, Consumable>
+  consumableIdMap: Map<number, Consumable>
   onSave: (data: CreateInventoryItem, existingItemId?: number) => void
   onClose: () => void
   isPending: boolean
 }) {
-  const [selectedItem, setSelectedItem] = useState<string | null>(null)
-  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null)
-  const [selectedGrip, setSelectedGrip] = useState<string | null>(null)
-  const [selectedGems, setSelectedGems] = useState<(string | null)[]>([])
+  // Resolve existing item names for pre-fill
+  const initialItemName = useMemo(() => {
+    if (!existingItem) return null
+    if (existingItem.item_type === "blade") {
+      const b = bladeIdMap.get(existingItem.item_id)
+      return b ? fmt(b.field_name) : null
+    }
+    if (existingItem.item_type === "grip") {
+      const g = gripIdMap.get(existingItem.item_id)
+      return g ? fmt(g.field_name) : null
+    }
+    if (existingItem.item_type === "gem") {
+      const g = gemIdMap.get(existingItem.item_id)
+      return g ? fmt(g.field_name) : null
+    }
+    if (existingItem.item_type === "consumable") {
+      const c = consumableIdMap.get(existingItem.item_id)
+      return c ? fmt(c.field_name) : null
+    }
+    const a = armorIdMap.get(existingItem.item_id)
+    return a ? fmt(a.field_name) : null
+  }, [
+    existingItem,
+    bladeIdMap,
+    armorIdMap,
+    gripIdMap,
+    gemIdMap,
+    consumableIdMap,
+  ])
+
+  const initialGripName = useMemo(() => {
+    if (!existingItem?.grip_id) return null
+    const g = gripIdMap.get(existingItem.grip_id)
+    return g ? fmt(g.field_name) : null
+  }, [existingItem, gripIdMap])
+
+  const initialGems = useMemo(() => {
+    if (!existingItem) return []
+    const ids = [
+      existingItem.gem_1_id,
+      existingItem.gem_2_id,
+      existingItem.gem_3_id,
+    ]
+    return ids.map((id) => {
+      if (!id) return null
+      const g = gemIdMap.get(id)
+      return g ? fmt(g.field_name) : null
+    })
+  }, [existingItem, gemIdMap])
+
+  const [selectedItem, setSelectedItem] = useState<string | null>(
+    initialItemName
+  )
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(
+    existingItem?.material ?? null
+  )
+  const [selectedGrip, setSelectedGrip] = useState<string | null>(
+    initialGripName
+  )
+  const [selectedGems, setSelectedGems] =
+    useState<(string | null)[]>(initialGems)
 
   // Build picker items based on slot type
   const pickerItems: PickerItem[] = useMemo(() => {
     const items: PickerItem[] = []
 
     if (!slot) {
-      // Bag: show all equipment
+      // Bag: show all item types
       for (const b of blades) {
         items.push({
           name: fmt(b.field_name),
@@ -1102,6 +1239,27 @@ function SlotEditorDialog({
           name: fmt(a.field_name),
           type: a.armor_type,
           level: a.game_id,
+        })
+      }
+      for (const g of grips) {
+        items.push({
+          name: fmt(g.field_name),
+          type: g.grip_type || "Grip",
+          level: g.game_id,
+        })
+      }
+      for (const g of gems) {
+        items.push({
+          name: fmt(g.field_name),
+          type: g.gem_type || "Gem",
+          level: g.game_id,
+        })
+      }
+      for (const c of consumables) {
+        items.push({
+          name: fmt(c.field_name),
+          type: "Consumable",
+          level: c.game_id,
         })
       }
       return items
@@ -1149,27 +1307,36 @@ function SlotEditorDialog({
     }
 
     return items
-  }, [slot, blades, armor])
+  }, [slot, blades, armor, grips, gems, consumables])
 
   // Determine mode of selected item
   const isBlade = selectedItem ? bladeMap.has(selectedItem) : false
+  const isGrip = selectedItem && !isBlade ? gripMap.has(selectedItem) : false
+  const isGem =
+    selectedItem && !isBlade && !isGrip ? gemMap.has(selectedItem) : false
+  const isConsumable =
+    selectedItem && !isBlade && !isGrip && !isGem
+      ? consumableMap.has(selectedItem)
+      : false
   const isShield =
-    selectedItem && !isBlade
+    selectedItem && !isBlade && !isGrip && !isGem && !isConsumable
       ? armorMap.get(selectedItem)?.armor_type === "Shield"
       : false
   const isAccessory =
-    selectedItem && !isBlade
+    selectedItem && !isBlade && !isGrip && !isGem && !isConsumable
       ? armorMap.get(selectedItem)?.armor_type === "Accessory"
       : false
 
+  // Whether this item type needs a material selector
+  const needsMaterial = !isAccessory && !isGrip && !isGem && !isConsumable
+
   // Materials
   const availableMaterials = useMemo(() => {
-    if (!selectedItem) return []
+    if (!selectedItem || !needsMaterial) return []
     if (isBlade) return BLADE_MATS
     if (isShield) return SHIELD_MATS
-    if (isAccessory) return []
     return ARMOR_MATS
-  }, [selectedItem, isBlade, isShield, isAccessory])
+  }, [selectedItem, needsMaterial, isBlade, isShield])
 
   // Compatible grips (blade only)
   const compatibleGripItems: PickerItem[] = useMemo(() => {
@@ -1237,6 +1404,15 @@ function SlotEditorDialog({
     if (bladeMap.has(selectedItem)) {
       item_type = "blade"
       item_id = bladeMap.get(selectedItem)!.id
+    } else if (gripMap.has(selectedItem)) {
+      item_type = "grip"
+      item_id = gripMap.get(selectedItem)!.id
+    } else if (gemMap.has(selectedItem)) {
+      item_type = "gem"
+      item_id = gemMap.get(selectedItem)!.id
+    } else if (consumableMap.has(selectedItem)) {
+      item_type = "consumable"
+      item_id = consumableMap.get(selectedItem)!.id
     } else {
       item_type = "armor"
       item_id = armorMap.get(selectedItem)!.id
@@ -1254,7 +1430,7 @@ function SlotEditorDialog({
     const data: CreateInventoryItem = {
       item_type,
       item_id,
-      material: isAccessory ? null : selectedMaterial || null,
+      material: needsMaterial ? selectedMaterial || null : null,
       grip_id: grip?.id ?? null,
       gem_1_id: gemIds[0] ?? null,
       gem_2_id: gemIds[1] ?? null,
@@ -1268,22 +1444,30 @@ function SlotEditorDialog({
   // Can confirm?
   const canConfirm = useMemo(() => {
     if (!selectedItem) return false
-    if (!isAccessory && availableMaterials.length > 0 && !selectedMaterial)
+    if (needsMaterial && availableMaterials.length > 0 && !selectedMaterial)
       return false
     return true
-  }, [selectedItem, isAccessory, availableMaterials, selectedMaterial])
+  }, [selectedItem, needsMaterial, availableMaterials, selectedMaterial])
+
+  const isEditing = !!existingItem
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {slot ? `Equip: ${slot.label}` : "Add to Bag"}
+            {isEditing
+              ? `Edit: ${slot?.label ?? "Bag Item"}`
+              : slot
+                ? `Equip: ${slot.label}`
+                : "Add to Bag"}
           </DialogTitle>
           <DialogDescription>
-            {slot
-              ? `Select an item for the ${slot.label.toLowerCase()} slot`
-              : "Select an item to add to your bag"}
+            {isEditing
+              ? `Update the item for ${slot ? `the ${slot.label.toLowerCase()} slot` : "your bag"}`
+              : slot
+                ? `Select an item for the ${slot.label.toLowerCase()} slot`
+                : "Select an item to add to your bag"}
           </DialogDescription>
         </DialogHeader>
 
@@ -1373,7 +1557,13 @@ function SlotEditorDialog({
             Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={!canConfirm || isPending}>
-            {isPending ? "Saving..." : existingItem ? "Update" : "Equip"}
+            {isPending
+              ? "Saving..."
+              : isEditing
+                ? "Update"
+                : slot
+                  ? "Equip"
+                  : "Add"}
           </Button>
         </DialogFooter>
       </DialogContent>
