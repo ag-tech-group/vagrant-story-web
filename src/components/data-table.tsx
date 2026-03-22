@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -91,15 +92,29 @@ export function DataTable<T>({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          placeholder={searchPlaceholder}
-          value={globalFilter}
-          onChange={(e) => {
-            setGlobalFilter(e.target.value)
-            table.setPageIndex(0)
-          }}
-          className="max-w-sm"
-        />
+        <div className="relative max-w-sm flex-1">
+          <Input
+            placeholder={searchPlaceholder}
+            value={globalFilter}
+            onChange={(e) => {
+              setGlobalFilter(e.target.value)
+              table.setPageIndex(0)
+            }}
+            className="pr-8"
+          />
+          {globalFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setGlobalFilter("")
+                table.setPageIndex(0)
+              }}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
         {filters?.map((f) => (
           <Select
             key={f.column}

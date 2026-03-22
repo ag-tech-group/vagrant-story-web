@@ -9,6 +9,7 @@ import {
   Plus,
   Search,
   Trash2,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -644,8 +645,17 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 value={bagSearch}
                 onChange={(e) => setBagSearch(e.target.value)}
                 placeholder="Filter items..."
-                className="pl-9"
+                className="pr-8 pl-9"
               />
+              {bagSearch && (
+                <button
+                  type="button"
+                  onClick={() => setBagSearch("")}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
             <Button
               variant="outline"
