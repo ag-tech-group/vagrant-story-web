@@ -27,6 +27,7 @@ export interface PickerItem {
   name: string
   type: string
   level?: number
+  suffix?: string
 }
 
 interface ItemPickerProps {
@@ -66,6 +67,11 @@ function TriggerButton({
           <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
             {value}
           </span>
+          {selectedItem?.suffix && (
+            <span className="bg-muted shrink-0 rounded px-1 py-0.5 text-[10px] font-semibold">
+              {selectedItem.suffix}
+            </span>
+          )}
           {selectedItem?.type && (
             <span className="text-muted-foreground shrink-0 text-xs">
               {formatType ? formatType(selectedItem.type) : selectedItem.type}
@@ -126,6 +132,11 @@ function ItemCommandList({
               >
                 <ItemIcon type={item.type} size="sm" />
                 <span className="flex-1">{item.name}</span>
+                {item.suffix && (
+                  <span className="bg-muted shrink-0 rounded px-1 py-0.5 text-[10px] font-semibold">
+                    {item.suffix}
+                  </span>
+                )}
                 <Check
                   className={cn(
                     "ml-auto size-4",

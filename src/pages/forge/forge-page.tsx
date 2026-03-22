@@ -333,15 +333,18 @@ export function ForgePage() {
     const items: PickerItem[] = []
     const byType = new Map<
       string,
-      { name: string; type: string; gameId: number }[]
+      { name: string; type: string; gameId: number; suffix?: string }[]
     >()
 
     for (const b of blades) {
       const type = b.blade_type
       if (!byType.has(type)) byType.set(type, [])
-      byType
-        .get(type)!
-        .push({ name: fmt(b.field_name), type, gameId: b.game_id })
+      byType.get(type)!.push({
+        name: fmt(b.field_name),
+        type,
+        gameId: b.game_id,
+        suffix: b.hands,
+      })
     }
     for (const a of armor) {
       if (a.armor_type === "Accessory") continue
@@ -359,7 +362,12 @@ export function ForgePage() {
         const item = group[i]
         if (!seen.has(item.name)) {
           seen.add(item.name)
-          items.push({ name: item.name, type: item.type, level: i + 1 })
+          items.push({
+            name: item.name,
+            type: item.type,
+            level: i + 1,
+            suffix: item.suffix,
+          })
         }
       }
     }
