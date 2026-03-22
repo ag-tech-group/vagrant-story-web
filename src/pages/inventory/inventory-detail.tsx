@@ -270,6 +270,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     [inventory]
   )
 
+  // Check if equipped blade is 2H (blocks left_hand shield)
+  const equippedBladeIs2H = useMemo(() => {
+    const rhItem = inventory?.items.find((i) => i.equip_slot === "right_hand")
+    if (!rhItem || rhItem.item_type !== "blade") return false
+    const blade = bladeIdMap.get(rhItem.item_id)
+    return blade?.hands === "2H"
+  }, [inventory, bladeIdMap])
+
   // Bag items (unequipped)
   const bagItems = useMemo(
     () => inventory?.items.filter((i) => i.equip_slot == null) ?? [],
@@ -550,6 +558,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           getItemDisplayType={getItemDisplayType}
           onSlotClick={setEditingSlot}
           onClearSlot={(slotItem) => deleteItemMutation.mutate(slotItem.id)}
+          equippedBladeIs2H={equippedBladeIs2H}
         />
       </div>
 
@@ -656,12 +665,14 @@ function EquipmentGrid({
   getItemDisplayType,
   onSlotClick,
   onClearSlot,
+  equippedBladeIs2H,
 }: {
   getSlotItem: (slot: EquipSlot) => InventoryItem | undefined
   getItemDisplayName: (item: InventoryItem) => string
   getItemDisplayType: (item: InventoryItem) => string
   onSlotClick: (slot: SlotConfig) => void
   onClearSlot: (item: InventoryItem) => void
+  equippedBladeIs2H: boolean
 }) {
   return (
     <div
@@ -680,6 +691,7 @@ function EquipmentGrid({
     >
       {EQUIP_SLOTS.map((slot) => {
         const item = getSlotItem(slot.key)
+        const disabled = slot.key === "left_hand" && equippedBladeIs2H
         return (
           <div key={slot.key} style={{ gridArea: slot.gridArea }}>
             <EquipSlotCard
@@ -687,8 +699,9 @@ function EquipmentGrid({
               item={item}
               displayName={item ? getItemDisplayName(item) : undefined}
               displayType={item ? getItemDisplayType(item) : undefined}
-              onClick={() => onSlotClick(slot)}
+              onClick={() => !disabled && onSlotClick(slot)}
               onClear={item ? () => onClearSlot(item) : undefined}
+              disabled={disabled}
             />
           </div>
         )
@@ -704,6 +717,7 @@ function EquipSlotCard({
   displayType,
   onClick,
   onClear,
+  disabled,
 }: {
   slot: SlotConfig
   item?: InventoryItem
@@ -711,18 +725,29 @@ function EquipSlotCard({
   displayType?: string
   onClick: () => void
   onClear?: () => void
+  disabled?: boolean
 }) {
   if (!item) {
     return (
       <button
         type="button"
         onClick={onClick}
-        className="border-border/50 hover:border-foreground/30 hover:bg-muted/30 flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors"
+        disabled={disabled}
+        className={cn(
+          "flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
+          disabled
+            ? "border-border/30 cursor-not-allowed opacity-40"
+            : "border-border/50 hover:border-foreground/30 hover:bg-muted/30"
+        )}
       >
         <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
           {slot.label}
         </span>
-        <Plus className="text-muted-foreground/50 size-5" />
+        {disabled ? (
+          <span className="text-muted-foreground text-[9px]">2H equipped</span>
+        ) : (
+          <Plus className="text-muted-foreground/50 size-5" />
+        )}
       </button>
     )
   }
@@ -1031,6 +1056,7 @@ function SlotEditorDialog({
           name: fmt(b.field_name),
           type: b.blade_type,
           level: b.game_id,
+          suffix: b.hands,
         })
       }
       for (const a of armor) {
@@ -1070,6 +1096,7 @@ function SlotEditorDialog({
           name: fmt(b.field_name),
           type: b.blade_type,
           level: b.game_id,
+          suffix: b.hands,
         })
       }
     } else if (slot.isShield) {
