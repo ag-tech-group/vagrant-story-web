@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
-import { ArrowLeft, Package, Plus, Trash2, X } from "lucide-react"
+import { ArrowLeft, Package, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -592,6 +592,15 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 name={getItemDisplayName(item)}
                 type={getItemDisplayType(item)}
                 onDelete={() => deleteItemMutation.mutate(item.id)}
+                onUnequip={
+                  item.equip_slot
+                    ? () =>
+                        updateItemMutation.mutate({
+                          itemId: item.id,
+                          equip_slot: null,
+                        })
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -727,7 +736,7 @@ function EquipSlotCard({
         onClick={onClick}
         disabled={disabled}
         className={cn(
-          "flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
+          "flex h-full w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
           disabled
             ? "border-border/30 cursor-not-allowed opacity-40"
             : "border-border/50 hover:border-foreground/30 hover:bg-muted/30"
@@ -749,7 +758,7 @@ function EquipSlotCard({
     <button
       type="button"
       onClick={onClick}
-      className="border-border hover:border-foreground/30 group bg-card/50 relative flex w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors"
+      className="border-border hover:border-foreground/30 group bg-card/50 relative flex h-full w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors"
     >
       <ItemIcon type={displayType} size="sm" />
       <span className="max-w-full truncate text-xs leading-tight font-medium">
@@ -772,7 +781,11 @@ function EquipSlotCard({
             }
           }}
         >
-          <X className="size-3.5" />
+          <img
+            src="/images/icons/Unequip.svg"
+            alt="Unequip"
+            className="size-3.5 dark:invert"
+          />
         </span>
       )}
     </button>
@@ -796,11 +809,13 @@ function BagItemRow({
   name,
   type,
   onDelete,
+  onUnequip,
 }: {
   item: InventoryItem
   name: string
   type: string
   onDelete: () => void
+  onUnequip?: () => void
 }) {
   return (
     <div className="border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2">
@@ -819,10 +834,26 @@ function BagItemRow({
       {item.quantity > 1 && (
         <span className="text-muted-foreground text-xs">x{item.quantity}</span>
       )}
+      {onUnequip && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground shrink-0"
+          title="Unequip"
+          onClick={onUnequip}
+        >
+          <img
+            src="/images/icons/Unequip.svg"
+            alt="Unequip"
+            className="size-3.5 dark:invert"
+          />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
         className="text-muted-foreground hover:text-destructive shrink-0"
+        title="Delete"
         onClick={onDelete}
       >
         <Trash2 className="size-3.5" />

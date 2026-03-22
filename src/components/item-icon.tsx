@@ -52,6 +52,7 @@ const ICON_MAP: Record<string, string> = {
   Crafting: "Crafting",
   Grid: "Grid",
   Inventory: "Inventory",
+  Unequip: "Unequip",
   // Material types (all use ingot icon)
   Wood: "Bronze",
   Leather: "Bronze",
