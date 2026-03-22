@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type Ref } from "react"
 import { Check, ChevronsUpDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ItemIcon } from "@/components/item-icon"
@@ -40,26 +40,28 @@ interface ItemPickerProps {
 }
 
 function TriggerButton({
+  ref,
   value,
   selectedItem,
   placeholder,
   formatType,
   onClear,
-  onClick,
+  ...props
 }: {
+  ref?: Ref<HTMLButtonElement>
   value: string | null
   selectedItem: PickerItem | null | undefined
   placeholder: string
   formatType?: (type: string) => string
   onClear: () => void
-  onClick?: () => void
-}) {
+} & Omit<React.ComponentPropsWithoutRef<typeof Button>, "value">) {
   return (
     <Button
+      ref={ref}
       variant="outline"
       role="combobox"
       className="h-auto min-h-12 w-full justify-between px-3 py-2"
-      onClick={onClick}
+      {...props}
     >
       {value ? (
         <div className="flex flex-1 items-center gap-2">
