@@ -276,6 +276,20 @@ export function HomePage() {
                 </CardContent>
               </Card>
             </Link>
+            <Link to="/inventory">
+              <Card className="hover:border-primary/40 h-full transition-colors">
+                <CardContent className="flex items-start gap-3 pt-6">
+                  <ItemIcon type="Inventory" size="sm" />
+                  <div>
+                    <h3 className="font-sans text-lg font-medium">Inventory</h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Create equipment loadouts and track your gear. See
+                      combined stats across all equipped pieces.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </section>
 
