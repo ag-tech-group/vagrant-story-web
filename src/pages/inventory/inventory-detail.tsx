@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link, useParams } from "@tanstack/react-router"
 import { ArrowLeft, Package, Plus, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { ItemIcon } from "@/components/item-icon"
 import { ItemPicker, type PickerItem } from "@/components/item-picker"
 import { MaterialSelect } from "@/components/material-select"
@@ -40,7 +40,6 @@ import {
   type CreateInventoryItem,
   type EquipSlot,
   type InventoryItem,
-  type InventoryListItem,
 } from "@/lib/inventory-api"
 import { cn } from "@/lib/utils"
 
@@ -53,19 +52,14 @@ interface SlotConfig {
   key: EquipSlot
   label: string
   gridArea: string
-  itemTypes: string[] // armor_type values or "blade" for blades
+  itemTypes: string[]
   isBlade?: boolean
   isShield?: boolean
   isAccessory?: boolean
 }
 
 const EQUIP_SLOTS: SlotConfig[] = [
-  {
-    key: "head",
-    label: "Head",
-    gridArea: "head",
-    itemTypes: ["Helm"],
-  },
+  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
   {
     key: "right_hand",
     label: "R. Hand",
@@ -73,12 +67,7 @@ const EQUIP_SLOTS: SlotConfig[] = [
     itemTypes: ["blade"],
     isBlade: true,
   },
-  {
-    key: "body",
-    label: "Body",
-    gridArea: "body",
-    itemTypes: ["Body"],
-  },
+  { key: "body", label: "Body", gridArea: "body", itemTypes: ["Body"] },
   {
     key: "left_hand",
     label: "L. Hand",
@@ -86,18 +75,8 @@ const EQUIP_SLOTS: SlotConfig[] = [
     itemTypes: ["Shield"],
     isShield: true,
   },
-  {
-    key: "arms",
-    label: "Arms",
-    gridArea: "arms",
-    itemTypes: ["Arm"],
-  },
-  {
-    key: "legs",
-    label: "Legs",
-    gridArea: "legs",
-    itemTypes: ["Leg"],
-  },
+  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
+  { key: "legs", label: "Legs", gridArea: "legs", itemTypes: ["Leg"] },
   {
     key: "accessory",
     label: "Accessory",
@@ -113,11 +92,9 @@ const SHIELD_MATS = ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 
 // ── Main component ──────────────────────────────────────────────────
 
-export function InventoryPage() {
+export function InventoryDetailPage() {
+  const { inventoryId } = useParams({ from: "/inventory/$inventoryId" })
   const auth = useAuth()
-  const [selectedInventoryId, setSelectedInventoryId] = useState<number | null>(
-    null
-  )
 
   if (auth.isLoading) {
     return (
@@ -144,186 +121,10 @@ export function InventoryPage() {
     )
   }
 
-  if (selectedInventoryId != null) {
-    return (
-      <InventoryDetailView
-        inventoryId={selectedInventoryId}
-        onBack={() => setSelectedInventoryId(null)}
-      />
-    )
-  }
-
-  return <InventoryListView onSelect={setSelectedInventoryId} />
+  return <InventoryDetail inventoryId={Number(inventoryId)} />
 }
 
-// ── Inventory List ──────────────────────────────────────────────────
-
-function InventoryListView({ onSelect }: { onSelect: (id: number) => void }) {
-  const queryClient = useQueryClient()
-  const [showCreate, setShowCreate] = useState(false)
-  const [newName, setNewName] = useState("")
-
-  const {
-    data: inventories = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["inventories"],
-    queryFn: inventoryApi.list,
-  })
-
-  const createMutation = useMutation({
-    mutationFn: (name: string) => inventoryApi.create(name),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inventories"] })
-      setShowCreate(false)
-      setNewName("")
-      toast.success("Inventory created")
-    },
-    onError: (err) => toast.error(String(err)),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => inventoryApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inventories"] })
-      toast.success("Inventory deleted")
-    },
-    onError: (err) => toast.error(String(err)),
-  })
-
-  if (isLoading) {
-    return (
-      <div className="text-muted-foreground py-10 text-center text-sm">
-        Loading inventories...
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="py-10 text-center text-sm text-red-400">
-        Failed to load inventories. Make sure you are signed in.
-      </div>
-    )
-  }
-
-  return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm">
-          {inventories.length} inventory{inventories.length !== 1 ? "ies" : ""}
-        </p>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="size-3.5" />
-          Create Inventory
-        </Button>
-      </div>
-
-      {inventories.length === 0 && (
-        <div className="text-muted-foreground py-10 text-center text-sm">
-          No inventories yet. Create one to start building your loadout.
-        </div>
-      )}
-
-      <div className="space-y-2">
-        {inventories.map((inv) => (
-          <InventoryCard
-            key={inv.id}
-            inventory={inv}
-            onClick={() => onSelect(inv.id)}
-            onDelete={() => deleteMutation.mutate(inv.id)}
-          />
-        ))}
-      </div>
-
-      {/* Create dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Inventory</DialogTitle>
-            <DialogDescription>
-              Give your inventory a name (e.g. "Main Loadout", "Undead
-              Farming").
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (newName.trim()) createMutation.mutate(newName.trim())
-            }}
-          >
-            <Input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Inventory name"
-              maxLength={100}
-              autoFocus
-            />
-            <DialogFooter className="mt-4">
-              <Button
-                type="submit"
-                disabled={!newName.trim() || createMutation.isPending}
-              >
-                {createMutation.isPending ? "Creating..." : "Create"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
-function InventoryCard({
-  inventory,
-  onClick,
-  onDelete,
-}: {
-  inventory: InventoryListItem
-  onClick: () => void
-  onDelete: () => void
-}) {
-  return (
-    <Card
-      className="hover:border-foreground/20 cursor-pointer transition-colors"
-      onClick={onClick}
-    >
-      <CardContent className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ItemIcon type="Chest" size="sm" />
-          <div>
-            <p className="font-medium">{inventory.name}</p>
-            <p className="text-muted-foreground text-xs">
-              Created {new Date(inventory.created_at).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-red-400"
-          onClick={(e) => {
-            e.stopPropagation()
-            if (confirm("Delete this inventory?")) onDelete()
-          }}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </CardContent>
-    </Card>
-  )
-}
-
-// ── Inventory Detail ────────────────────────────────────────────────
-
-function InventoryDetailView({
-  inventoryId,
-  onBack,
-}: {
-  inventoryId: number
-  onBack: () => void
-}) {
+function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
@@ -621,7 +422,7 @@ function InventoryDetailView({
           gripPiercing = grip.piercing
         }
 
-        // Grip gems (gem_1, gem_2, gem_3 on the blade item hold the grip's gems)
+        // Grip gems
         for (const gemId of [item.gem_1_id, item.gem_2_id, item.gem_3_id]) {
           if (!gemId) continue
           const gem = gemIdMap.get(gemId)
@@ -653,7 +454,6 @@ function InventoryDetailView({
         const mat = item.material ? materialMap.get(item.material) : null
 
         if (isAccessory) {
-          // Accessories have no material
           totals.str += armorItem.str
           totals.int += armorItem.int
           totals.agi += armorItem.agi
@@ -733,9 +533,11 @@ function InventoryDetailView({
     <div className="mx-auto w-full max-w-4xl space-y-8">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft className="size-4" />
-          Back
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/inventory">
+            <ArrowLeft className="size-4" />
+            Back
+          </Link>
         </Button>
         <h2 className="text-lg font-medium">{inventory.name}</h2>
       </div>
@@ -911,7 +713,6 @@ function EquipSlotCard({
   onClear?: () => void
 }) {
   if (!item) {
-    // Empty slot
     return (
       <button
         type="button"
@@ -926,7 +727,6 @@ function EquipSlotCard({
     )
   }
 
-  // Filled slot
   return (
     <button
       type="button"
@@ -1138,7 +938,7 @@ function SlotEditorDialog({
   onClose,
   isPending,
 }: {
-  slot: SlotConfig | null // null = bag item
+  slot: SlotConfig | null
   existingItem?: InventoryItem
   blades: Blade[]
   armor: Armor[]
@@ -1226,7 +1026,6 @@ function SlotEditorDialog({
     const items: PickerItem[] = []
 
     if (!slot) {
-      // Bag: show all item types
       for (const b of blades) {
         items.push({
           name: fmt(b.field_name),
@@ -1294,7 +1093,6 @@ function SlotEditorDialog({
         }
       }
     } else {
-      // Armor slot (Helm, Body, Leg, Arm)
       for (const a of armor) {
         if (slot.itemTypes.includes(a.armor_type)) {
           items.push({
@@ -1327,7 +1125,6 @@ function SlotEditorDialog({
       ? armorMap.get(selectedItem)?.armor_type === "Accessory"
       : false
 
-  // Whether this item type needs a material selector
   const needsMaterial = !isAccessory && !isGrip && !isGem && !isConsumable
 
   // Materials
@@ -1397,7 +1194,6 @@ function SlotEditorDialog({
   const handleConfirm = () => {
     if (!selectedItem) return
 
-    // Resolve IDs
     let item_type: string
     let item_id: number
 
@@ -1420,7 +1216,6 @@ function SlotEditorDialog({
 
     const grip = selectedGrip ? gripMap.get(selectedGrip) : null
 
-    // Resolve gem IDs
     const gemIds = selectedGems.map((name) => {
       if (!name) return null
       const gem = gems.find((g) => fmt(g.field_name) === name)
@@ -1441,7 +1236,6 @@ function SlotEditorDialog({
     onSave(data, existingItem?.id)
   }
 
-  // Can confirm?
   const canConfirm = useMemo(() => {
     if (!selectedItem) return false
     if (needsMaterial && availableMaterials.length > 0 && !selectedMaterial)
