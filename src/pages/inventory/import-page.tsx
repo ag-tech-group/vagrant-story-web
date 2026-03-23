@@ -17,9 +17,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   ReadOnlyEquipmentGrid,
   ReadOnlyBagItemRow,
 } from "@/components/inventory-preview"
+import { DISPLAY_TYPE_TO_CATEGORY } from "@/lib/inventory-constants"
 import { useAuth } from "@/lib/auth"
 import { loginUrl } from "@/lib/config"
 import {
@@ -259,15 +267,12 @@ function ImportFlow() {
         const g = gripIdMap.get(item.item_id)
         return g?.grip_type ?? "Grip"
       }
-      if (item.item_type === "gem") {
-        const g = gemIdMap.get(item.item_id)
-        return g?.gem_type ?? "Gem"
-      }
+      if (item.item_type === "gem") return "Gem"
       if (item.item_type === "consumable") return "Consumable"
       const a = armorIdMap.get(item.item_id)
       return a?.armor_type ?? "Armor"
     },
-    [bladeIdMap, armorIdMap, gripIdMap, gemIdMap]
+    [bladeIdMap, armorIdMap, gripIdMap]
   )
 
   // ── Import handler ──────────────────────────────────────────────────
@@ -683,6 +688,8 @@ function SlotCard({
   const { slot, name, selected, expanded } = state
   const disabled = !slot.checksumValid
   const roomName = getRoomName(slot.zoneId, slot.roomId)
+  const [bagCategory, setBagCategory] = useState("all")
+  const [containerCategory, setContainerCategory] = useState("all")
 
   // Build preview items only when expanded (avoid computing for collapsed)
   const previewItems = useMemo(
@@ -693,6 +700,55 @@ function SlotCard({
   const bagItems = previewItems.filter((i) => i.storage === "bag")
   const containerItems = previewItems.filter((i) => i.storage === "container")
   const equippedItems = bagItems.filter((i) => i.equip_slot)
+
+  // Build category counts for bag and container
+  const getCategoryCounts = useCallback(
+    (items: InventoryItem[]) => {
+      const counts = new Map<string, number>()
+      for (const item of items) {
+        const displayType = getDisplayType(item)
+        const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
+        counts.set(category, (counts.get(category) ?? 0) + 1)
+      }
+      const order = [
+        "Blade",
+        "Grip",
+        "Shield",
+        "Helm",
+        "Body",
+        "Leg",
+        "Arm",
+        "Accessory",
+        "Gem",
+        "Consumable",
+      ]
+      return order
+        .filter((c) => counts.has(c))
+        .map((c) => ({ label: c, count: counts.get(c)! }))
+    },
+    [getDisplayType]
+  )
+
+  const bagCategories = useMemo(
+    () => getCategoryCounts(bagItems),
+    [bagItems, getCategoryCounts]
+  )
+  const containerCategories = useMemo(
+    () => getCategoryCounts(containerItems),
+    [containerItems, getCategoryCounts]
+  )
+
+  const filterByCategory = useCallback(
+    (items: InventoryItem[], category: string) => {
+      if (category === "all") return items
+      return items.filter((item) => {
+        const displayType = getDisplayType(item)
+        const cat = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
+        return cat === category
+      })
+    },
+    [getDisplayType]
+  )
 
   const hpPct = slot.maxHp > 0 ? (slot.hp / slot.maxHp) * 100 : 0
   const mpPct = slot.maxMp > 0 ? (slot.mp / slot.maxMp) * 100 : 0
@@ -817,7 +873,7 @@ function SlotCard({
 
         {/* Expanded content */}
         {expanded && (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-2" onClick={(e) => e.stopPropagation()}>
             {/* Equipment grid */}
             {equippedItems.length > 0 && (
               <div>
@@ -837,11 +893,28 @@ function SlotCard({
             {/* Bag items */}
             {bagItems.length > 0 && (
               <div>
-                <p className="text-muted-foreground mb-2 text-xs font-medium">
-                  Bag ({bagItems.length} items)
-                </p>
+                <div className="mb-2 flex items-center gap-2">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    Bag ({bagItems.length})
+                  </p>
+                  {bagCategories.length > 1 && (
+                    <Select value={bagCategory} onValueChange={setBagCategory}>
+                      <SelectTrigger className="h-7 w-auto min-w-[6rem] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {bagCategories.map((c) => (
+                          <SelectItem key={c.label} value={c.label}>
+                            {c.label} ({c.count})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
                 <div className="space-y-1">
-                  {bagItems.map((item) => (
+                  {filterByCategory(bagItems, bagCategory).map((item) => (
                     <ReadOnlyBagItemRow
                       key={`bag-${item.id}`}
                       item={item}
@@ -856,18 +929,40 @@ function SlotCard({
             {/* Container items */}
             {containerItems.length > 0 && (
               <div>
-                <p className="text-muted-foreground mb-2 text-xs font-medium">
-                  Container ({containerItems.length} items)
-                </p>
+                <div className="mb-2 flex items-center gap-2">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    Container ({containerItems.length})
+                  </p>
+                  {containerCategories.length > 1 && (
+                    <Select
+                      value={containerCategory}
+                      onValueChange={setContainerCategory}
+                    >
+                      <SelectTrigger className="h-7 w-auto min-w-[6rem] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {containerCategories.map((c) => (
+                          <SelectItem key={c.label} value={c.label}>
+                            {c.label} ({c.count})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
                 <div className="space-y-1">
-                  {containerItems.map((item) => (
-                    <ReadOnlyBagItemRow
-                      key={`container-${item.id}`}
-                      item={item}
-                      name={getDisplayName(item)}
-                      type={getDisplayType(item)}
-                    />
-                  ))}
+                  {filterByCategory(containerItems, containerCategory).map(
+                    (item) => (
+                      <ReadOnlyBagItemRow
+                        key={`container-${item.id}`}
+                        item={item}
+                        name={getDisplayName(item)}
+                        type={getDisplayType(item)}
+                      />
+                    )
+                  )}
                 </div>
               </div>
             )}
