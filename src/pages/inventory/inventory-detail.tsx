@@ -16,6 +16,8 @@ import {
   ArrowDownAZ,
   ArrowDownWideNarrow,
   ArrowLeft,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
   Package,
   Plus,
   Search,
@@ -522,21 +524,31 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       if (!over) return
 
       const itemId = active.data.current?.itemId as number | undefined
-      const source = active.data.current?.source as "bag" | "equip" | undefined
+      const source = active.data.current?.source as
+        | "bag"
+        | "equip"
+        | "container"
+        | undefined
       if (!itemId || !source) return
 
       const item = allItems.find((i) => i.id === itemId)
       if (!item) return
 
       if (source === "bag" && over.id === "equipment-grid") {
-        // Drag from bag to equipment grid => equip (with swap)
         const targetSlot = getEquipSlotForItem(item)
         if (targetSlot) {
           equipToSlot(item, targetSlot)
         }
       } else if (source === "equip" && over.id === "bag-area") {
-        // Drag from equipment grid to bag => unequip
         updateItemMutation.mutate({ itemId: item.id, equip_slot: null })
+      } else if (
+        source === "bag" &&
+        !item.equip_slot &&
+        over.id === "container-area"
+      ) {
+        updateItemMutation.mutate({ itemId: item.id, storage: "container" })
+      } else if (source === "container" && over.id === "bag-area") {
+        updateItemMutation.mutate({ itemId: item.id, storage: "bag" })
       }
     },
     [allItems, equipToSlot, getEquipSlotForItem, updateItemMutation]
@@ -740,14 +752,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div
-          className={cn(
-            "grid gap-8",
-            containerItems.length > 0
-              ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]"
-              : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
-          )}
-        >
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
           {/* Left Column: Equipment + Stats */}
           <div className="space-y-6">
             {/* Equipment Grid */}
@@ -782,10 +787,12 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               )}
           </div>
 
-          {/* Right Column: Item Bag */}
+          {/* Middle Column: Item Bag */}
           <BagDropZone
             isOver={
-              activeDragItem !== null && activeDragItem.equip_slot !== null
+              activeDragItem !== null &&
+              (activeDragItem.equip_slot !== null ||
+                activeDragItem.storage === "container")
             }
           >
             <div className="space-y-3">
@@ -879,15 +886,13 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                     const targetSlot = !item.equip_slot
                       ? getEquipSlotForItem(item)
                       : null
-                    const isDraggable =
-                      !!item.equip_slot || !!getEquipSlotForItem(item)
                     return (
                       <DraggableBagItemRow
                         key={item.id}
                         item={item}
                         name={getItemDisplayName(item)}
                         type={getItemDisplayType(item)}
-                        isDraggable={isDraggable}
+                        isDraggable
                         isDragging={activeDragItem?.id === item.id}
                         onDelete={() => deleteItemMutation.mutate(item.id)}
                         onUnequip={
@@ -904,6 +909,15 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                             ? () => equipToSlot(item, targetSlot)
                             : undefined
                         }
+                        onMoveToContainer={
+                          !item.equip_slot
+                            ? () =>
+                                updateItemMutation.mutate({
+                                  itemId: item.id,
+                                  storage: "container",
+                                })
+                            : undefined
+                        }
                       />
                     )
                   })}
@@ -912,28 +926,46 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             </div>
           </BagDropZone>
 
-          {/* Container (read-only storage) */}
-          {containerItems.length > 0 && (
+          {/* Right Column: Container */}
+          <ContainerDropZone
+            isOver={
+              activeDragItem !== null &&
+              activeDragItem.storage !== "container" &&
+              !activeDragItem.equip_slot
+            }
+          >
             <div className="space-y-3">
               <h3 className="text-sm font-medium">
                 <Package className="mr-1.5 inline size-4" />
                 Container ({containerItems.length})
               </h3>
-              <div className="space-y-1">
-                {containerItems.map((item) => (
-                  <DraggableBagItemRow
-                    key={item.id}
-                    item={item}
-                    name={getItemDisplayName(item)}
-                    type={getItemDisplayType(item)}
-                    isDraggable={false}
-                    isDragging={false}
-                    onDelete={() => deleteItemMutation.mutate(item.id)}
-                  />
-                ))}
-              </div>
+              {containerItems.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center text-xs">
+                  Drop items here to store them
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {containerItems.map((item) => (
+                    <DraggableBagItemRow
+                      key={item.id}
+                      item={item}
+                      name={getItemDisplayName(item)}
+                      type={getItemDisplayType(item)}
+                      isDraggable
+                      isDragging={activeDragItem?.id === item.id}
+                      onDelete={() => deleteItemMutation.mutate(item.id)}
+                      onMoveToBag={() =>
+                        updateItemMutation.mutate({
+                          itemId: item.id,
+                          storage: "bag",
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </ContainerDropZone>
         </div>
 
         <DragOverlay dropAnimation={null}>
@@ -1051,6 +1083,31 @@ function BagDropZone({
   children: React.ReactNode
 }) {
   const { setNodeRef, isOver: isDropOver } = useDroppable({ id: "bag-area" })
+  const highlight = isOver && isDropOver
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-xl border-2 border-transparent p-2 transition-colors",
+        highlight && "border-primary/50 bg-primary/5"
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ContainerDropZone({
+  isOver,
+  children,
+}: {
+  isOver: boolean
+  children: React.ReactNode
+}) {
+  const { setNodeRef, isOver: isDropOver } = useDroppable({
+    id: "container-area",
+  })
   const highlight = isOver && isDropOver
 
   return (
@@ -1234,6 +1291,8 @@ function DraggableBagItemRow({
   onDelete,
   onUnequip,
   onEquip,
+  onMoveToContainer,
+  onMoveToBag,
 }: {
   item: InventoryItem
   name: string
@@ -1243,8 +1302,14 @@ function DraggableBagItemRow({
   onDelete: () => void
   onUnequip?: () => void
   onEquip?: () => void
+  onMoveToContainer?: () => void
+  onMoveToBag?: () => void
 }) {
-  const source = item.equip_slot ? "equip" : "bag"
+  const source = item.equip_slot
+    ? "equip"
+    : item.storage === "container"
+      ? "container"
+      : "bag"
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `bag-${item.id}`,
     data: { itemId: item.id, source },
@@ -1311,6 +1376,28 @@ function DraggableBagItemRow({
             }}
           />
           Unequip
+        </Button>
+      )}
+      {onMoveToContainer && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground shrink-0"
+          title="Move to container"
+          onClick={onMoveToContainer}
+        >
+          <ArrowRightFromLine className="size-3.5" />
+        </Button>
+      )}
+      {onMoveToBag && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground shrink-0"
+          title="Move to bag"
+          onClick={onMoveToBag}
+        >
+          <ArrowLeftFromLine className="size-3.5" />
         </Button>
       )}
       <Button
@@ -1521,6 +1608,7 @@ function SlotEditorDialog({
     })
   }, [existingItem, gemIdMap])
 
+  const [targetStorage, setTargetStorage] = useState<"bag" | "container">("bag")
   const [selectedItem, setSelectedItem] = useState<string | null>(
     initialItemName
   )
@@ -1745,6 +1833,7 @@ function SlotEditorDialog({
       gem_2_id: gemIds[1] ?? null,
       gem_3_id: gemIds[2] ?? null,
       equip_slot: slot?.key ?? null,
+      storage: slot ? "bag" : targetStorage,
     }
 
     onSave(data, existingItem?.id)
@@ -1768,7 +1857,9 @@ function SlotEditorDialog({
               ? `Edit: ${slot?.label ?? "Bag Item"}`
               : slot
                 ? `Equip: ${slot.label}`
-                : "Add to Bag"}
+                : targetStorage === "container"
+                  ? "Add to Container"
+                  : "Add to Bag"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
@@ -1780,6 +1871,28 @@ function SlotEditorDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Storage toggle (only for bag/container add, not equip slots) */}
+          {!slot && (
+            <div className="flex gap-2">
+              <Button
+                variant={targetStorage === "bag" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTargetStorage("bag")}
+              >
+                <Package className="mr-1.5 size-3.5" />
+                Bag
+              </Button>
+              <Button
+                variant={targetStorage === "container" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTargetStorage("container")}
+              >
+                <Package className="mr-1.5 size-3.5" />
+                Container
+              </Button>
+            </div>
+          )}
+
           {/* Item picker */}
           <ItemPicker
             items={pickerItems}
