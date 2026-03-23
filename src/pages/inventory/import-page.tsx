@@ -758,12 +758,18 @@ function SlotCard({
       className={cn(
         "transition-colors",
         disabled && "opacity-60",
-        selected && !disabled && "border-primary/30"
+        selected && !disabled && "border-primary/30",
+        expanded && "flex max-h-[80vh] flex-col"
       )}
     >
-      <CardContent className="space-y-3 p-4">
+      <CardContent
+        className={cn(
+          "space-y-3 p-4",
+          expanded && "flex flex-col overflow-hidden"
+        )}
+      >
         {/* Top row: checkbox + clickable save info */}
-        <div className="flex items-start gap-3">
+        <div className={cn("flex shrink-0 items-start gap-3")}>
           {/* Checkbox — stops propagation so it doesn't toggle expand */}
           <button
             type="button"
@@ -871,9 +877,12 @@ function SlotCard({
           </div>
         )}
 
-        {/* Expanded content */}
+        {/* Expanded content — scrolls within the card */}
         {expanded && (
-          <div className="space-y-4 pt-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto pt-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Equipment grid */}
             {equippedItems.length > 0 && (
               <div>

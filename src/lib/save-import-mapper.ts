@@ -275,10 +275,28 @@ export function mapSaveSlotToItems(
       return
     }
 
+    // bodyPart == 0 means unequipped; non-zero = equipped in that slot.
+    // RAM order (from Data Crystal): Accessory, R.Arm, L.Arm, Helm, Body, Legs
+    // Save file uses 1-based: 1/2=Arms (R/L), 3=Head, 4=Body, 5=Legs, 6+=Accessory
+    let equipSlot: EquipSlot | null = null
+    if (storage === "bag" && armor.bodyPart !== 0) {
+      const slotMap: Record<number, EquipSlot> = {
+        1: "arms",
+        2: "arms",
+        3: "head",
+        4: "body",
+        5: "legs",
+        6: "accessory",
+        7: "accessory",
+      }
+      equipSlot = slotMap[armor.bodyPart] ?? null
+    }
+
     items.push({
       item_type: "armor",
       item_id: apiArmor.id,
       material: MATERIAL_BY_ID[armor.materialId] ?? null,
+      equip_slot: equipSlot,
       storage,
     })
   }
