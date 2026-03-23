@@ -657,7 +657,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-8">
+    <div className="mx-auto w-full max-w-6xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
@@ -669,152 +669,154 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         <h2 className="text-lg font-medium">{inventory.name}</h2>
       </div>
 
-      {/* Equipment Grid */}
-      <div className="mx-auto max-w-md">
-        <EquipmentGrid
-          getSlotItem={getSlotItem}
-          getItemDisplayName={getItemDisplayName}
-          getItemDisplayType={getItemDisplayType}
-          onSlotClick={setEditingSlot}
-          onUnequip={(slotItem) =>
-            updateItemMutation.mutate({
-              itemId: slotItem.id,
-              equip_slot: null,
-            })
-          }
-          equippedBladeIs2H={equippedBladeIs2H}
-        />
-      </div>
-
-      {/* Combined Stats */}
-      {combinedStats && inventory.items.some((i) => i.equip_slot != null) && (
-        <CombinedStatsCard stats={combinedStats} />
-      )}
-
-      {/* Item Bag */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">
-            <Package className="mr-1.5 inline size-4" />
-            Item Bag ({allItems.length})
-          </h3>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setEditingBagItem(true)}
-          >
-            <Plus className="size-3.5" />
-            Add Item
-          </Button>
-        </div>
-        {allItems.length > 1 && (
-          <div className="flex items-center gap-2">
-            {bagCategories.length > 1 && (
-              <Select value={bagCategory} onValueChange={setBagCategory}>
-                <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All ({allItems.length})</SelectItem>
-                  {bagCategories.map((c) => (
-                    <SelectItem key={c.label} value={c.label}>
-                      {c.label} ({c.count})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                value={bagSearch}
-                onChange={(e) => setBagSearch(e.target.value)}
-                placeholder="Filter items..."
-                className="pr-8 pl-9"
-              />
-              {bagSearch && (
-                <button
-                  type="button"
-                  onClick={() => setBagSearch("")}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={() =>
-                setBagSort((s) =>
-                  s === "equipped"
-                    ? "added"
-                    : s === "added"
-                      ? "name"
-                      : "equipped"
-                )
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+        {/* Left Column: Equipment + Stats */}
+        <div className="space-y-6">
+          {/* Equipment Grid */}
+          <div className="mx-auto max-w-md">
+            <EquipmentGrid
+              getSlotItem={getSlotItem}
+              getItemDisplayName={getItemDisplayName}
+              getItemDisplayType={getItemDisplayType}
+              onSlotClick={setEditingSlot}
+              onUnequip={(slotItem) =>
+                updateItemMutation.mutate({
+                  itemId: slotItem.id,
+                  equip_slot: null,
+                })
               }
-            >
-              {bagSort === "name" ? (
-                <ArrowDownAZ className="size-3.5" />
-              ) : (
-                <ArrowDownWideNarrow className="size-3.5" />
-              )}
-              {bagSort === "equipped"
-                ? "Equipped"
-                : bagSort === "added"
-                  ? "Added"
-                  : "Name"}
+              equippedBladeIs2H={equippedBladeIs2H}
+            />
+          </div>
+
+          {/* Combined Stats */}
+          {combinedStats &&
+            inventory.items.some((i) => i.equip_slot != null) && (
+              <CombinedStatsCard stats={combinedStats} />
+            )}
+        </div>
+
+        {/* Right Column: Item Bag */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">
+              <Package className="mr-1.5 inline size-4" />
+              Item Bag ({allItems.length})
+            </h3>
+            <Button size="sm" onClick={() => setEditingBagItem(true)}>
+              <Plus className="size-3.5" />
+              Add Item
             </Button>
           </div>
-        )}
-        {allItems.length === 0 ? (
-          <p className="text-muted-foreground py-4 text-center text-xs">
-            No items in the bag
-          </p>
-        ) : filteredBagItems.length === 0 ? (
-          <p className="text-muted-foreground py-4 text-center text-xs">
-            No items match
-            {bagCategory !== "all" && ` "${bagCategory}"`}
-            {bagSearch && ` "${bagSearch}"`}
-          </p>
-        ) : (
-          <div className="space-y-1">
-            {filteredBagItems.map((item) => {
-              const targetSlot = !item.equip_slot
-                ? getEquipSlotForItem(item)
-                : null
-              return (
-                <BagItemRow
-                  key={item.id}
-                  item={item}
-                  name={getItemDisplayName(item)}
-                  type={getItemDisplayType(item)}
-                  onDelete={() => deleteItemMutation.mutate(item.id)}
-                  onUnequip={
-                    item.equip_slot
-                      ? () =>
-                          updateItemMutation.mutate({
-                            itemId: item.id,
-                            equip_slot: null,
-                          })
-                      : undefined
-                  }
-                  onEquip={
-                    targetSlot
-                      ? () =>
-                          updateItemMutation.mutate({
-                            itemId: item.id,
-                            equip_slot: targetSlot,
-                          })
-                      : undefined
-                  }
+          {allItems.length > 1 && (
+            <div className="flex items-center gap-2">
+              {bagCategories.length > 1 && (
+                <Select value={bagCategory} onValueChange={setBagCategory}>
+                  <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All ({allItems.length})</SelectItem>
+                    {bagCategories.map((c) => (
+                      <SelectItem key={c.label} value={c.label}>
+                        {c.label} ({c.count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="relative flex-1">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  value={bagSearch}
+                  onChange={(e) => setBagSearch(e.target.value)}
+                  placeholder="Filter items..."
+                  className="pr-8 pl-9"
                 />
-              )
-            })}
-          </div>
-        )}
+                {bagSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setBagSearch("")}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() =>
+                  setBagSort((s) =>
+                    s === "equipped"
+                      ? "added"
+                      : s === "added"
+                        ? "name"
+                        : "equipped"
+                  )
+                }
+              >
+                {bagSort === "name" ? (
+                  <ArrowDownAZ className="size-3.5" />
+                ) : (
+                  <ArrowDownWideNarrow className="size-3.5" />
+                )}
+                {bagSort === "equipped"
+                  ? "Equipped"
+                  : bagSort === "added"
+                    ? "Added"
+                    : "Name"}
+              </Button>
+            </div>
+          )}
+          {allItems.length === 0 ? (
+            <p className="text-muted-foreground py-4 text-center text-xs">
+              No items in the bag
+            </p>
+          ) : filteredBagItems.length === 0 ? (
+            <p className="text-muted-foreground py-4 text-center text-xs">
+              No items match
+              {bagCategory !== "all" && ` "${bagCategory}"`}
+              {bagSearch && ` "${bagSearch}"`}
+            </p>
+          ) : (
+            <div className="space-y-1">
+              {filteredBagItems.map((item) => {
+                const targetSlot = !item.equip_slot
+                  ? getEquipSlotForItem(item)
+                  : null
+                return (
+                  <BagItemRow
+                    key={item.id}
+                    item={item}
+                    name={getItemDisplayName(item)}
+                    type={getItemDisplayType(item)}
+                    onDelete={() => deleteItemMutation.mutate(item.id)}
+                    onUnequip={
+                      item.equip_slot
+                        ? () =>
+                            updateItemMutation.mutate({
+                              itemId: item.id,
+                              equip_slot: null,
+                            })
+                        : undefined
+                    }
+                    onEquip={
+                      targetSlot
+                        ? () =>
+                            updateItemMutation.mutate({
+                              itemId: item.id,
+                              equip_slot: targetSlot,
+                            })
+                        : undefined
+                    }
+                  />
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Slot Editor Dialog */}
