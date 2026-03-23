@@ -819,9 +819,9 @@ function EquipmentGrid({
       style={{
         gridTemplateColumns: "1fr 1fr 1fr",
         gridTemplateAreas: `
-          "rhand    head      accessory"
-          "arms     body      lhand"
-          ".        legs      ."
+          ".        head      accessory"
+          "rhand    body      lhand"
+          "arms     legs      ."
         `,
       }}
     >
