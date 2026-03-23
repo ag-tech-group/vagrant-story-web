@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
   AlertTriangle,
@@ -109,6 +109,7 @@ export function ImportPage() {
 
 function ImportFlow() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [phase, setPhase] = useState<Phase>("upload")
   const [slots, setSlots] = useState<SlotState[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -322,6 +323,9 @@ function ImportFlow() {
         `Imported ${createdIds.length} ${createdIds.length === 1 ? "inventory" : "inventories"}`
       )
 
+      // Invalidate cache so list/detail pages show new data
+      await queryClient.invalidateQueries({ queryKey: ["inventories"] })
+
       // Redirect: 1 slot → detail, multiple → list
       if (createdIds.length === 1) {
         navigate({
@@ -337,7 +341,7 @@ function ImportFlow() {
       )
       setPhase("preview")
     }
-  }, [slots, blades, armor, grips, gems, consumables, navigate])
+  }, [slots, blades, armor, grips, gems, consumables, navigate, queryClient])
 
   // ── Build preview items for expanded slots ──────────────────────────
 

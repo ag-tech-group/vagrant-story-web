@@ -103,6 +103,8 @@ export function mapSaveSlotToItems(
   const armorById = buildIdMap(gameData.armor)
   const gripById = buildIdMap(gameData.grips)
   const gemById = buildIdMap(gameData.gems)
+  // Track assigned equip slots to avoid duplicates (e.g. R.Arm + L.Arm → one "arms" slot)
+  const usedEquipSlots = new Set<EquipSlot>()
   const consumableById = buildIdMap(gameData.consumables)
   const warnings: string[] = []
   const items: CreateInventoryItem[] = []
@@ -183,8 +185,13 @@ export function mapSaveSlotToItems(
     const gem3 = resolveGemId(weapon.gemRefs[2] ?? 0, inv)
 
     let equipSlot: EquipSlot | null = null
-    if (storage === "bag" && weapon.isEquipped) {
+    if (
+      storage === "bag" &&
+      weapon.isEquipped &&
+      !usedEquipSlots.has("right_hand")
+    ) {
       equipSlot = "right_hand"
+      usedEquipSlots.add("right_hand")
     }
 
     items.push({
@@ -216,8 +223,13 @@ export function mapSaveSlotToItems(
     const gem3 = resolveGemId(shield.gemRefs[2] ?? 0, inv)
 
     let equipSlot: EquipSlot | null = null
-    if (storage === "bag" && shield.isEquipped) {
+    if (
+      storage === "bag" &&
+      shield.isEquipped &&
+      !usedEquipSlots.has("left_hand")
+    ) {
       equipSlot = "left_hand"
+      usedEquipSlots.add("left_hand")
     }
 
     items.push({
@@ -289,7 +301,11 @@ export function mapSaveSlotToItems(
         6: "accessory",
         7: "accessory",
       }
-      equipSlot = slotMap[armor.bodyPart] ?? null
+      const candidate = slotMap[armor.bodyPart] ?? null
+      if (candidate && !usedEquipSlots.has(candidate)) {
+        equipSlot = candidate
+        usedEquipSlots.add(candidate)
+      }
     }
 
     // Accessories don't have materials (materialId 0 = "Wood" is meaningless for them)

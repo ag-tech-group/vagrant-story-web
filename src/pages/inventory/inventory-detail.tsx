@@ -267,8 +267,16 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     return blade?.hands === "2H"
   }, [inventory, bladeIdMap])
 
-  // All items for the bag view (equipped items shown with badge)
+  // Split items by storage
   const allItems = useMemo(() => inventory?.items ?? [], [inventory])
+  const bagItems = useMemo(
+    () => allItems.filter((i) => i.storage !== "container"),
+    [allItems]
+  )
+  const containerItems = useMemo(
+    () => allItems.filter((i) => i.storage === "container"),
+    [allItems]
+  )
 
   // Get display info for an inventory item
   const getItemDisplayName = useCallback(
@@ -307,17 +315,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         const grip = gripIdMap.get(item.item_id)
         return grip?.grip_type ?? "Grip"
       }
-      if (item.item_type === "gem") {
-        const gem = gemIdMap.get(item.item_id)
-        return gem?.gem_type ?? "Gem"
-      }
+      if (item.item_type === "gem") return "Gem"
       if (item.item_type === "consumable") {
         return "Consumable"
       }
       const armorItem = armorIdMap.get(item.item_id)
       return armorItem?.armor_type ?? "Armor"
     },
-    [bladeIdMap, armorIdMap, gripIdMap, gemIdMap]
+    [bladeIdMap, armorIdMap, gripIdMap]
   )
 
   // Determine the equip slot for an item (null = not equippable)
@@ -345,7 +350,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   // Derive bag categories with counts from current items
   const bagCategories = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const item of allItems) {
+    for (const item of bagItems) {
       const displayType = getItemDisplayType(item)
       const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
       counts.set(category, (counts.get(category) ?? 0) + 1)
@@ -366,11 +371,11 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     return order
       .filter((c) => counts.has(c))
       .map((c) => ({ label: c, count: counts.get(c)! }))
-  }, [allItems, getItemDisplayType])
+  }, [bagItems, getItemDisplayType])
 
   // Filtered and sorted bag items
   const filteredBagItems = useMemo(() => {
-    let list = allItems
+    let list = bagItems
     if (bagCategory !== "all") {
       list = list.filter((item) => {
         const displayType = getItemDisplayType(item)
@@ -396,7 +401,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       return b.id - a.id
     })
   }, [
-    allItems,
+    bagItems,
     bagCategory,
     bagSearch,
     bagSort,
@@ -735,7 +740,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+        <div
+          className={cn(
+            "grid gap-8",
+            containerItems.length > 0
+              ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]"
+              : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
+          )}
+        >
           {/* Left Column: Equipment + Stats */}
           <div className="space-y-6">
             {/* Equipment Grid */}
@@ -780,14 +792,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">
                   <Package className="mr-1.5 inline size-4" />
-                  Item Bag ({allItems.length})
+                  Item Bag ({bagItems.length})
                 </h3>
                 <Button size="sm" onClick={() => setEditingBagItem(true)}>
                   <Plus className="size-3.5" />
                   Add Item
                 </Button>
               </div>
-              {allItems.length > 1 && (
+              {bagItems.length > 1 && (
                 <div className="flex items-center gap-2">
                   {bagCategories.length > 1 && (
                     <Select value={bagCategory} onValueChange={setBagCategory}>
@@ -796,7 +808,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">
-                          All ({allItems.length})
+                          All ({bagItems.length})
                         </SelectItem>
                         {bagCategories.map((c) => (
                           <SelectItem key={c.label} value={c.label}>
@@ -851,7 +863,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                   </Button>
                 </div>
               )}
-              {allItems.length === 0 ? (
+              {bagItems.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-xs">
                   No items in the bag
                 </p>
@@ -899,6 +911,29 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               )}
             </div>
           </BagDropZone>
+
+          {/* Container (read-only storage) */}
+          {containerItems.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">
+                <Package className="mr-1.5 inline size-4" />
+                Container ({containerItems.length})
+              </h3>
+              <div className="space-y-1">
+                {containerItems.map((item) => (
+                  <DraggableBagItemRow
+                    key={item.id}
+                    item={item}
+                    name={getItemDisplayName(item)}
+                    type={getItemDisplayType(item)}
+                    isDraggable={false}
+                    isDragging={false}
+                    onDelete={() => deleteItemMutation.mutate(item.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <DragOverlay dropAnimation={null}>
@@ -1239,7 +1274,7 @@ function DraggableBagItemRow({
         </div>
         {item.material && <MaterialBadge mat={item.material} />}
       </div>
-      {item.quantity > 1 && (
+      {(item.quantity > 1 || item.item_type === "consumable") && (
         <span className="text-muted-foreground text-xs">x{item.quantity}</span>
       )}
       {onEquip && (
