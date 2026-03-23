@@ -287,7 +287,7 @@ function InventoryCard({
       <Card className="hover:border-foreground/20 cursor-pointer transition-colors">
         <CardContent className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ItemIcon type="Chest" size="sm" />
+            <ItemIcon type="Inventory" size="sm" />
             <div>
               <p className="font-medium">{inventory.name}</p>
               <p className="text-muted-foreground text-xs">
