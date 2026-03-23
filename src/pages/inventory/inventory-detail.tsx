@@ -130,12 +130,42 @@ export function InventoryDetailPage() {
 
 type BagSort = "equipped" | "added" | "name"
 
+// Map item display types to broader filter categories
+const DISPLAY_TYPE_TO_CATEGORY: Record<string, string> = {
+  Dagger: "Blade",
+  Sword: "Blade",
+  "Great Sword": "Blade",
+  "Axe / Mace": "Blade",
+  Staff: "Blade",
+  "Heavy Mace": "Blade",
+  Polearm: "Blade",
+  Crossbow: "Blade",
+  Grip: "Grip",
+  Hilt: "Grip",
+  Haft: "Grip",
+  Shaft: "Grip",
+  Bolt: "Grip",
+  Shield: "Shield",
+  Helm: "Helm",
+  Body: "Body",
+  Leg: "Leg",
+  Arm: "Arm",
+  Accessory: "Accessory",
+  // Gem types
+  Gem: "Gem",
+  Weapon: "Gem",
+  Armor: "Gem",
+  Both: "Gem",
+  Consumable: "Consumable",
+}
+
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
   const [bagSearch, setBagSearch] = useState("")
   const [bagSort, setBagSort] = useState<BagSort>("equipped")
+  const [bagCategory, setBagCategory] = useState("all")
 
   const { data: inventory, isLoading } = useQuery({
     queryKey: ["inventory", inventoryId],
@@ -361,9 +391,42 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     [armorIdMap]
   )
 
+  // Derive bag categories with counts from current items
+  const bagCategories = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const item of allItems) {
+      const displayType = getItemDisplayType(item)
+      const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
+      counts.set(category, (counts.get(category) ?? 0) + 1)
+    }
+    // Sort categories in a stable order
+    const order = [
+      "Blade",
+      "Grip",
+      "Shield",
+      "Helm",
+      "Body",
+      "Leg",
+      "Arm",
+      "Accessory",
+      "Gem",
+      "Consumable",
+    ]
+    return order
+      .filter((c) => counts.has(c))
+      .map((c) => ({ label: c, count: counts.get(c)! }))
+  }, [allItems, getItemDisplayType])
+
   // Filtered and sorted bag items
   const filteredBagItems = useMemo(() => {
     let list = allItems
+    if (bagCategory !== "all") {
+      list = list.filter((item) => {
+        const displayType = getItemDisplayType(item)
+        const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
+        return category === bagCategory
+      })
+    }
     if (bagSearch.trim()) {
       const q = bagSearch.trim().toLowerCase()
       list = list.filter((item) =>
@@ -381,7 +444,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         return getItemDisplayName(a).localeCompare(getItemDisplayName(b))
       return b.id - a.id
     })
-  }, [allItems, bagSearch, bagSort, getItemDisplayName])
+  }, [
+    allItems,
+    bagCategory,
+    bagSearch,
+    bagSort,
+    getItemDisplayName,
+    getItemDisplayType,
+  ])
 
   // Handle slot save
   const handleSlotSave = useCallback(
@@ -639,6 +709,21 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         </div>
         {allItems.length > 1 && (
           <div className="flex items-center gap-2">
+            {bagCategories.length > 1 && (
+              <Select value={bagCategory} onValueChange={setBagCategory}>
+                <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ({allItems.length})</SelectItem>
+                  {bagCategories.map((c) => (
+                    <SelectItem key={c.label} value={c.label}>
+                      {c.label} ({c.count})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <div className="relative flex-1">
               <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
@@ -690,7 +775,9 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           </p>
         ) : filteredBagItems.length === 0 ? (
           <p className="text-muted-foreground py-4 text-center text-xs">
-            No items match "{bagSearch}"
+            No items match
+            {bagCategory !== "all" && ` "${bagCategory}"`}
+            {bagSearch && ` "${bagSearch}"`}
           </p>
         ) : (
           <div className="space-y-1">
