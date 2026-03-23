@@ -1,4 +1,15 @@
 import { useCallback, useMemo, useState } from "react"
+import {
+  DndContext,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "@tanstack/react-router"
 import {
@@ -476,6 +487,116 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     [addItemMutation]
   )
 
+  // ── Equip with swap logic ──────────────────────────────────────────
+
+  const equipToSlot = useCallback(
+    async (item: InventoryItem, targetSlot: EquipSlot) => {
+      const updates: Promise<unknown>[] = []
+
+      // Unequip current occupant of the target slot
+      const currentOccupant = inventory?.items.find(
+        (i) => i.equip_slot === targetSlot && i.id !== item.id
+      )
+      if (currentOccupant) {
+        updates.push(
+          inventoryApi.updateItem(inventoryId, currentOccupant.id, {
+            equip_slot: null,
+          })
+        )
+      }
+
+      // 2H blade → also unequip shield
+      if (targetSlot === "right_hand" && item.item_type === "blade") {
+        const blade = bladeIdMap.get(item.item_id)
+        if (blade?.hands === "2H") {
+          const shield = inventory?.items.find(
+            (i) => i.equip_slot === "left_hand"
+          )
+          if (shield) {
+            updates.push(
+              inventoryApi.updateItem(inventoryId, shield.id, {
+                equip_slot: null,
+              })
+            )
+          }
+        }
+      }
+
+      // Equipping a shield → unequip 2H blade
+      if (targetSlot === "left_hand") {
+        const rhItem = inventory?.items.find(
+          (i) => i.equip_slot === "right_hand"
+        )
+        if (rhItem && rhItem.item_type === "blade") {
+          const blade = bladeIdMap.get(rhItem.item_id)
+          if (blade?.hands === "2H") {
+            updates.push(
+              inventoryApi.updateItem(inventoryId, rhItem.id, {
+                equip_slot: null,
+              })
+            )
+          }
+        }
+      }
+
+      // Wait for unequips to complete, then equip the new item
+      await Promise.all(updates)
+      await inventoryApi.updateItem(inventoryId, item.id, {
+        equip_slot: targetSlot,
+      })
+      queryClient.invalidateQueries({ queryKey: ["inventory", inventoryId] })
+      toast.success("Item equipped")
+    },
+    [inventory, inventoryId, bladeIdMap, queryClient]
+  )
+
+  // ── Drag and drop ───────────────────────────────────────────────────
+
+  const [activeDragItem, setActiveDragItem] = useState<InventoryItem | null>(
+    null
+  )
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
+
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const itemId = event.active.data.current?.itemId as number | undefined
+      if (!itemId) return
+      const item = allItems.find((i) => i.id === itemId)
+      if (item) setActiveDragItem(item)
+    },
+    [allItems]
+  )
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveDragItem(null)
+      const { active, over } = event
+      if (!over) return
+
+      const itemId = active.data.current?.itemId as number | undefined
+      const source = active.data.current?.source as "bag" | "equip" | undefined
+      if (!itemId || !source) return
+
+      const item = allItems.find((i) => i.id === itemId)
+      if (!item) return
+
+      if (source === "bag" && over.id === "equipment-grid") {
+        // Drag from bag to equipment grid => equip (with swap)
+        const targetSlot = getEquipSlotForItem(item)
+        if (targetSlot) {
+          equipToSlot(item, targetSlot)
+        }
+      } else if (source === "equip" && over.id === "bag-area") {
+        // Drag from equipment grid to bag => unequip
+        updateItemMutation.mutate({ itemId: item.id, equip_slot: null })
+      }
+    },
+    [allItems, equipToSlot, getEquipSlotForItem, updateItemMutation]
+  )
+
   // Compute combined stats
   const combinedStats = useMemo(() => {
     if (!inventory) return null
@@ -669,155 +790,190 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         <h2 className="text-lg font-medium">{inventory.name}</h2>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
-        {/* Left Column: Equipment + Stats */}
-        <div className="space-y-6">
-          {/* Equipment Grid */}
-          <div className="mx-auto max-w-md">
-            <EquipmentGrid
-              getSlotItem={getSlotItem}
-              getItemDisplayName={getItemDisplayName}
-              getItemDisplayType={getItemDisplayType}
-              onSlotClick={setEditingSlot}
-              onUnequip={(slotItem) =>
-                updateItemMutation.mutate({
-                  itemId: slotItem.id,
-                  equip_slot: null,
-                })
-              }
-              equippedBladeIs2H={equippedBladeIs2H}
-            />
-          </div>
-
-          {/* Combined Stats */}
-          {combinedStats &&
-            inventory.items.some((i) => i.equip_slot != null) && (
-              <CombinedStatsCard stats={combinedStats} />
-            )}
-        </div>
-
-        {/* Right Column: Item Bag */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">
-              <Package className="mr-1.5 inline size-4" />
-              Item Bag ({allItems.length})
-            </h3>
-            <Button size="sm" onClick={() => setEditingBagItem(true)}>
-              <Plus className="size-3.5" />
-              Add Item
-            </Button>
-          </div>
-          {allItems.length > 1 && (
-            <div className="flex items-center gap-2">
-              {bagCategories.length > 1 && (
-                <Select value={bagCategory} onValueChange={setBagCategory}>
-                  <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All ({allItems.length})</SelectItem>
-                    {bagCategories.map((c) => (
-                      <SelectItem key={c.label} value={c.label}>
-                        {c.label} ({c.count})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                <Input
-                  value={bagSearch}
-                  onChange={(e) => setBagSearch(e.target.value)}
-                  placeholder="Filter items..."
-                  className="pr-8 pl-9"
-                />
-                {bagSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setBagSearch("")}
-                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={() =>
-                  setBagSort((s) =>
-                    s === "equipped"
-                      ? "added"
-                      : s === "added"
-                        ? "name"
-                        : "equipped"
-                  )
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+          {/* Left Column: Equipment + Stats */}
+          <div className="space-y-6">
+            {/* Equipment Grid */}
+            <div className="mx-auto max-w-md">
+              <EquipmentGridDropZone
+                isOver={
+                  activeDragItem !== null &&
+                  activeDragItem.equip_slot === null &&
+                  getEquipSlotForItem(activeDragItem) !== null
                 }
               >
-                {bagSort === "name" ? (
-                  <ArrowDownAZ className="size-3.5" />
-                ) : (
-                  <ArrowDownWideNarrow className="size-3.5" />
-                )}
-                {bagSort === "equipped"
-                  ? "Equipped"
-                  : bagSort === "added"
-                    ? "Added"
-                    : "Name"}
-              </Button>
+                <EquipmentGrid
+                  getSlotItem={getSlotItem}
+                  getItemDisplayName={getItemDisplayName}
+                  getItemDisplayType={getItemDisplayType}
+                  onSlotClick={setEditingSlot}
+                  onUnequip={(slotItem) =>
+                    updateItemMutation.mutate({
+                      itemId: slotItem.id,
+                      equip_slot: null,
+                    })
+                  }
+                  equippedBladeIs2H={equippedBladeIs2H}
+                />
+              </EquipmentGridDropZone>
             </div>
-          )}
-          {allItems.length === 0 ? (
-            <p className="text-muted-foreground py-4 text-center text-xs">
-              No items in the bag
-            </p>
-          ) : filteredBagItems.length === 0 ? (
-            <p className="text-muted-foreground py-4 text-center text-xs">
-              No items match
-              {bagCategory !== "all" && ` "${bagCategory}"`}
-              {bagSearch && ` "${bagSearch}"`}
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {filteredBagItems.map((item) => {
-                const targetSlot = !item.equip_slot
-                  ? getEquipSlotForItem(item)
-                  : null
-                return (
-                  <BagItemRow
-                    key={item.id}
-                    item={item}
-                    name={getItemDisplayName(item)}
-                    type={getItemDisplayType(item)}
-                    onDelete={() => deleteItemMutation.mutate(item.id)}
-                    onUnequip={
-                      item.equip_slot
-                        ? () =>
-                            updateItemMutation.mutate({
-                              itemId: item.id,
-                              equip_slot: null,
-                            })
-                        : undefined
+
+            {/* Combined Stats */}
+            {combinedStats &&
+              inventory.items.some((i) => i.equip_slot != null) && (
+                <CombinedStatsCard stats={combinedStats} />
+              )}
+          </div>
+
+          {/* Right Column: Item Bag */}
+          <BagDropZone
+            isOver={
+              activeDragItem !== null && activeDragItem.equip_slot !== null
+            }
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">
+                  <Package className="mr-1.5 inline size-4" />
+                  Item Bag ({allItems.length})
+                </h3>
+                <Button size="sm" onClick={() => setEditingBagItem(true)}>
+                  <Plus className="size-3.5" />
+                  Add Item
+                </Button>
+              </div>
+              {allItems.length > 1 && (
+                <div className="flex items-center gap-2">
+                  {bagCategories.length > 1 && (
+                    <Select value={bagCategory} onValueChange={setBagCategory}>
+                      <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          All ({allItems.length})
+                        </SelectItem>
+                        {bagCategories.map((c) => (
+                          <SelectItem key={c.label} value={c.label}>
+                            {c.label} ({c.count})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <div className="relative flex-1">
+                    <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                      value={bagSearch}
+                      onChange={(e) => setBagSearch(e.target.value)}
+                      placeholder="Filter items..."
+                      className="pr-8 pl-9"
+                    />
+                    {bagSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setBagSearch("")}
+                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() =>
+                      setBagSort((s) =>
+                        s === "equipped"
+                          ? "added"
+                          : s === "added"
+                            ? "name"
+                            : "equipped"
+                      )
                     }
-                    onEquip={
-                      targetSlot
-                        ? () =>
-                            updateItemMutation.mutate({
-                              itemId: item.id,
-                              equip_slot: targetSlot,
-                            })
-                        : undefined
-                    }
-                  />
-                )
-              })}
+                  >
+                    {bagSort === "name" ? (
+                      <ArrowDownAZ className="size-3.5" />
+                    ) : (
+                      <ArrowDownWideNarrow className="size-3.5" />
+                    )}
+                    {bagSort === "equipped"
+                      ? "Equipped"
+                      : bagSort === "added"
+                        ? "Added"
+                        : "Name"}
+                  </Button>
+                </div>
+              )}
+              {allItems.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center text-xs">
+                  No items in the bag
+                </p>
+              ) : filteredBagItems.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center text-xs">
+                  No items match
+                  {bagCategory !== "all" && ` "${bagCategory}"`}
+                  {bagSearch && ` "${bagSearch}"`}
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {filteredBagItems.map((item) => {
+                    const targetSlot = !item.equip_slot
+                      ? getEquipSlotForItem(item)
+                      : null
+                    const isDraggable =
+                      !!item.equip_slot || !!getEquipSlotForItem(item)
+                    return (
+                      <DraggableBagItemRow
+                        key={item.id}
+                        item={item}
+                        name={getItemDisplayName(item)}
+                        type={getItemDisplayType(item)}
+                        isDraggable={isDraggable}
+                        isDragging={activeDragItem?.id === item.id}
+                        onDelete={() => deleteItemMutation.mutate(item.id)}
+                        onUnequip={
+                          item.equip_slot
+                            ? () =>
+                                updateItemMutation.mutate({
+                                  itemId: item.id,
+                                  equip_slot: null,
+                                })
+                            : undefined
+                        }
+                        onEquip={
+                          targetSlot
+                            ? () => equipToSlot(item, targetSlot)
+                            : undefined
+                        }
+                      />
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </BagDropZone>
         </div>
-      </div>
+
+        <DragOverlay dropAnimation={null}>
+          {activeDragItem && (
+            <div className="bg-card border-primary/50 rounded-lg border px-3 py-2 shadow-lg">
+              <div className="flex items-center gap-2">
+                <ItemIcon type={getItemDisplayType(activeDragItem)} size="sm" />
+                <span className="text-sm font-medium">
+                  {getItemDisplayName(activeDragItem)}
+                </span>
+              </div>
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
 
       {/* Slot Editor Dialog */}
       {editingSlot && (
@@ -885,6 +1041,56 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   )
 }
 
+// ── Drop zones ──────────────────────────────────────────────────────
+
+function EquipmentGridDropZone({
+  isOver,
+  children,
+}: {
+  isOver: boolean
+  children: React.ReactNode
+}) {
+  const { setNodeRef, isOver: isDropOver } = useDroppable({
+    id: "equipment-grid",
+  })
+  const highlight = isOver && isDropOver
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-xl border-2 border-transparent p-2 transition-colors",
+        highlight && "border-primary/50 bg-primary/5"
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function BagDropZone({
+  isOver,
+  children,
+}: {
+  isOver: boolean
+  children: React.ReactNode
+}) {
+  const { setNodeRef, isOver: isDropOver } = useDroppable({ id: "bag-area" })
+  const highlight = isOver && isDropOver
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-xl border-2 border-transparent p-2 transition-colors",
+        highlight && "border-primary/50 bg-primary/5"
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
 // ── Equipment Grid ──────────────────────────────────────────────────
 
 function EquipmentGrid({
@@ -919,15 +1125,22 @@ function EquipmentGrid({
         const disabled = slot.key === "left_hand" && equippedBladeIs2H
         return (
           <div key={slot.key} style={{ gridArea: slot.gridArea }}>
-            <EquipSlotCard
-              slot={slot}
-              item={item}
-              displayName={item ? getItemDisplayName(item) : undefined}
-              displayType={item ? getItemDisplayType(item) : undefined}
-              onClick={() => !disabled && onSlotClick(slot)}
-              onClear={item ? () => onUnequip(item) : undefined}
-              disabled={disabled}
-            />
+            {item ? (
+              <DraggableEquipSlotCard
+                item={item}
+                displayName={getItemDisplayName(item)}
+                displayType={getItemDisplayType(item)}
+                onClick={() => !disabled && onSlotClick(slot)}
+                onClear={() => onUnequip(item)}
+                disabled={disabled}
+              />
+            ) : (
+              <EquipSlotCard
+                slot={slot}
+                onClick={() => !disabled && onSlotClick(slot)}
+                disabled={disabled}
+              />
+            )}
           </div>
         )
       })}
@@ -935,8 +1148,7 @@ function EquipmentGrid({
   )
 }
 
-function EquipSlotCard({
-  slot,
+function DraggableEquipSlotCard({
   item,
   displayName,
   displayType,
@@ -944,51 +1156,36 @@ function EquipSlotCard({
   onClear,
   disabled,
 }: {
-  slot: SlotConfig
-  item?: InventoryItem
-  displayName?: string
-  displayType?: string
+  item: InventoryItem
+  displayName: string
+  displayType: string
   onClick: () => void
-  onClear?: () => void
+  onClear: () => void
   disabled?: boolean
 }) {
-  if (!item) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={disabled}
-        className={cn(
-          "flex h-full w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
-          disabled
-            ? "border-border/30 cursor-not-allowed opacity-40"
-            : "border-border/50 hover:border-foreground/30 hover:bg-muted/30"
-        )}
-      >
-        <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-          {slot.label}
-        </span>
-        {disabled ? (
-          <span className="text-muted-foreground text-[9px]">2H equipped</span>
-        ) : (
-          <Plus className="text-muted-foreground/50 size-5" />
-        )}
-      </button>
-    )
-  }
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `equip-${item.id}`,
+    data: { itemId: item.id, source: "equip" },
+  })
 
   return (
     <button
+      ref={setNodeRef}
       type="button"
       onClick={onClick}
-      className="border-border hover:border-foreground/30 group bg-card/50 relative flex h-full w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors"
+      className={cn(
+        "border-border hover:border-foreground/30 group bg-card/50 relative flex h-full w-full flex-col items-center gap-1 rounded-lg border p-2 transition-colors",
+        isDragging && "opacity-40"
+      )}
+      {...listeners}
+      {...attributes}
     >
       <ItemIcon type={displayType} size="sm" />
       <span className="max-w-full truncate text-xs leading-tight font-medium">
         {displayName}
       </span>
       {item.material && <MaterialBadge mat={item.material} />}
-      {onClear && (
+      {onClear && !disabled && (
         <span
           role="button"
           tabIndex={0}
@@ -1018,6 +1215,39 @@ function EquipSlotCard({
   )
 }
 
+function EquipSlotCard({
+  slot,
+  onClick,
+  disabled,
+}: {
+  slot: SlotConfig
+  onClick: () => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex h-full w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-3 transition-colors",
+        disabled
+          ? "border-border/30 cursor-not-allowed opacity-40"
+          : "border-border/50 hover:border-foreground/30 hover:bg-muted/30"
+      )}
+    >
+      <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+        {slot.label}
+      </span>
+      {disabled ? (
+        <span className="text-muted-foreground text-[9px]">2H equipped</span>
+      ) : (
+        <Plus className="text-muted-foreground/50 size-5" />
+      )}
+    </button>
+  )
+}
+
 // ── Bag Item Row ────────────────────────────────────────────────────
 
 const SLOT_LABELS: Record<string, string> = {
@@ -1030,10 +1260,12 @@ const SLOT_LABELS: Record<string, string> = {
   accessory: "Accessory",
 }
 
-function BagItemRow({
+function DraggableBagItemRow({
   item,
   name,
   type,
+  isDraggable,
+  isDragging,
   onDelete,
   onUnequip,
   onEquip,
@@ -1041,12 +1273,30 @@ function BagItemRow({
   item: InventoryItem
   name: string
   type: string
+  isDraggable: boolean
+  isDragging: boolean
   onDelete: () => void
   onUnequip?: () => void
   onEquip?: () => void
 }) {
+  const source = item.equip_slot ? "equip" : "bag"
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `bag-${item.id}`,
+    data: { itemId: item.id, source },
+    disabled: !isDraggable,
+  })
+
   return (
-    <div className="border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2">
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "border-border/50 flex items-center gap-3 rounded-lg border px-3 py-2",
+        isDraggable && "cursor-grab",
+        isDragging && "opacity-40"
+      )}
+      {...listeners}
+      {...attributes}
+    >
       <ItemIcon type={type} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
