@@ -102,7 +102,7 @@ export function ReadOnlyBagItemRow({
         </div>
         {item.material && <MaterialBadge mat={item.material} />}
       </div>
-      {item.quantity > 1 && (
+      {(item.quantity > 1 || item.item_type === "consumable") && (
         <span className="text-muted-foreground text-[10px]">
           x{item.quantity}
         </span>

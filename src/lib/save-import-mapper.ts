@@ -292,10 +292,12 @@ export function mapSaveSlotToItems(
       equipSlot = slotMap[armor.bodyPart] ?? null
     }
 
+    // Accessories don't have materials (materialId 0 = "Wood" is meaningless for them)
+    const isAccessory = armor.id >= 223
     items.push({
       item_type: "armor",
       item_id: apiArmor.id,
-      material: MATERIAL_BY_ID[armor.materialId] ?? null,
+      material: isAccessory ? null : (MATERIAL_BY_ID[armor.materialId] ?? null),
       equip_slot: equipSlot,
       storage,
     })
