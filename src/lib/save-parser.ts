@@ -36,6 +36,8 @@ const MATERIALS = [
 
 export interface ParsedSaveSlot {
   slotNumber: number
+  zoneId: number
+  roomId: number
   gameTime: string // "HH:MM:SS"
   hp: number
   maxHp: number
@@ -44,6 +46,8 @@ export interface ParsedSaveSlot {
   saveCount: number
   clearCount: number // NG+ counter
   mapCompletion: number
+  checksumValid: boolean
+  checksumErrors: string[]
   inventory: ParsedInventory
   container: ParsedInventory
 }
@@ -910,14 +914,19 @@ function parseSaveSlot(
     )
   }
 
-  // Validate checksums (warn but don't throw)
-  const [checksumsValid, checksumErrors] = validateChecksums(decrypted)
-  if (!checksumsValid) {
+  // Validate checksums and surface errors to the caller
+  const [checksumValid, checksumErrors] = validateChecksums(decrypted)
+  if (!checksumValid) {
     console.warn(
       `Slot ${slotNumber}: ${checksumErrors.length} checksum error(s):`,
       checksumErrors
     )
   }
+
+  // Extract zone + room IDs from decrypted save data at offset 0x1778
+  // (D_80061068_t struct: zndId at +0, roomId at +1)
+  const zoneId = decrypted[0x1778]
+  const roomId = decrypted[0x1779]
 
   // Parse save summary
   const summary = parseSaveSummary(decView)
@@ -928,6 +937,8 @@ function parseSaveSlot(
 
   return {
     slotNumber,
+    zoneId,
+    roomId,
     gameTime: summary.gameTime,
     hp: summary.hp,
     maxHp: summary.maxHp,
@@ -936,6 +947,8 @@ function parseSaveSlot(
     saveCount: summary.saveCount,
     clearCount: summary.clearCount,
     mapCompletion: summary.mapCompletion,
+    checksumValid,
+    checksumErrors,
     inventory,
     container,
   }

@@ -28,6 +28,7 @@ export interface InventoryItem {
   gem_2_id: number | null
   gem_3_id: number | null
   equip_slot: EquipSlot | null
+  storage: "bag" | "container"
   quantity: number
 }
 
@@ -44,6 +45,7 @@ export interface CreateInventoryItem {
   gem_2_id?: number | null
   gem_3_id?: number | null
   equip_slot?: EquipSlot | null
+  storage?: "bag" | "container"
   quantity?: number
 }
 
@@ -56,6 +58,7 @@ export interface UpdateInventoryItem {
   gem_2_id?: number | null
   gem_3_id?: number | null
   equip_slot?: EquipSlot | null
+  storage?: "bag" | "container"
   quantity?: number
 }
 
@@ -119,5 +122,16 @@ export const inventoryApi = {
   deleteItem: (inventoryId: number, itemId: number) =>
     fetchAuth<void>(`/user/inventories/${inventoryId}/items/${itemId}`, {
       method: "DELETE",
+    }),
+
+  importItems: (
+    inventoryId: number,
+    items: CreateInventoryItem[],
+    clearExisting: boolean = false
+  ) =>
+    fetchAuth<InventoryDetail>(`/user/inventories/${inventoryId}/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items, clear_existing: clearExisting }),
     }),
 }

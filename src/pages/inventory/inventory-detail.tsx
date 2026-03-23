@@ -63,47 +63,16 @@ import {
   type EquipSlot,
   type InventoryItem,
 } from "@/lib/inventory-api"
+import { StatBox } from "@/components/inventory-preview"
+import {
+  EQUIP_SLOTS,
+  SLOT_LABELS,
+  DISPLAY_TYPE_TO_CATEGORY,
+  type SlotConfig,
+} from "@/lib/inventory-constants"
 import { cn } from "@/lib/utils"
 
 // ── Slot configuration ──────────────────────────────────────────────
-
-interface SlotConfig {
-  key: EquipSlot
-  label: string
-  gridArea: string
-  itemTypes: string[]
-  isBlade?: boolean
-  isShield?: boolean
-  isAccessory?: boolean
-}
-
-const EQUIP_SLOTS: SlotConfig[] = [
-  {
-    key: "right_hand",
-    label: "R. Hand",
-    gridArea: "rhand",
-    itemTypes: ["blade"],
-    isBlade: true,
-  },
-  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
-  {
-    key: "accessory",
-    label: "Accessory",
-    gridArea: "accessory",
-    itemTypes: ["Accessory"],
-    isAccessory: true,
-  },
-  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
-  { key: "body", label: "Body", gridArea: "body", itemTypes: ["Body"] },
-  {
-    key: "left_hand",
-    label: "L. Hand",
-    gridArea: "lhand",
-    itemTypes: ["Shield"],
-    isShield: true,
-  },
-  { key: "legs", label: "Legs", gridArea: "legs", itemTypes: ["Leg"] },
-]
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const ARMOR_MATS = ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
@@ -140,35 +109,6 @@ export function InventoryDetailPage() {
 }
 
 type BagSort = "equipped" | "added" | "name"
-
-// Map item display types to broader filter categories
-const DISPLAY_TYPE_TO_CATEGORY: Record<string, string> = {
-  Dagger: "Blade",
-  Sword: "Blade",
-  "Great Sword": "Blade",
-  "Axe / Mace": "Blade",
-  Staff: "Blade",
-  "Heavy Mace": "Blade",
-  Polearm: "Blade",
-  Crossbow: "Blade",
-  Grip: "Grip",
-  Hilt: "Grip",
-  Haft: "Grip",
-  Shaft: "Grip",
-  Bolt: "Grip",
-  Shield: "Shield",
-  Helm: "Helm",
-  Body: "Body",
-  Leg: "Leg",
-  Arm: "Arm",
-  Accessory: "Accessory",
-  // Gem types
-  Gem: "Gem",
-  Weapon: "Gem",
-  Armor: "Gem",
-  Both: "Gem",
-  Consumable: "Consumable",
-}
 
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
@@ -1250,16 +1190,6 @@ function EquipSlotCard({
 
 // ── Bag Item Row ────────────────────────────────────────────────────
 
-const SLOT_LABELS: Record<string, string> = {
-  right_hand: "R. Hand",
-  left_hand: "L. Hand",
-  head: "Head",
-  body: "Body",
-  legs: "Legs",
-  arms: "Arms",
-  accessory: "Accessory",
-}
-
 function DraggableBagItemRow({
   item,
   name,
@@ -1443,26 +1373,6 @@ function CombinedStatsCard({
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function StatBox({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="bg-muted/50 flex min-w-11 flex-col items-center rounded px-2 py-1.5">
-      <span className="text-muted-foreground text-xs leading-none">
-        {label}
-      </span>
-      <span
-        className={cn(
-          "text-sm leading-tight font-medium",
-          value > 0 && "text-green-400",
-          value < 0 && "text-red-400",
-          value === 0 && "text-muted-foreground"
-        )}
-      >
-        {value}
-      </span>
-    </div>
   )
 }
 
