@@ -243,9 +243,10 @@ export function findCraftingPaths(
   const visited = new Set<string>()
 
   function stateKey(items: CraftableItem[]): string {
+    // Use IDs for fast comparison — synthetic items have unique negative IDs
     return items
-      .map((i) => `${i.name}:${i.material}`)
-      .sort()
+      .map((i) => i.id)
+      .sort((a, b) => a - b)
       .join(",")
   }
 

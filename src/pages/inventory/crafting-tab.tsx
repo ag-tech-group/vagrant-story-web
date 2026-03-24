@@ -170,11 +170,30 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const runForwardSearch = () => {
     if (!recipesReady || !targetItem) return
     setForwardSearched(false)
+
+    // Determine target category and only send relevant items + recipes
+    const blade = blades.find((b) => b.name === targetItem)
+    const armorItem = armor.find((a) => a.name === targetItem)
+    const targetCategory = blade
+      ? "blade"
+      : armorItem?.armor_type === "Shield"
+        ? "shield"
+        : armorItem
+          ? "armor"
+          : "blade"
+
+    const filteredCraftables = craftables.filter(
+      (c) => c.category === targetCategory
+    )
+    const filteredRecipes = craftingRecipes.filter(
+      (r) => r.category === targetCategory
+    )
+
     postWorker({
       type: "forward",
-      craftingRecipes,
+      craftingRecipes: filteredRecipes,
       materialRecipes,
-      craftables,
+      craftables: filteredCraftables,
       targetName: targetItem,
       targetMaterial,
     })
@@ -190,11 +209,19 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const runReverseSearch = () => {
     if (!recipesReady || !reverseSource) return
     setReverseSearched(false)
+
+    const filteredCraftables = craftables.filter(
+      (c) => c.category === reverseSource.category
+    )
+    const filteredRecipes = craftingRecipes.filter(
+      (r) => r.category === reverseSource.category
+    )
+
     postWorker({
       type: "reverse",
-      craftingRecipes,
+      craftingRecipes: filteredRecipes,
       materialRecipes,
-      craftables,
+      craftables: filteredCraftables,
       sourceItem: reverseSource,
     })
   }
