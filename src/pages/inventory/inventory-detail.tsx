@@ -16,6 +16,8 @@ import {
   ArrowDownAZ,
   ArrowDownWideNarrow,
   ArrowLeft,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
   Package,
   Plus,
   Search,
@@ -63,47 +65,38 @@ import {
   type EquipSlot,
   type InventoryItem,
 } from "@/lib/inventory-api"
+import { StatBox } from "@/components/inventory-preview"
+import {
+  EQUIP_SLOTS,
+  SLOT_LABELS,
+  DISPLAY_TYPE_TO_CATEGORY,
+  type SlotConfig,
+} from "@/lib/inventory-constants"
 import { cn } from "@/lib/utils"
 
 // ── Slot configuration ──────────────────────────────────────────────
 
-interface SlotConfig {
-  key: EquipSlot
-  label: string
-  gridArea: string
-  itemTypes: string[]
-  isBlade?: boolean
-  isShield?: boolean
-  isAccessory?: boolean
+// Game limits per section (bag / container)
+const BAG_LIMITS: Record<string, number> = {
+  Blade: 16,
+  Grip: 16,
+  Shield: 8,
+  Armor: 16, // shared: Helm + Body + Leg + Arm
+  Gem: 48,
+  Accessory: 16,
+  Consumable: 64,
 }
-
-const EQUIP_SLOTS: SlotConfig[] = [
-  {
-    key: "right_hand",
-    label: "R. Hand",
-    gridArea: "rhand",
-    itemTypes: ["blade"],
-    isBlade: true,
-  },
-  { key: "head", label: "Head", gridArea: "head", itemTypes: ["Helm"] },
-  {
-    key: "accessory",
-    label: "Accessory",
-    gridArea: "accessory",
-    itemTypes: ["Accessory"],
-    isAccessory: true,
-  },
-  { key: "arms", label: "Arms", gridArea: "arms", itemTypes: ["Arm"] },
-  { key: "body", label: "Body", gridArea: "body", itemTypes: ["Body"] },
-  {
-    key: "left_hand",
-    label: "L. Hand",
-    gridArea: "lhand",
-    itemTypes: ["Shield"],
-    isShield: true,
-  },
-  { key: "legs", label: "Legs", gridArea: "legs", itemTypes: ["Leg"] },
-]
+const CONTAINER_LIMITS: Record<string, number> = {
+  Blade: 64,
+  Grip: 64,
+  Shield: 32,
+  Armor: 64, // shared: Helm + Body + Leg + Arm
+  Gem: 192,
+  Accessory: 64,
+  Consumable: 256,
+}
+// Armor sub-types share one pool
+const ARMOR_POOL_TYPES = new Set(["Helm", "Body", "Leg", "Arm"])
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const ARMOR_MATS = ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
@@ -140,35 +133,6 @@ export function InventoryDetailPage() {
 }
 
 type BagSort = "equipped" | "added" | "name"
-
-// Map item display types to broader filter categories
-const DISPLAY_TYPE_TO_CATEGORY: Record<string, string> = {
-  Dagger: "Blade",
-  Sword: "Blade",
-  "Great Sword": "Blade",
-  "Axe / Mace": "Blade",
-  Staff: "Blade",
-  "Heavy Mace": "Blade",
-  Polearm: "Blade",
-  Crossbow: "Blade",
-  Grip: "Grip",
-  Hilt: "Grip",
-  Haft: "Grip",
-  Shaft: "Grip",
-  Bolt: "Grip",
-  Shield: "Shield",
-  Helm: "Helm",
-  Body: "Body",
-  Leg: "Leg",
-  Arm: "Arm",
-  Accessory: "Accessory",
-  // Gem types
-  Gem: "Gem",
-  Weapon: "Gem",
-  Armor: "Gem",
-  Both: "Gem",
-  Consumable: "Consumable",
-}
 
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
@@ -327,8 +291,16 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     return blade?.hands === "2H"
   }, [inventory, bladeIdMap])
 
-  // All items for the bag view (equipped items shown with badge)
+  // Split items by storage
   const allItems = useMemo(() => inventory?.items ?? [], [inventory])
+  const bagItems = useMemo(
+    () => allItems.filter((i) => i.storage !== "container"),
+    [allItems]
+  )
+  const containerItems = useMemo(
+    () => allItems.filter((i) => i.storage === "container"),
+    [allItems]
+  )
 
   // Get display info for an inventory item
   const getItemDisplayName = useCallback(
@@ -367,17 +339,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         const grip = gripIdMap.get(item.item_id)
         return grip?.grip_type ?? "Grip"
       }
-      if (item.item_type === "gem") {
-        const gem = gemIdMap.get(item.item_id)
-        return gem?.gem_type ?? "Gem"
-      }
+      if (item.item_type === "gem") return "Gem"
       if (item.item_type === "consumable") {
         return "Consumable"
       }
       const armorItem = armorIdMap.get(item.item_id)
       return armorItem?.armor_type ?? "Armor"
     },
-    [bladeIdMap, armorIdMap, gripIdMap, gemIdMap]
+    [bladeIdMap, armorIdMap, gripIdMap]
   )
 
   // Determine the equip slot for an item (null = not equippable)
@@ -402,15 +371,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     [armorIdMap]
   )
 
-  // Derive bag categories with counts from current items
-  const bagCategories = useMemo(() => {
+  // Categories from all items (bag + container), shared filter controls
+  const itemCategories = useMemo(() => {
     const counts = new Map<string, number>()
     for (const item of allItems) {
       const displayType = getItemDisplayType(item)
       const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
       counts.set(category, (counts.get(category) ?? 0) + 1)
     }
-    // Sort categories in a stable order
     const order = [
       "Blade",
       "Grip",
@@ -428,8 +396,8 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       .map((c) => ({ label: c, count: counts.get(c)! }))
   }, [allItems, getItemDisplayType])
 
-  // Filtered and sorted bag items
-  const filteredBagItems = useMemo(() => {
+  // Filter + sort applied to all items, then split by storage
+  const filteredSorted = useMemo(() => {
     let list = allItems
     if (bagCategory !== "all") {
       list = list.filter((item) => {
@@ -463,6 +431,49 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     getItemDisplayName,
     getItemDisplayType,
   ])
+
+  const filteredBagItems = useMemo(
+    () => filteredSorted.filter((i) => i.storage !== "container"),
+    [filteredSorted]
+  )
+  const filteredContainerItems = useMemo(
+    () => filteredSorted.filter((i) => i.storage === "container"),
+    [filteredSorted]
+  )
+
+  // Per-section limit info when a category filter is active
+  const sectionLimits = useMemo(() => {
+    if (bagCategory === "all") return null
+    const isArmorType = ARMOR_POOL_TYPES.has(bagCategory)
+    const limitKey = isArmorType ? "Armor" : bagCategory
+    const bagMax = BAG_LIMITS[limitKey]
+    const containerMax = CONTAINER_LIMITS[limitKey]
+    if (!bagMax && !containerMax) return null
+
+    // Count all items in the pool (not just filtered — armor pool includes all sub-types)
+    const poolFilter = isArmorType
+      ? (item: InventoryItem) => {
+          const dt = getItemDisplayType(item)
+          const cat = DISPLAY_TYPE_TO_CATEGORY[dt] ?? dt
+          return ARMOR_POOL_TYPES.has(cat)
+        }
+      : (item: InventoryItem) => {
+          const dt = getItemDisplayType(item)
+          const cat = DISPLAY_TYPE_TO_CATEGORY[dt] ?? dt
+          return cat === bagCategory
+        }
+
+    const bagCount = bagItems.filter(poolFilter).length
+    const containerCount = containerItems.filter(poolFilter).length
+    const label = isArmorType ? "Armor" : bagCategory
+
+    return {
+      bag: bagMax ? `${label} ${bagCount}/${bagMax}` : null,
+      container: containerMax
+        ? `${label} ${containerCount}/${containerMax}`
+        : null,
+    }
+  }, [bagCategory, bagItems, containerItems, getItemDisplayType])
 
   // Handle slot save
   const handleSlotSave = useCallback(
@@ -577,21 +588,31 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       if (!over) return
 
       const itemId = active.data.current?.itemId as number | undefined
-      const source = active.data.current?.source as "bag" | "equip" | undefined
+      const source = active.data.current?.source as
+        | "bag"
+        | "equip"
+        | "container"
+        | undefined
       if (!itemId || !source) return
 
       const item = allItems.find((i) => i.id === itemId)
       if (!item) return
 
       if (source === "bag" && over.id === "equipment-grid") {
-        // Drag from bag to equipment grid => equip (with swap)
         const targetSlot = getEquipSlotForItem(item)
         if (targetSlot) {
           equipToSlot(item, targetSlot)
         }
       } else if (source === "equip" && over.id === "bag-area") {
-        // Drag from equipment grid to bag => unequip
         updateItemMutation.mutate({ itemId: item.id, equip_slot: null })
+      } else if (
+        source === "bag" &&
+        !item.equip_slot &&
+        over.id === "container-area"
+      ) {
+        updateItemMutation.mutate({ itemId: item.id, storage: "container" })
+      } else if (source === "container" && over.id === "bag-area") {
+        updateItemMutation.mutate({ itemId: item.id, storage: "bag" })
       }
     },
     [allItems, equipToSlot, getEquipSlotForItem, updateItemMutation]
@@ -795,7 +816,80 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+        {/* Shared filter controls for bag + container */}
+        {allItems.length > 1 && (
+          <div className="flex items-center gap-2">
+            {itemCategories.length > 1 && (
+              <Select value={bagCategory} onValueChange={setBagCategory}>
+                <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ({allItems.length})</SelectItem>
+                  {itemCategories.map((c) => {
+                    const limitKey = ARMOR_POOL_TYPES.has(c.label)
+                      ? "Armor"
+                      : c.label
+                    const total =
+                      (BAG_LIMITS[limitKey] ?? 0) +
+                      (CONTAINER_LIMITS[limitKey] ?? 0)
+                    return (
+                      <SelectItem key={c.label} value={c.label}>
+                        {c.label} ({c.count}
+                        {total > 0 ? `/${total}` : ""})
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+            )}
+            <div className="relative flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={bagSearch}
+                onChange={(e) => setBagSearch(e.target.value)}
+                placeholder="Filter items..."
+                className="pr-8 pl-9"
+              />
+              {bagSearch && (
+                <button
+                  type="button"
+                  onClick={() => setBagSearch("")}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() =>
+                setBagSort((s) =>
+                  s === "equipped"
+                    ? "added"
+                    : s === "added"
+                      ? "name"
+                      : "equipped"
+                )
+              }
+            >
+              {bagSort === "name" ? (
+                <ArrowDownAZ className="size-3.5" />
+              ) : (
+                <ArrowDownWideNarrow className="size-3.5" />
+              )}
+              {bagSort === "equipped"
+                ? "Equipped"
+                : bagSort === "added"
+                  ? "Added"
+                  : "Name"}
+            </Button>
+          </div>
+        )}
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
           {/* Left Column: Equipment + Stats */}
           <div className="space-y-6">
             {/* Equipment Grid */}
@@ -830,88 +924,31 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               )}
           </div>
 
-          {/* Right Column: Item Bag */}
+          {/* Middle Column: Item Bag */}
           <BagDropZone
             isOver={
-              activeDragItem !== null && activeDragItem.equip_slot !== null
+              activeDragItem !== null &&
+              (activeDragItem.equip_slot !== null ||
+                activeDragItem.storage === "container")
             }
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">
+                <h3 className="font-medium">
                   <Package className="mr-1.5 inline size-4" />
-                  Item Bag ({allItems.length})
+                  Item Bag ({filteredBagItems.length})
+                  {sectionLimits?.bag && (
+                    <span className="text-muted-foreground ml-2 text-sm font-normal">
+                      {sectionLimits.bag}
+                    </span>
+                  )}
                 </h3>
                 <Button size="sm" onClick={() => setEditingBagItem(true)}>
                   <Plus className="size-3.5" />
                   Add Item
                 </Button>
               </div>
-              {allItems.length > 1 && (
-                <div className="flex items-center gap-2">
-                  {bagCategories.length > 1 && (
-                    <Select value={bagCategory} onValueChange={setBagCategory}>
-                      <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          All ({allItems.length})
-                        </SelectItem>
-                        {bagCategories.map((c) => (
-                          <SelectItem key={c.label} value={c.label}>
-                            {c.label} ({c.count})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  <div className="relative flex-1">
-                    <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                      value={bagSearch}
-                      onChange={(e) => setBagSearch(e.target.value)}
-                      placeholder="Filter items..."
-                      className="pr-8 pl-9"
-                    />
-                    {bagSearch && (
-                      <button
-                        type="button"
-                        onClick={() => setBagSearch("")}
-                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0"
-                    onClick={() =>
-                      setBagSort((s) =>
-                        s === "equipped"
-                          ? "added"
-                          : s === "added"
-                            ? "name"
-                            : "equipped"
-                      )
-                    }
-                  >
-                    {bagSort === "name" ? (
-                      <ArrowDownAZ className="size-3.5" />
-                    ) : (
-                      <ArrowDownWideNarrow className="size-3.5" />
-                    )}
-                    {bagSort === "equipped"
-                      ? "Equipped"
-                      : bagSort === "added"
-                        ? "Added"
-                        : "Name"}
-                  </Button>
-                </div>
-              )}
-              {allItems.length === 0 ? (
+              {bagItems.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-xs">
                   No items in the bag
                 </p>
@@ -927,15 +964,13 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                     const targetSlot = !item.equip_slot
                       ? getEquipSlotForItem(item)
                       : null
-                    const isDraggable =
-                      !!item.equip_slot || !!getEquipSlotForItem(item)
                     return (
                       <DraggableBagItemRow
                         key={item.id}
                         item={item}
                         name={getItemDisplayName(item)}
                         type={getItemDisplayType(item)}
-                        isDraggable={isDraggable}
+                        isDraggable
                         isDragging={activeDragItem?.id === item.id}
                         onDelete={() => deleteItemMutation.mutate(item.id)}
                         onUnequip={
@@ -952,6 +987,15 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                             ? () => equipToSlot(item, targetSlot)
                             : undefined
                         }
+                        onMoveToContainer={
+                          !item.equip_slot
+                            ? () =>
+                                updateItemMutation.mutate({
+                                  itemId: item.id,
+                                  storage: "container",
+                                })
+                            : undefined
+                        }
                       />
                     )
                   })}
@@ -959,6 +1003,56 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               )}
             </div>
           </BagDropZone>
+
+          {/* Right Column: Container */}
+          <ContainerDropZone
+            isOver={
+              activeDragItem !== null &&
+              activeDragItem.storage !== "container" &&
+              !activeDragItem.equip_slot
+            }
+          >
+            <div className="space-y-3">
+              <h3 className="font-medium">
+                <Package className="mr-1.5 inline size-4" />
+                Container ({filteredContainerItems.length})
+                {sectionLimits?.container && (
+                  <span className="text-muted-foreground ml-2 text-sm font-normal">
+                    {sectionLimits.container}
+                  </span>
+                )}
+              </h3>
+              {containerItems.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center text-xs">
+                  Drop items here to store them
+                </p>
+              ) : filteredContainerItems.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center text-xs">
+                  No items match filter
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {filteredContainerItems.map((item) => (
+                    <DraggableBagItemRow
+                      key={item.id}
+                      item={item}
+                      name={getItemDisplayName(item)}
+                      type={getItemDisplayType(item)}
+                      isDraggable
+                      isDragging={activeDragItem?.id === item.id}
+                      onDelete={() => deleteItemMutation.mutate(item.id)}
+                      onMoveToBag={() =>
+                        updateItemMutation.mutate({
+                          itemId: item.id,
+                          storage: "bag",
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </ContainerDropZone>
         </div>
 
         <DragOverlay dropAnimation={null}>
@@ -1076,6 +1170,31 @@ function BagDropZone({
   children: React.ReactNode
 }) {
   const { setNodeRef, isOver: isDropOver } = useDroppable({ id: "bag-area" })
+  const highlight = isOver && isDropOver
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-xl border-2 border-transparent p-2 transition-colors",
+        highlight && "border-primary/50 bg-primary/5"
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ContainerDropZone({
+  isOver,
+  children,
+}: {
+  isOver: boolean
+  children: React.ReactNode
+}) {
+  const { setNodeRef, isOver: isDropOver } = useDroppable({
+    id: "container-area",
+  })
   const highlight = isOver && isDropOver
 
   return (
@@ -1250,16 +1369,6 @@ function EquipSlotCard({
 
 // ── Bag Item Row ────────────────────────────────────────────────────
 
-const SLOT_LABELS: Record<string, string> = {
-  right_hand: "R. Hand",
-  left_hand: "L. Hand",
-  head: "Head",
-  body: "Body",
-  legs: "Legs",
-  arms: "Arms",
-  accessory: "Accessory",
-}
-
 function DraggableBagItemRow({
   item,
   name,
@@ -1269,6 +1378,8 @@ function DraggableBagItemRow({
   onDelete,
   onUnequip,
   onEquip,
+  onMoveToContainer,
+  onMoveToBag,
 }: {
   item: InventoryItem
   name: string
@@ -1278,8 +1389,14 @@ function DraggableBagItemRow({
   onDelete: () => void
   onUnequip?: () => void
   onEquip?: () => void
+  onMoveToContainer?: () => void
+  onMoveToBag?: () => void
 }) {
-  const source = item.equip_slot ? "equip" : "bag"
+  const source = item.equip_slot
+    ? "equip"
+    : item.storage === "container"
+      ? "container"
+      : "bag"
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `bag-${item.id}`,
     data: { itemId: item.id, source },
@@ -1309,7 +1426,7 @@ function DraggableBagItemRow({
         </div>
         {item.material && <MaterialBadge mat={item.material} />}
       </div>
-      {item.quantity > 1 && (
+      {(item.quantity > 1 || item.item_type === "consumable") && (
         <span className="text-muted-foreground text-xs">x{item.quantity}</span>
       )}
       {onEquip && (
@@ -1346,6 +1463,28 @@ function DraggableBagItemRow({
             }}
           />
           Unequip
+        </Button>
+      )}
+      {onMoveToContainer && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground shrink-0"
+          title="Move to container"
+          onClick={onMoveToContainer}
+        >
+          <ArrowRightFromLine className="size-3.5" />
+        </Button>
+      )}
+      {onMoveToBag && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground shrink-0"
+          title="Move to bag"
+          onClick={onMoveToBag}
+        >
+          <ArrowLeftFromLine className="size-3.5" />
         </Button>
       )}
       <Button
@@ -1443,26 +1582,6 @@ function CombinedStatsCard({
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function StatBox({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="bg-muted/50 flex min-w-11 flex-col items-center rounded px-2 py-1.5">
-      <span className="text-muted-foreground text-xs leading-none">
-        {label}
-      </span>
-      <span
-        className={cn(
-          "text-sm leading-tight font-medium",
-          value > 0 && "text-green-400",
-          value < 0 && "text-red-400",
-          value === 0 && "text-muted-foreground"
-        )}
-      >
-        {value}
-      </span>
-    </div>
   )
 }
 
@@ -1576,6 +1695,7 @@ function SlotEditorDialog({
     })
   }, [existingItem, gemIdMap])
 
+  const [targetStorage, setTargetStorage] = useState<"bag" | "container">("bag")
   const [selectedItem, setSelectedItem] = useState<string | null>(
     initialItemName
   )
@@ -1800,6 +1920,7 @@ function SlotEditorDialog({
       gem_2_id: gemIds[1] ?? null,
       gem_3_id: gemIds[2] ?? null,
       equip_slot: slot?.key ?? null,
+      storage: slot ? "bag" : targetStorage,
     }
 
     onSave(data, existingItem?.id)
@@ -1823,7 +1944,9 @@ function SlotEditorDialog({
               ? `Edit: ${slot?.label ?? "Bag Item"}`
               : slot
                 ? `Equip: ${slot.label}`
-                : "Add to Bag"}
+                : targetStorage === "container"
+                  ? "Add to Container"
+                  : "Add to Bag"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
@@ -1835,6 +1958,28 @@ function SlotEditorDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Storage toggle (only for bag/container add, not equip slots) */}
+          {!slot && (
+            <div className="flex gap-2">
+              <Button
+                variant={targetStorage === "bag" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTargetStorage("bag")}
+              >
+                <Package className="mr-1.5 size-3.5" />
+                Bag
+              </Button>
+              <Button
+                variant={targetStorage === "container" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTargetStorage("container")}
+              >
+                <Package className="mr-1.5 size-3.5" />
+                Container
+              </Button>
+            </div>
+          )}
+
           {/* Item picker */}
           <ItemPicker
             items={pickerItems}

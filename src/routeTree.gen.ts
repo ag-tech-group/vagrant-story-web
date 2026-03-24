@@ -59,6 +59,7 @@ import { Route as SpellsIdRouteImport } from './routes/spells/$id'
 import { Route as SigilsIdRouteImport } from './routes/sigils/$id'
 import { Route as RankingsIdRouteImport } from './routes/rankings/$id'
 import { Route as KeysIdRouteImport } from './routes/keys/$id'
+import { Route as InventoryImportRouteImport } from './routes/inventory/import'
 import { Route as InventoryInventoryIdRouteImport } from './routes/inventory/$inventoryId'
 import { Route as GripsIdRouteImport } from './routes/grips/$id'
 import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
@@ -323,6 +324,11 @@ const KeysIdRoute = KeysIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => KeysRouteRoute,
 } as any)
+const InventoryImportRoute = InventoryImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => InventoryRouteRoute,
+} as any)
 const InventoryInventoryIdRoute = InventoryInventoryIdRouteImport.update({
   id: '/$inventoryId',
   path: '/$inventoryId',
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/grimoires/$id': typeof GrimoiresIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/inventory/$inventoryId': typeof InventoryInventoryIdRoute
+  '/inventory/import': typeof InventoryImportRoute
   '/keys/$id': typeof KeysIdRoute
   '/rankings/$id': typeof RankingsIdRoute
   '/sigils/$id': typeof SigilsIdRoute
@@ -471,6 +478,7 @@ export interface FileRoutesByTo {
   '/grimoires/$id': typeof GrimoiresIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/inventory/$inventoryId': typeof InventoryInventoryIdRoute
+  '/inventory/import': typeof InventoryImportRoute
   '/keys/$id': typeof KeysIdRoute
   '/rankings/$id': typeof RankingsIdRoute
   '/sigils/$id': typeof SigilsIdRoute
@@ -537,6 +545,7 @@ export interface FileRoutesById {
   '/grimoires/$id': typeof GrimoiresIdRoute
   '/grips/$id': typeof GripsIdRoute
   '/inventory/$inventoryId': typeof InventoryInventoryIdRoute
+  '/inventory/import': typeof InventoryImportRoute
   '/keys/$id': typeof KeysIdRoute
   '/rankings/$id': typeof RankingsIdRoute
   '/sigils/$id': typeof SigilsIdRoute
@@ -604,6 +613,7 @@ export interface FileRouteTypes {
     | '/grimoires/$id'
     | '/grips/$id'
     | '/inventory/$inventoryId'
+    | '/inventory/import'
     | '/keys/$id'
     | '/rankings/$id'
     | '/sigils/$id'
@@ -649,6 +659,7 @@ export interface FileRouteTypes {
     | '/grimoires/$id'
     | '/grips/$id'
     | '/inventory/$inventoryId'
+    | '/inventory/import'
     | '/keys/$id'
     | '/rankings/$id'
     | '/sigils/$id'
@@ -714,6 +725,7 @@ export interface FileRouteTypes {
     | '/grimoires/$id'
     | '/grips/$id'
     | '/inventory/$inventoryId'
+    | '/inventory/import'
     | '/keys/$id'
     | '/rankings/$id'
     | '/sigils/$id'
@@ -1122,6 +1134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KeysIdRouteImport
       parentRoute: typeof KeysRouteRoute
     }
+    '/inventory/import': {
+      id: '/inventory/import'
+      path: '/import'
+      fullPath: '/inventory/import'
+      preLoaderRoute: typeof InventoryImportRouteImport
+      parentRoute: typeof InventoryRouteRoute
+    }
     '/inventory/$inventoryId': {
       id: '/inventory/$inventoryId'
       path: '/$inventoryId'
@@ -1395,11 +1414,13 @@ const GripsRouteRouteWithChildren = GripsRouteRoute._addFileChildren(
 
 interface InventoryRouteRouteChildren {
   InventoryInventoryIdRoute: typeof InventoryInventoryIdRoute
+  InventoryImportRoute: typeof InventoryImportRoute
   InventoryIndexRoute: typeof InventoryIndexRoute
 }
 
 const InventoryRouteRouteChildren: InventoryRouteRouteChildren = {
   InventoryInventoryIdRoute: InventoryInventoryIdRoute,
+  InventoryImportRoute: InventoryImportRoute,
   InventoryIndexRoute: InventoryIndexRoute,
 }
 
