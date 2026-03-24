@@ -402,17 +402,60 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
 
 // ── Discover results (forward) ───────────────────────────────────────
 
+type DiscoverSort = "score" | "material" | "stats" | "steps"
+type DiscoverFilter = "all" | "mat-upgrade" | "tier-up" | "stat-up"
+
+const MATERIAL_ORDER: Record<string, number> = {
+  Wood: 0,
+  Leather: 1,
+  Bronze: 2,
+  Iron: 3,
+  Hagane: 4,
+  Silver: 5,
+  Damascus: 6,
+}
+
 function DiscoverResults({ results }: { results: CraftableResult[] }) {
   const [showAll, setShowAll] = useState(false)
+  const [sortBy, setSortBy] = useState<DiscoverSort>("score")
+  const [filterBy, setFilterBy] = useState<DiscoverFilter>("all")
   const PAGE_SIZE = 20
 
   // Only show results that are upgrades (material or tier or stat improvement)
-  const upgrades = results.filter(
-    (r) =>
-      r.materialUpgrade ||
-      r.step.recipe.tier_change > 0 ||
-      (r.statDiff && r.statDiff.total > 0)
-  )
+  const upgrades = useMemo(() => {
+    let filtered = results.filter(
+      (r) =>
+        r.materialUpgrade ||
+        r.step.recipe.tier_change > 0 ||
+        (r.statDiff && r.statDiff.total > 0)
+    )
+
+    // Apply user filter
+    if (filterBy === "mat-upgrade") {
+      filtered = filtered.filter((r) => r.materialUpgrade)
+    } else if (filterBy === "tier-up") {
+      filtered = filtered.filter((r) => r.step.recipe.tier_change > 0)
+    } else if (filterBy === "stat-up") {
+      filtered = filtered.filter((r) => r.statDiff && r.statDiff.total > 0)
+    }
+
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "material") {
+        return (
+          (MATERIAL_ORDER[b.result.material] ?? 0) -
+          (MATERIAL_ORDER[a.result.material] ?? 0)
+        )
+      }
+      if (sortBy === "stats") {
+        return (b.statDiff?.total ?? 0) - (a.statDiff?.total ?? 0)
+      }
+      if (sortBy === "steps") {
+        return a.steps - b.steps
+      }
+      return b.score - a.score
+    })
+  }, [results, sortBy, filterBy])
 
   if (upgrades.length === 0) {
     return (
@@ -421,7 +464,7 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
         <p>No upgrades found with your current inventory</p>
         <p className="mt-1 text-xs">
           {results.length > 0
-            ? `${results.length} combinations exist but none produce an upgrade`
+            ? `${results.length} combinations exist but none match the filter`
             : "No combinations found"}
         </p>
       </div>
@@ -433,16 +476,41 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-muted-foreground text-xs">
-        Showing {visible.length} of {upgrades.length} upgrade
-        {upgrades.length !== 1 ? "s" : ""}
-        {results.length > upgrades.length && (
-          <span>
-            {" "}
-            ({results.length - upgrades.length} lateral moves hidden)
-          </span>
-        )}
-      </p>
+      {/* Sort + filter controls */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          value={sortBy}
+          onValueChange={(v) => setSortBy(v as DiscoverSort)}
+        >
+          <SelectTrigger className="h-8 w-auto min-w-[7rem] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="score">Best Overall</SelectItem>
+            <SelectItem value="material">Material Tier</SelectItem>
+            <SelectItem value="stats">Stat Gain</SelectItem>
+            <SelectItem value="steps">Fewest Steps</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterBy}
+          onValueChange={(v) => setFilterBy(v as DiscoverFilter)}
+        >
+          <SelectTrigger className="h-8 w-auto min-w-[7rem] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Upgrades</SelectItem>
+            <SelectItem value="mat-upgrade">Material Upgrades</SelectItem>
+            <SelectItem value="tier-up">Tier Up Only</SelectItem>
+            <SelectItem value="stat-up">Stat Gains Only</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-muted-foreground text-xs">
+          {upgrades.length} result{upgrades.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
       <div className="space-y-2">
         {visible.map((r, i) => (
           <DiscoverCard key={i} result={r} />
