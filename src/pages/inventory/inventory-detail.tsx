@@ -799,7 +799,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div className="mx-auto w-full max-w-[90rem] space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
@@ -893,7 +893,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           {/* Left Column: Equipment + Stats */}
           <div className="space-y-6">
             {/* Equipment Grid */}
-            <div className="mx-auto max-w-md">
+            <div className="mx-auto max-w-sm lg:max-w-none">
               <EquipmentGridDropZone
                 isOver={
                   activeDragItem !== null &&
@@ -1532,7 +1532,7 @@ function CombinedStatsCard({
   }
 }) {
   return (
-    <Card className="mx-auto max-w-md">
+    <Card className="mx-auto max-w-sm lg:max-w-none">
       <CardContent className="space-y-3">
         <p className="text-muted-foreground text-center text-xs font-semibold tracking-wider uppercase">
           Combined Stats
