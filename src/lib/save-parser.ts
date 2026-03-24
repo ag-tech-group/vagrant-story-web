@@ -22,14 +22,16 @@ const VS_BLOCKS_PER_SAVE = 3 // 3 blocks = 24,576 bytes allocated
 const MAGIC_VALUE = 0x20000107 // Post-decryption validation marker
 const LCG_MULTIPLIER = 0x19660d // Numerical Recipes LCG multiplier
 
+// Material IDs in save data are 1-based (0 = no material)
 const MATERIALS = [
-  "Wood",
-  "Leather",
-  "Bronze",
-  "Iron",
-  "Silver",
-  "Hagane",
-  "Damascus",
+  "", // 0 = none
+  "Wood", // 1
+  "Leather", // 2
+  "Bronze", // 3
+  "Iron", // 4
+  "Hagane", // 5
+  "Silver", // 6
+  "Damascus", // 7
 ] as const
 
 // ── Types ────────────────────────────────────────────────────────────

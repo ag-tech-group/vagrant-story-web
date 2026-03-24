@@ -34,14 +34,15 @@ import type {
 
 // ── Material mapping (must match save-parser.ts MATERIALS array) ─────
 
+// Material IDs in the save file are 1-based (0 = no material)
 const MATERIAL_BY_ID: Record<number, string> = {
-  0: "Wood",
-  1: "Leather",
-  2: "Bronze",
-  3: "Iron",
-  4: "Silver",
+  1: "Wood",
+  2: "Leather",
+  3: "Bronze",
+  4: "Iron",
   5: "Hagane",
-  6: "Damascus",
+  6: "Silver",
+  7: "Damascus",
 }
 
 // ── ITEMNAME.BIN → API id conversion ─────────────────────────────────
