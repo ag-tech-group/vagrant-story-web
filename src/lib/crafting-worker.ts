@@ -5,35 +5,33 @@
 
 import {
   buildRecipeIndex,
+  findAllCraftableResults,
   findCraftingPaths,
-  findReachableItems,
   type CraftableItem,
+  type CraftableResult,
   type CraftingPath,
   type OptimizerConfig,
-  type ReachableItem,
 } from "./crafting-optimizer"
 import type { CraftingRecipe, MaterialRecipe } from "./game-api"
 
 // ── Message types ────────────────────────────────────────────────────
 
 export interface WorkerRequest {
-  type: "forward" | "reverse"
+  type: "discover" | "reverse"
   craftingRecipes: CraftingRecipe[]
   materialRecipes: MaterialRecipe[]
   craftables: CraftableItem[]
-  // Forward-specific
+  // Reverse-specific (find path to target)
   targetName?: string
   targetMaterial?: string | null
-  // Reverse-specific
-  sourceItem?: CraftableItem
   // Config
   config?: Partial<OptimizerConfig>
 }
 
 export interface WorkerResponse {
-  type: "forward" | "reverse"
-  forwardPaths?: CraftingPath[]
-  reverseResults?: ReachableItem[]
+  type: "discover" | "reverse"
+  discoverResults?: CraftableResult[]
+  reversePaths?: CraftingPath[]
   elapsed: number
 }
 
@@ -43,7 +41,15 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
   const index = buildRecipeIndex(req.craftingRecipes, req.materialRecipes)
 
-  if (req.type === "forward" && req.targetName) {
+  if (req.type === "discover") {
+    const results = findAllCraftableResults(req.craftables, index)
+    const response: WorkerResponse = {
+      type: "discover",
+      discoverResults: results,
+      elapsed: performance.now() - start,
+    }
+    self.postMessage(response)
+  } else if (req.type === "reverse" && req.targetName) {
     const paths = findCraftingPaths(
       { name: req.targetName, material: req.targetMaterial ?? null },
       req.craftables,
@@ -51,21 +57,8 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       { maxDepth: 3, maxResults: 20, maxStates: 10000, ...req.config }
     )
     const response: WorkerResponse = {
-      type: "forward",
-      forwardPaths: paths,
-      elapsed: performance.now() - start,
-    }
-    self.postMessage(response)
-  } else if (req.type === "reverse" && req.sourceItem) {
-    const results = findReachableItems(req.sourceItem, req.craftables, index, {
-      maxDepth: 2,
-      maxResults: 50,
-      maxStates: 10000,
-      ...req.config,
-    })
-    const response: WorkerResponse = {
       type: "reverse",
-      reverseResults: results,
+      reversePaths: paths,
       elapsed: performance.now() - start,
     }
     self.postMessage(response)

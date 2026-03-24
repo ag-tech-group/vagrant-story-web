@@ -6,7 +6,6 @@ import {
   Loader2,
   Search,
   Settings2,
-  Undo2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -25,13 +24,13 @@ import { gameApi, type Armor, type Blade } from "@/lib/game-api"
 import type { InventoryItem } from "@/lib/inventory-api"
 import {
   inventoryToCraftables,
+  type CraftableResult,
   type CraftingPath,
-  type ReachableItem,
 } from "@/lib/crafting-optimizer"
 import type { WorkerRequest, WorkerResponse } from "@/lib/crafting-worker"
 import { cn } from "@/lib/utils"
 
-// ── Materials available per workshop ─────────────────────────────────
+// ── Materials ────────────────────────────────────────────────────────
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const ALL_MATERIALS = [
@@ -47,6 +46,7 @@ const ALL_MATERIALS = [
 // ── Types ────────────────────────────────────────────────────────────
 
 type Mode = "forward" | "reverse"
+type Category = "blade" | "shield" | "armor"
 
 interface CraftingTabProps {
   items: InventoryItem[]
@@ -58,13 +58,15 @@ interface CraftingTabProps {
 
 export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const [mode, setMode] = useState<Mode>("forward")
-  const [workshopId, setWorkshopId] = useState<string>("6") // Godhands default
+  const [workshopId, setWorkshopId] = useState<string>("6")
   const [includeEquipped, setIncludeEquipped] = useState(true)
+  const [forwardCategory, setForwardCategory] = useState<Category>("blade")
+
+  // Reverse mode state
   const [targetItem, setTargetItem] = useState<string | null>(null)
   const [targetMaterial, setTargetMaterial] = useState<string | null>(null)
-  const [reverseSourceId, setReverseSourceId] = useState<number | null>(null)
 
-  // Fetch workshops and recipes
+  // Fetch data
   const { data: workshops = [] } = useQuery({
     queryKey: ["workshops"],
     queryFn: gameApi.workshops,
@@ -80,24 +82,23 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
 
   const recipesReady = craftingRecipes.length > 0 && materialRecipes.length > 0
 
-  // Convert inventory to craftable items
   const craftables = useMemo(() => {
     const all = inventoryToCraftables(items, blades, armor)
     if (includeEquipped) return all
     return all.filter((c) => !c.sourceItem?.equip_slot)
   }, [items, blades, armor, includeEquipped])
 
-  // ── Search state (declared before worker so refs can access them) ──
+  // ── Search state ───────────────────────────────────────────────────
 
-  const [forwardPaths, setForwardPaths] = useState<CraftingPath[]>([])
-  const [forwardSearched, setForwardSearched] = useState(false)
-  const [reverseResults, setReverseResults] = useState<ReachableItem[]>([])
+  const [discoverResults, setDiscoverResults] = useState<CraftableResult[]>([])
+  const [discoverSearched, setDiscoverSearched] = useState(false)
+  const [reversePaths, setReversePaths] = useState<CraftingPath[]>([])
   const [reverseSearched, setReverseSearched] = useState(false)
+  const [searching, setSearching] = useState(false)
 
   // ── Web Worker ─────────────────────────────────────────────────────
 
   const workerRef = useRef<Worker | null>(null)
-  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     const worker = new Worker(
@@ -107,11 +108,11 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
       const res = e.data
       setSearching(false)
-      if (res.type === "forward" && res.forwardPaths) {
-        setForwardPaths(res.forwardPaths)
-        setForwardSearched(true)
-      } else if (res.type === "reverse" && res.reverseResults) {
-        setReverseResults(res.reverseResults)
+      if (res.type === "discover" && res.discoverResults) {
+        setDiscoverResults(res.discoverResults)
+        setDiscoverSearched(true)
+      } else if (res.type === "reverse" && res.reversePaths) {
+        setReversePaths(res.reversePaths)
         setReverseSearched(true)
       }
     }
@@ -125,7 +126,24 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     workerRef.current.postMessage(req)
   }, [])
 
-  // ── Forward mode: picker items + search ────────────────────────────
+  // ── Forward: discover what you can make ────────────────────────────
+
+  const runDiscover = () => {
+    if (!recipesReady) return
+    setDiscoverSearched(false)
+    const filtered = craftables.filter((c) => c.category === forwardCategory)
+    const filteredRecipes = craftingRecipes.filter(
+      (r) => r.category === forwardCategory
+    )
+    postWorker({
+      type: "discover",
+      craftingRecipes: filteredRecipes,
+      materialRecipes,
+      craftables: filtered,
+    })
+  }
+
+  // ── Reverse: find path to a target ─────────────────────────────────
 
   const bladePickerItems: PickerItem[] = useMemo(
     () =>
@@ -153,7 +171,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     [bladePickerItems, armorPickerItems]
   )
 
-  // Determine available materials for target
   const targetMaterials = useMemo(() => {
     if (!targetItem) return []
     const blade = blades.find((b) => b.name === targetItem)
@@ -166,63 +183,30 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     return ALL_MATERIALS
   }, [targetItem, blades, armor])
 
-  // Forward search — triggered by button click, runs in worker
-  const runForwardSearch = () => {
+  const runReverse = () => {
     if (!recipesReady || !targetItem) return
-    setForwardSearched(false)
+    setReverseSearched(false)
 
-    // Determine target category and only send relevant items + recipes
     const blade = blades.find((b) => b.name === targetItem)
     const armorItem = armor.find((a) => a.name === targetItem)
     const targetCategory = blade
       ? "blade"
       : armorItem?.armor_type === "Shield"
         ? "shield"
-        : armorItem
-          ? "armor"
-          : "blade"
+        : "armor"
 
-    const filteredCraftables = craftables.filter(
-      (c) => c.category === targetCategory
-    )
+    const filtered = craftables.filter((c) => c.category === targetCategory)
     const filteredRecipes = craftingRecipes.filter(
       (r) => r.category === targetCategory
-    )
-
-    postWorker({
-      type: "forward",
-      craftingRecipes: filteredRecipes,
-      materialRecipes,
-      craftables: filteredCraftables,
-      targetName: targetItem,
-      targetMaterial,
-    })
-  }
-
-  // ── Reverse mode: source selection + search ────────────────────────
-
-  const reverseSource = useMemo(
-    () => craftables.find((c) => c.id === reverseSourceId) ?? null,
-    [craftables, reverseSourceId]
-  )
-
-  const runReverseSearch = () => {
-    if (!recipesReady || !reverseSource) return
-    setReverseSearched(false)
-
-    const filteredCraftables = craftables.filter(
-      (c) => c.category === reverseSource.category
-    )
-    const filteredRecipes = craftingRecipes.filter(
-      (r) => r.category === reverseSource.category
     )
 
     postWorker({
       type: "reverse",
       craftingRecipes: filteredRecipes,
       materialRecipes,
-      craftables: filteredCraftables,
-      sourceItem: reverseSource,
+      craftables: filtered,
+      targetName: targetItem,
+      targetMaterial,
     })
   }
 
@@ -232,7 +216,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     <div className="space-y-4">
       {/* Controls row */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Workshop selector */}
         <Select value={workshopId} onValueChange={setWorkshopId}>
           <SelectTrigger className="h-9 w-auto min-w-[12rem]">
             <Settings2 className="mr-1.5 size-3.5" />
@@ -252,7 +235,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
           </SelectContent>
         </Select>
 
-        {/* Mode toggle */}
         <div className="flex rounded-lg border">
           <button
             type="button"
@@ -264,7 +246,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Forward
+            What Can I Make?
           </button>
           <button
             type="button"
@@ -276,11 +258,10 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Reverse
+            How Do I Make...?
           </button>
         </div>
 
-        {/* Include equipped toggle */}
         <label className="flex items-center gap-2 text-xs">
           <input
             type="checkbox"
@@ -292,8 +273,50 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
         </label>
       </div>
 
-      {/* Forward mode */}
+      {/* Forward: What Can I Make? */}
       {mode === "forward" && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Select
+              value={forwardCategory}
+              onValueChange={(v) => {
+                setForwardCategory(v as Category)
+                setDiscoverSearched(false)
+              }}
+            >
+              <SelectTrigger className="h-9 w-auto min-w-[8rem]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="blade">Blades</SelectItem>
+                <SelectItem value="shield">Shields</SelectItem>
+                <SelectItem value="armor">Armor</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={runDiscover}
+              size="sm"
+              disabled={searching || !recipesReady}
+            >
+              {searching ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Search className="size-3.5" />
+              )}
+              {searching ? "Searching..." : "Find Best Results"}
+            </Button>
+            <span className="text-muted-foreground text-xs">
+              {craftables.filter((c) => c.category === forwardCategory).length}{" "}
+              items in inventory
+            </span>
+          </div>
+
+          {discoverSearched && <DiscoverResults results={discoverResults} />}
+        </div>
+      )}
+
+      {/* Reverse: How Do I Make...? */}
+      {mode === "reverse" && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="min-w-[14rem] flex-1">
@@ -303,10 +326,10 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 onSelect={(name) => {
                   setTargetItem(name)
                   setTargetMaterial(null)
-                  setForwardSearched(false)
+                  setReverseSearched(false)
                 }}
                 placeholder="Select target item..."
-                label="Target"
+                label="I want to make..."
               />
             </div>
             {targetItem && targetMaterials.length > 0 && (
@@ -316,14 +339,14 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                   value={targetMaterial}
                   onSelect={(m) => {
                     setTargetMaterial(m)
-                    setForwardSearched(false)
+                    setReverseSearched(false)
                   }}
                   label="Material (optional)"
                 />
               </div>
             )}
             {targetItem && recipesReady && (
-              <Button onClick={runForwardSearch} size="sm" disabled={searching}>
+              <Button onClick={runReverse} size="sm" disabled={searching}>
                 {searching ? (
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : (
@@ -334,10 +357,9 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
             )}
           </div>
 
-          {/* Results */}
-          {forwardSearched && (
-            <ForwardResults
-              paths={forwardPaths}
+          {reverseSearched && (
+            <ReverseResults
+              paths={reversePaths}
               targetName={targetItem ?? ""}
               targetMaterial={targetMaterial}
             />
@@ -345,58 +367,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
         </div>
       )}
 
-      {/* Reverse mode */}
-      {mode === "reverse" && (
-        <div className="space-y-4">
-          <div>
-            <label className="text-muted-foreground mb-1 block text-xs font-medium">
-              Select an item from your inventory
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {craftables.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => {
-                    setReverseSourceId(c.id)
-                    setReverseSearched(false)
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs transition-colors",
-                    reverseSourceId === c.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border/50 hover:border-foreground/30"
-                  )}
-                >
-                  <ItemIcon type={c.equipType} size="sm" />
-                  <span className="font-medium">{c.name}</span>
-                  {c.material && <MaterialBadge mat={c.material} />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {reverseSource && recipesReady && (
-            <Button onClick={runReverseSearch} size="sm" disabled={searching}>
-              {searching ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Search className="size-3.5" />
-              )}
-              {searching ? "Searching..." : "Find Craftable Items"}
-            </Button>
-          )}
-
-          {reverseSearched && reverseSource && (
-            <ReverseResults
-              results={reverseResults}
-              sourceName={reverseSource.name}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Empty state */}
       {!recipesReady && (
         <p className="text-muted-foreground py-8 text-center text-sm">
           Loading crafting recipes...
@@ -406,9 +376,67 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   )
 }
 
-// ── Forward results ──────────────────────────────────────────────────
+// ── Discover results (forward) ───────────────────────────────────────
 
-function ForwardResults({
+function DiscoverResults({ results }: { results: CraftableResult[] }) {
+  if (results.length === 0) {
+    return (
+      <div className="text-muted-foreground py-6 text-center text-sm">
+        <FlaskConical className="mx-auto mb-2 size-8 opacity-30" />
+        <p>No combinations found with your current inventory</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-muted-foreground text-xs">
+        {results.length} possible result{results.length !== 1 ? "s" : ""} — top
+        results shown first
+      </p>
+      <div className="space-y-2">
+        {results.slice(0, 20).map((r, i) => (
+          <Card
+            key={i}
+            className={cn("transition-colors", i < 3 && "border-primary/30")}
+          >
+            <CardContent className="flex items-center gap-3 p-3">
+              {i < 3 && (
+                <span className="text-primary text-xs font-bold">#{i + 1}</span>
+              )}
+              <div className="flex items-center gap-2">
+                <ItemIcon type={r.result.equipType} size="sm" />
+                <span className="text-sm font-medium">{r.result.name}</span>
+                {r.result.material && <MaterialBadge mat={r.result.material} />}
+              </div>
+              <ChevronRight className="text-muted-foreground size-3" />
+              <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                <span>{r.step.input1.name}</span>
+                {r.step.input1.material && (
+                  <MaterialBadge mat={r.step.input1.material} />
+                )}
+                <span>+</span>
+                <span>{r.step.input2.name}</span>
+                {r.step.input2.material && (
+                  <MaterialBadge mat={r.step.input2.material} />
+                )}
+              </div>
+              {r.step.recipe.tier_change > 0 && (
+                <span className="text-primary ml-auto text-[10px] font-semibold">
+                  UPGRADE
+                </span>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Reverse results (find path to target) ────────────────────────────
+
+function ReverseResults({
   paths,
   targetName,
   targetMaterial,
@@ -463,7 +491,6 @@ function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
       onClick={() => setExpanded(!expanded)}
     >
       <CardContent className="p-3">
-        {/* Header */}
         <div className="flex items-center gap-3">
           <span className="text-muted-foreground font-mono text-xs">
             #{rank}
@@ -485,7 +512,6 @@ function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
           />
         </div>
 
-        {/* Steps */}
         {expanded && (
           <div className="mt-3 space-y-2">
             {path.steps.map((step, i) => (
@@ -523,7 +549,6 @@ function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
               </div>
             ))}
 
-            {/* Consumed items summary */}
             <div className="text-muted-foreground pt-1 text-[11px]">
               Consumes:{" "}
               {path.consumedItems
@@ -535,75 +560,5 @@ function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
         )}
       </CardContent>
     </Card>
-  )
-}
-
-// ── Reverse results ──────────────────────────────────────────────────
-
-function ReverseResults({
-  results,
-  sourceName,
-}: {
-  results: ReachableItem[]
-  sourceName: string
-}) {
-  if (results.length === 0) {
-    return (
-      <div className="text-muted-foreground py-6 text-center text-sm">
-        <Undo2 className="mx-auto mb-2 size-8 opacity-30" />
-        <p>
-          No crafting options found for{" "}
-          <span className="font-medium">{sourceName}</span>
-        </p>
-        <p className="mt-1 text-xs">
-          This item can't be combined with anything in your current inventory
-        </p>
-      </div>
-    )
-  }
-
-  // Group by depth
-  const byDepth = new Map<number, ReachableItem[]>()
-  for (const r of results) {
-    const list = byDepth.get(r.depth) ?? []
-    list.push(r)
-    byDepth.set(r.depth, list)
-  }
-
-  return (
-    <div className="space-y-4">
-      <p className="text-muted-foreground text-xs">
-        {results.length} reachable item{results.length !== 1 ? "s" : ""} from{" "}
-        <span className="font-medium">{sourceName}</span>
-      </p>
-
-      {[...byDepth.entries()].map(([depth, items]) => (
-        <div key={depth}>
-          <p className="text-muted-foreground mb-2 text-xs font-medium">
-            {depth} step{depth !== 1 ? "s" : ""}
-          </p>
-          <div className="space-y-1">
-            {items.map((r, i) => (
-              <div
-                key={i}
-                className="border-border/50 flex items-center gap-2 rounded-lg border px-3 py-2"
-              >
-                <ItemIcon type={r.item.equipType} size="sm" />
-                <span className="text-sm font-medium">{r.item.name}</span>
-                {r.item.material && <MaterialBadge mat={r.item.material} />}
-                <span className="text-muted-foreground ml-auto text-xs">
-                  {r.path
-                    .map(
-                      (s) =>
-                        `${s.input1.name} + ${s.input2.name} → ${s.result.name}`
-                    )
-                    .join(" → ")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
   )
 }

@@ -533,6 +533,91 @@ export function findReachableItems(
   return results.sort((a, b) => a.depth - b.depth)
 }
 
+// ── Discover all craftable results from inventory ────────────────────
+
+export interface CraftableResult {
+  result: CraftableItem
+  step: CraftingStep
+  score: number
+}
+
+/**
+ * Find all items craftable from the current inventory in one step.
+ * Returns deduplicated results ranked by material tier and upgrade potential.
+ */
+export function findAllCraftableResults(
+  craftables: CraftableItem[],
+  index: RecipeIndex
+): CraftableResult[] {
+  syntheticIdCounter = -1
+  const results: CraftableResult[] = []
+  const seen = new Set<string>()
+
+  for (let i = 0; i < craftables.length; i++) {
+    for (let j = i + 1; j < craftables.length; j++) {
+      const a = craftables[i]
+      const b = craftables[j]
+      if (a.category !== b.category) continue
+
+      const recipes = index.byInputPair.get(pairKey(a.name, b.name))
+      if (!recipes) continue
+
+      for (const recipe of recipes) {
+        const isForward = recipe.input_1 === a.name
+        const input1 = isForward ? a : b
+        const input2 = isForward ? b : a
+
+        const matRecipe = resolveResultMaterial(
+          index,
+          input1.equipType,
+          input2.equipType,
+          input1.material,
+          input2.material
+        )
+        const resultMaterial = matRecipe?.result_material ?? input1.material
+
+        const resultKey = `${recipe.result}:${resultMaterial}`
+        if (seen.has(resultKey)) continue
+        seen.add(resultKey)
+
+        const resultItem: CraftableItem = {
+          id: syntheticIdCounter--,
+          name: recipe.result,
+          category: recipe.category,
+          equipType: input1.equipType,
+          material: resultMaterial,
+          sourceItem: null,
+        }
+
+        const step: CraftingStep = {
+          input1,
+          input2,
+          result: resultItem,
+          recipe,
+          materialRecipe: matRecipe,
+          swapped: !isForward,
+        }
+
+        // Score: material tier is primary, upgrade recipes get a bonus
+        const matScore = (MATERIAL_TIER[resultMaterial] ?? 0) * 10
+        const upgradeBonus = recipe.tier_change > 0 ? 5 : 0
+        // Penalize consuming high-tier inputs
+        const inputCost =
+          (MATERIAL_TIER[input1.material] ?? 0) +
+          (MATERIAL_TIER[input2.material] ?? 0)
+
+        results.push({
+          result: resultItem,
+          step,
+          score: matScore + upgradeBonus - inputCost,
+        })
+      }
+    }
+  }
+
+  return results.sort((a, b) => b.score - a.score)
+}
+
 // ── Scoring ──────────────────────────────────────────────────────────
 
 function scorePath(
