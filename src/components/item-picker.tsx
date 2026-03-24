@@ -37,6 +37,7 @@ interface ItemPickerProps {
   placeholder?: string
   label?: string
   formatType?: (type: string) => string
+  triggerClassName?: string
 }
 
 function TriggerButton({
@@ -46,6 +47,7 @@ function TriggerButton({
   placeholder,
   formatType,
   onClear,
+  className: triggerCn,
   ...props
 }: {
   ref?: Ref<HTMLButtonElement>
@@ -60,7 +62,10 @@ function TriggerButton({
       ref={ref}
       variant="outline"
       role="combobox"
-      className="h-auto min-h-12 w-full justify-between px-3 py-2"
+      className={cn(
+        "h-auto min-h-12 w-full justify-between px-3 py-2",
+        triggerCn
+      )}
       {...props}
     >
       {value ? (
@@ -161,6 +166,7 @@ export function ItemPicker({
   placeholder = "Select item...",
   label,
   formatType,
+  triggerClassName,
 }: ItemPickerProps) {
   const [open, setOpen] = useState(false)
   const isMobile = useIsMobile()
@@ -201,6 +207,7 @@ export function ItemPicker({
           placeholder={placeholder}
           formatType={formatType}
           onClear={handleClear}
+          className={triggerClassName}
           onClick={() => setOpen(true)}
         />
         <Dialog open={open} onOpenChange={setOpen}>
@@ -238,6 +245,7 @@ export function ItemPicker({
             placeholder={placeholder}
             formatType={formatType}
             onClear={handleClear}
+            className={triggerClassName}
           />
         </PopoverTrigger>
         <PopoverContent

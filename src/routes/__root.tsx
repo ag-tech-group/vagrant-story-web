@@ -87,7 +87,7 @@ const DATABASE_ROUTES = [
 const NAV_TABS = [
   { to: "/blades" as const, label: "Game Database", icon: "Sword" },
   { to: "/forge" as const, label: "Forge", icon: "Forge" },
-  { to: "/crafting" as const, label: "Crafting", icon: "Crafting" },
+  { to: "/crafting" as const, label: "Recipes", icon: "Crafting" },
   { to: "/material-grid" as const, label: "Material Grid", icon: "Grid" },
   { to: "/inventory" as const, label: "Inventory", icon: "Inventory" },
 ]
