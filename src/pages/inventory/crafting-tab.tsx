@@ -61,7 +61,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const [workshopId, setWorkshopId] = useState<string>("6")
   const [includeEquipped, setIncludeEquipped] = useState(true)
   const [forwardCategory, setForwardCategory] = useState<Category>("blade")
-  const [forwardDepth, setForwardDepth] = useState<number>(1)
+  const [searchDepth, setSearchDepth] = useState<number>(1)
 
   // Reverse mode state
   const [targetItem, setTargetItem] = useState<string | null>(null)
@@ -79,6 +79,11 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const { data: materialRecipes = [] } = useQuery({
     queryKey: ["materialRecipes"],
     queryFn: () => gameApi.materialRecipes("limit=10000"),
+  })
+
+  const { data: materials = [] } = useQuery({
+    queryKey: ["materials"],
+    queryFn: gameApi.materials,
   })
 
   const recipesReady = craftingRecipes.length > 0 && materialRecipes.length > 0
@@ -141,7 +146,10 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
       craftingRecipes: filteredRecipes,
       materialRecipes,
       craftables: filtered,
-      maxDepth: forwardDepth,
+      blades,
+      armor,
+      materials,
+      maxDepth: searchDepth,
     })
   }
 
@@ -209,6 +217,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
       craftables: filtered,
       targetName: targetItem,
       targetMaterial,
+      maxDepth: searchDepth,
     })
   }
 
@@ -273,6 +282,19 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
           />
           <span className="text-muted-foreground">Include equipped</span>
         </label>
+
+        <Select
+          value={String(searchDepth)}
+          onValueChange={(v) => setSearchDepth(Number(v))}
+        >
+          <SelectTrigger className="h-9 w-auto min-w-[6rem]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">1 step</SelectItem>
+            <SelectItem value="2">2 steps</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Forward: What Can I Make? */}
@@ -293,21 +315,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 <SelectItem value="blade">Blades</SelectItem>
                 <SelectItem value="shield">Shields</SelectItem>
                 <SelectItem value="armor">Armor</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={String(forwardDepth)}
-              onValueChange={(v) => {
-                setForwardDepth(Number(v))
-                setDiscoverSearched(false)
-              }}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-[6rem]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 step</SelectItem>
-                <SelectItem value="2">2 steps</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -470,6 +477,42 @@ function DiscoverCard({ result: r }: { result: CraftableResult }) {
             </span>
           )}
 
+          {/* Stat diff */}
+          {r.statDiff && (
+            <div className="flex items-center gap-1.5 text-[10px] font-medium">
+              {r.statDiff.str !== 0 && (
+                <span
+                  className={
+                    r.statDiff.str > 0 ? "text-green-400" : "text-red-400"
+                  }
+                >
+                  STR {r.statDiff.str > 0 ? "+" : ""}
+                  {r.statDiff.str}
+                </span>
+              )}
+              {r.statDiff.int !== 0 && (
+                <span
+                  className={
+                    r.statDiff.int > 0 ? "text-green-400" : "text-red-400"
+                  }
+                >
+                  INT {r.statDiff.int > 0 ? "+" : ""}
+                  {r.statDiff.int}
+                </span>
+              )}
+              {r.statDiff.agi !== 0 && (
+                <span
+                  className={
+                    r.statDiff.agi > 0 ? "text-green-400" : "text-red-400"
+                  }
+                >
+                  AGI {r.statDiff.agi > 0 ? "+" : ""}
+                  {r.statDiff.agi}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Recipe (last step for 1-step, or summary) */}
           <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
             <span>{r.step.input1.name}</span>
@@ -583,39 +626,62 @@ function ReverseResults({
 }
 
 function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
-  const [expanded, setExpanded] = useState(rank === 1)
+  const isMultiStep = path.steps.length > 1
+  const [expanded, setExpanded] = useState(rank === 1 && isMultiStep)
 
+  // 1-step: show inline recipe. Multi-step: collapsible.
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-colors",
+        "transition-colors",
+        isMultiStep && "cursor-pointer",
         rank === 1 && "border-primary/30"
       )}
-      onClick={() => setExpanded(!expanded)}
+      onClick={isMultiStep ? () => setExpanded(!expanded) : undefined}
     >
       <CardContent className="p-3">
-        <div className="flex items-center gap-3">
-          <span className="text-muted-foreground font-mono text-xs">
-            #{rank}
-          </span>
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
+            <ItemIcon type={path.result.equipType} size="sm" />
             <span className="text-sm font-medium">{path.result.name}</span>
             {path.result.material && (
               <MaterialBadge mat={path.result.material} />
             )}
           </div>
-          <span className="text-muted-foreground ml-auto text-xs">
-            {path.steps.length} step{path.steps.length !== 1 ? "s" : ""}
-          </span>
-          <ChevronRight
-            className={cn(
-              "text-muted-foreground size-4 transition-transform",
-              expanded && "rotate-90"
+          {isMultiStep && (
+            <span className="text-muted-foreground text-[10px]">
+              {path.steps.length} steps
+            </span>
+          )}
+
+          {/* Inline recipe for 1-step */}
+          <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
+            {!isMultiStep && path.steps[0] && (
+              <>
+                <span>{path.steps[0].input1.name}</span>
+                {path.steps[0].input1.material && (
+                  <MaterialBadge mat={path.steps[0].input1.material} />
+                )}
+                <span>+</span>
+                <span>{path.steps[0].input2.name}</span>
+                {path.steps[0].input2.material && (
+                  <MaterialBadge mat={path.steps[0].input2.material} />
+                )}
+              </>
             )}
-          />
+          </div>
+
+          {isMultiStep && (
+            <ChevronRight
+              className={cn(
+                "text-muted-foreground size-4 transition-transform",
+                expanded && "rotate-90"
+              )}
+            />
+          )}
         </div>
 
-        {expanded && (
+        {expanded && isMultiStep && (
           <div className="mt-3 space-y-2">
             {path.steps.map((step, i) => (
               <div

@@ -535,6 +535,14 @@ export function findReachableItems(
 
 // ── Discover all craftable results from inventory ────────────────────
 
+export interface StatComparison {
+  str: number
+  int: number
+  agi: number
+  /** Sum of all stat diffs (positive = overall improvement) */
+  total: number
+}
+
 export interface CraftableResult {
   result: CraftableItem
   step: CraftingStep
@@ -543,6 +551,8 @@ export interface CraftableResult {
   steps: number
   score: number
   materialUpgrade: boolean
+  /** Stat diff vs best input (positive = improvement) */
+  statDiff: StatComparison | null
 }
 
 /**
@@ -627,6 +637,7 @@ export function findAllCraftableResults(
           steps: 1,
           score: matScore + upgradeBonus - inputCost,
           materialUpgrade,
+          statDiff: null,
         })
       }
     }
