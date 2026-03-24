@@ -403,9 +403,15 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
 // ── Discover results (forward) ───────────────────────────────────────
 
 function DiscoverResults({ results }: { results: CraftableResult[] }) {
-  // Only show results that are upgrades (material or tier)
+  const [showAll, setShowAll] = useState(false)
+  const PAGE_SIZE = 20
+
+  // Only show results that are upgrades (material or tier or stat improvement)
   const upgrades = results.filter(
-    (r) => r.materialUpgrade || r.step.recipe.tier_change > 0
+    (r) =>
+      r.materialUpgrade ||
+      r.step.recipe.tier_change > 0 ||
+      (r.statDiff && r.statDiff.total > 0)
   )
 
   if (upgrades.length === 0) {
@@ -415,17 +421,21 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
         <p>No upgrades found with your current inventory</p>
         <p className="mt-1 text-xs">
           {results.length > 0
-            ? `${results.length} combinations exist but none produce a material or tier upgrade`
+            ? `${results.length} combinations exist but none produce an upgrade`
             : "No combinations found"}
         </p>
       </div>
     )
   }
 
+  const visible = showAll ? upgrades : upgrades.slice(0, PAGE_SIZE)
+  const hasMore = upgrades.length > PAGE_SIZE && !showAll
+
   return (
     <div className="space-y-3">
       <p className="text-muted-foreground text-xs">
-        {upgrades.length} upgrade{upgrades.length !== 1 ? "s" : ""} found
+        Showing {visible.length} of {upgrades.length} upgrade
+        {upgrades.length !== 1 ? "s" : ""}
         {results.length > upgrades.length && (
           <span>
             {" "}
@@ -434,10 +444,20 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
         )}
       </p>
       <div className="space-y-2">
-        {upgrades.slice(0, 30).map((r, i) => (
+        {visible.map((r, i) => (
           <DiscoverCard key={i} result={r} />
         ))}
       </div>
+      {hasMore && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowAll(true)}
+          className="w-full"
+        >
+          Show all {upgrades.length} results
+        </Button>
+      )}
     </div>
   )
 }
