@@ -830,9 +830,9 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           <span
             className="size-4 shrink-0 bg-current"
             style={{
-              mask: "url(/images/icons/Chest.svg) center / contain no-repeat",
+              mask: "url(/images/icons/Swords.svg) center / contain no-repeat",
               WebkitMask:
-                "url(/images/icons/Chest.svg) center / contain no-repeat",
+                "url(/images/icons/Swords.svg) center / contain no-repeat",
             }}
           />
           Equipment
@@ -853,9 +853,9 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           <span
             className="size-4 shrink-0 bg-current"
             style={{
-              mask: "url(/images/icons/Crafting.svg) center / contain no-repeat",
+              mask: "url(/images/icons/HammerPick.svg) center / contain no-repeat",
               WebkitMask:
-                "url(/images/icons/Crafting.svg) center / contain no-repeat",
+                "url(/images/icons/HammerPick.svg) center / contain no-repeat",
             }}
           />
           Crafting
