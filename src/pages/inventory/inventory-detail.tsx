@@ -18,7 +18,6 @@ import {
   ArrowLeft,
   ArrowLeftFromLine,
   ArrowRightFromLine,
-  Hammer,
   Package,
   Plus,
   Search,
@@ -828,7 +827,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               : "text-muted-foreground hover:text-foreground"
           )}
         >
-          <Package className="size-4" />
+          <span
+            className="size-4 shrink-0 bg-current"
+            style={{
+              mask: "url(/images/icons/Chest.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Chest.svg) center / contain no-repeat",
+            }}
+          />
           Equipment
           {activeTab === "equipment" && (
             <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
@@ -844,7 +850,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
               : "text-muted-foreground hover:text-foreground"
           )}
         >
-          <Hammer className="size-4" />
+          <span
+            className="size-4 shrink-0 bg-current"
+            style={{
+              mask: "url(/images/icons/Crafting.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Crafting.svg) center / contain no-repeat",
+            }}
+          />
           Crafting
           {activeTab === "crafting" && (
             <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
