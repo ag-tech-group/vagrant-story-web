@@ -7,6 +7,8 @@ import {
   buildRecipeIndex,
   findAllCraftableResults,
   findCraftingPaths,
+  findReachableItems,
+  MATERIAL_TIER,
   type CraftableItem,
   type CraftableResult,
   type CraftingPath,
@@ -21,6 +23,8 @@ export interface WorkerRequest {
   craftingRecipes: CraftingRecipe[]
   materialRecipes: MaterialRecipe[]
   craftables: CraftableItem[]
+  // Discover-specific
+  maxDepth?: number
   // Reverse-specific (find path to target)
   targetName?: string
   targetMaterial?: string | null
@@ -42,7 +46,37 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const index = buildRecipeIndex(req.craftingRecipes, req.materialRecipes)
 
   if (req.type === "discover") {
-    const results = findAllCraftableResults(req.craftables, index)
+    const depth = req.maxDepth ?? 1
+    let results: CraftableResult[]
+
+    if (depth <= 1) {
+      results = findAllCraftableResults(req.craftables, index)
+    } else {
+      // For depth > 1, run findReachableItems from each item and convert
+      const seen = new Set<string>()
+      results = []
+      for (const item of req.craftables) {
+        const reachable = findReachableItems(item, req.craftables, index, {
+          maxDepth: depth,
+          maxResults: 100,
+          maxStates: 2000,
+        })
+        for (const r of reachable) {
+          const key = `${r.item.name}:${r.item.material}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          const lastStep = r.path[r.path.length - 1]
+          const matScore = (MATERIAL_TIER[r.item.material] ?? 0) * 10
+          results.push({
+            result: r.item,
+            step: lastStep,
+            score: matScore - r.depth * 5,
+          })
+        }
+      }
+      results.sort((a, b) => b.score - a.score)
+    }
+
     const response: WorkerResponse = {
       type: "discover",
       discoverResults: results,

@@ -61,6 +61,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const [workshopId, setWorkshopId] = useState<string>("6")
   const [includeEquipped, setIncludeEquipped] = useState(true)
   const [forwardCategory, setForwardCategory] = useState<Category>("blade")
+  const [forwardDepth, setForwardDepth] = useState<number>(1)
 
   // Reverse mode state
   const [targetItem, setTargetItem] = useState<string | null>(null)
@@ -140,6 +141,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
       craftingRecipes: filteredRecipes,
       materialRecipes,
       craftables: filtered,
+      maxDepth: forwardDepth,
     })
   }
 
@@ -291,6 +293,21 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 <SelectItem value="blade">Blades</SelectItem>
                 <SelectItem value="shield">Shields</SelectItem>
                 <SelectItem value="armor">Armor</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={String(forwardDepth)}
+              onValueChange={(v) => {
+                setForwardDepth(Number(v))
+                setDiscoverSearched(false)
+              }}
+            >
+              <SelectTrigger className="h-9 w-auto min-w-[6rem]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 step</SelectItem>
+                <SelectItem value="2">2 steps</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -548,14 +565,6 @@ function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
                 </div>
               </div>
             ))}
-
-            <div className="text-muted-foreground pt-1 text-[11px]">
-              Consumes:{" "}
-              {path.consumedItems
-                .filter((c) => c.sourceItem)
-                .map((c) => `${c.name} (${c.material})`)
-                .join(", ") || "intermediate results only"}
-            </div>
           </div>
         )}
       </CardContent>

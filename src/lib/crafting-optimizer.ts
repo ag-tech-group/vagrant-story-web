@@ -69,7 +69,7 @@ const DEFAULT_CONFIG: OptimizerConfig = {
 
 // ── Material tier for scoring ────────────────────────────────────────
 
-const MATERIAL_TIER: Record<string, number> = {
+export const MATERIAL_TIER: Record<string, number> = {
   Wood: 0,
   Leather: 1,
   Bronze: 2,
