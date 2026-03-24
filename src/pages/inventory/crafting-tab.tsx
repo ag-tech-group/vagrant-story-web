@@ -428,49 +428,112 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
       </p>
       <div className="space-y-2">
         {upgrades.slice(0, 30).map((r, i) => (
-          <Card key={i} className="transition-colors">
-            <CardContent className="flex flex-wrap items-center gap-2 p-3">
-              {/* Result */}
-              <div className="flex items-center gap-2">
-                <ItemIcon type={r.result.equipType} size="sm" />
-                <span className="text-sm font-medium">{r.result.name}</span>
-                {r.result.material && <MaterialBadge mat={r.result.material} />}
-              </div>
-
-              {/* Badges */}
-              {r.materialUpgrade && (
-                <span className="rounded bg-green-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-green-400">
-                  MAT UPGRADE
-                </span>
-              )}
-              {r.step.recipe.tier_change > 0 && (
-                <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold">
-                  TIER UP
-                </span>
-              )}
-              {r.steps > 1 && (
-                <span className="text-muted-foreground text-[10px]">
-                  {r.steps} steps
-                </span>
-              )}
-
-              {/* Recipe */}
-              <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
-                <span>{r.step.input1.name}</span>
-                {r.step.input1.material && (
-                  <MaterialBadge mat={r.step.input1.material} />
-                )}
-                <span>+</span>
-                <span>{r.step.input2.name}</span>
-                {r.step.input2.material && (
-                  <MaterialBadge mat={r.step.input2.material} />
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <DiscoverCard key={i} result={r} />
         ))}
       </div>
     </div>
+  )
+}
+
+function DiscoverCard({ result: r }: { result: CraftableResult }) {
+  const [expanded, setExpanded] = useState(false)
+  const isMultiStep = r.steps > 1
+
+  return (
+    <Card
+      className={cn("transition-colors", isMultiStep && "cursor-pointer")}
+      onClick={isMultiStep ? () => setExpanded(!expanded) : undefined}
+    >
+      <CardContent className="p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Result */}
+          <div className="flex items-center gap-2">
+            <ItemIcon type={r.result.equipType} size="sm" />
+            <span className="text-sm font-medium">{r.result.name}</span>
+            {r.result.material && <MaterialBadge mat={r.result.material} />}
+          </div>
+
+          {/* Badges */}
+          {r.materialUpgrade && (
+            <span className="rounded bg-green-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-green-400">
+              MAT UPGRADE
+            </span>
+          )}
+          {r.step.recipe.tier_change > 0 && (
+            <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold">
+              TIER UP
+            </span>
+          )}
+          {isMultiStep && (
+            <span className="text-muted-foreground text-[10px]">
+              {r.steps} steps
+            </span>
+          )}
+
+          {/* Recipe (last step for 1-step, or summary) */}
+          <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
+            <span>{r.step.input1.name}</span>
+            {r.step.input1.material && (
+              <MaterialBadge mat={r.step.input1.material} />
+            )}
+            <span>+</span>
+            <span>{r.step.input2.name}</span>
+            {r.step.input2.material && (
+              <MaterialBadge mat={r.step.input2.material} />
+            )}
+          </div>
+
+          {isMultiStep && (
+            <ChevronRight
+              className={cn(
+                "text-muted-foreground size-4 transition-transform",
+                expanded && "rotate-90"
+              )}
+            />
+          )}
+        </div>
+
+        {/* Expanded steps */}
+        {expanded && isMultiStep && (
+          <div className="mt-3 space-y-2">
+            {r.path.map((step, i) => (
+              <div
+                key={i}
+                className="bg-muted/30 flex items-center gap-2 rounded-lg px-3 py-2 text-xs"
+              >
+                <span className="text-muted-foreground font-mono">
+                  {i + 1}.
+                </span>
+                <div className="flex items-center gap-1">
+                  <ItemIcon type={step.input1.equipType} size="sm" />
+                  <span className="font-medium">{step.input1.name}</span>
+                  {step.input1.material && (
+                    <MaterialBadge mat={step.input1.material} />
+                  )}
+                </div>
+                <span className="text-muted-foreground">+</span>
+                <div className="flex items-center gap-1">
+                  <ItemIcon type={step.input2.equipType} size="sm" />
+                  <span className="font-medium">{step.input2.name}</span>
+                  {step.input2.material && (
+                    <MaterialBadge mat={step.input2.material} />
+                  )}
+                </div>
+                <ChevronRight className="text-muted-foreground size-3" />
+                <div className="flex items-center gap-1">
+                  <span className="text-primary font-medium">
+                    {step.result.name}
+                  </span>
+                  {step.result.material && (
+                    <MaterialBadge mat={step.result.material} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

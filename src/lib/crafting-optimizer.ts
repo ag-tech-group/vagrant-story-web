@@ -538,6 +538,8 @@ export function findReachableItems(
 export interface CraftableResult {
   result: CraftableItem
   step: CraftingStep
+  /** Full path for multi-step results */
+  path: CraftingStep[]
   steps: number
   score: number
   materialUpgrade: boolean
@@ -621,6 +623,7 @@ export function findAllCraftableResults(
         results.push({
           result: resultItem,
           step,
+          path: [step],
           steps: 1,
           score: matScore + upgradeBonus - inputCost,
           materialUpgrade,

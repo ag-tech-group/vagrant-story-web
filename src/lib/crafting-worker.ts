@@ -75,6 +75,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
           results.push({
             result: r.item,
             step: lastStep,
+            path: r.path,
             steps: r.depth,
             score: matScore + upgradeBonus - r.depth * 3,
             materialUpgrade,
