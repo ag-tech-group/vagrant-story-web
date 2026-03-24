@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   ArrowLeftFromLine,
   ArrowRightFromLine,
+  Hammer,
   Package,
   Plus,
   Search,
@@ -72,6 +73,7 @@ import {
   DISPLAY_TYPE_TO_CATEGORY,
   type SlotConfig,
 } from "@/lib/inventory-constants"
+import { CraftingTab } from "@/pages/inventory/crafting-tab"
 import { cn } from "@/lib/utils"
 
 // ── Slot configuration ──────────────────────────────────────────────
@@ -136,6 +138,9 @@ type BagSort = "equipped" | "added" | "name"
 
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState<"equipment" | "crafting">(
+    "equipment"
+  )
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
   const [bagSearch, setBagSearch] = useState("")
@@ -811,325 +816,378 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         <h2 className="text-lg font-medium">{inventory.name}</h2>
       </div>
 
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {/* Shared filter controls for bag + container */}
-        {allItems.length > 1 && (
-          <div className="flex items-center gap-2">
-            {itemCategories.length > 1 && (
-              <Select value={bagCategory} onValueChange={setBagCategory}>
-                <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All ({allItems.length})</SelectItem>
-                  {itemCategories.map((c) => {
-                    const limitKey = ARMOR_POOL_TYPES.has(c.label)
-                      ? "Armor"
-                      : c.label
-                    const total =
-                      (BAG_LIMITS[limitKey] ?? 0) +
-                      (CONTAINER_LIMITS[limitKey] ?? 0)
-                    return (
-                      <SelectItem key={c.label} value={c.label}>
-                        {c.label} ({c.count}
-                        {total > 0 ? `/${total}` : ""})
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-            )}
-            <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                value={bagSearch}
-                onChange={(e) => setBagSearch(e.target.value)}
-                placeholder="Filter items..."
-                className="pr-8 pl-9"
-              />
-              {bagSearch && (
-                <button
-                  type="button"
-                  onClick={() => setBagSearch("")}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={() =>
-                setBagSort((s) =>
-                  s === "equipped"
-                    ? "added"
-                    : s === "added"
-                      ? "name"
-                      : "equipped"
-                )
-              }
-            >
-              {bagSort === "name" ? (
-                <ArrowDownAZ className="size-3.5" />
-              ) : (
-                <ArrowDownWideNarrow className="size-3.5" />
-              )}
-              {bagSort === "equipped"
-                ? "Equipped"
-                : bagSort === "added"
-                  ? "Added"
-                  : "Name"}
-            </Button>
-          </div>
-        )}
-
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
-          {/* Left Column: Equipment + Stats */}
-          <div className="space-y-6">
-            {/* Equipment Grid */}
-            <div className="mx-auto max-w-sm lg:max-w-none">
-              <EquipmentGridDropZone
-                isOver={
-                  activeDragItem !== null &&
-                  activeDragItem.equip_slot === null &&
-                  getEquipSlotForItem(activeDragItem) !== null
-                }
-              >
-                <EquipmentGrid
-                  getSlotItem={getSlotItem}
-                  getItemDisplayName={getItemDisplayName}
-                  getItemDisplayType={getItemDisplayType}
-                  onSlotClick={setEditingSlot}
-                  onUnequip={(slotItem) =>
-                    updateItemMutation.mutate({
-                      itemId: slotItem.id,
-                      equip_slot: null,
-                    })
-                  }
-                  equippedBladeIs2H={equippedBladeIs2H}
-                />
-              </EquipmentGridDropZone>
-            </div>
-
-            {/* Combined Stats */}
-            {combinedStats &&
-              inventory.items.some((i) => i.equip_slot != null) && (
-                <CombinedStatsCard stats={combinedStats} />
-              )}
-          </div>
-
-          {/* Middle Column: Item Bag */}
-          <BagDropZone
-            isOver={
-              activeDragItem !== null &&
-              (activeDragItem.equip_slot !== null ||
-                activeDragItem.storage === "container")
-            }
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">
-                  <Package className="mr-1.5 inline size-4" />
-                  Item Bag ({filteredBagItems.length})
-                  {sectionLimits?.bag && (
-                    <span className="text-muted-foreground ml-2 text-sm font-normal">
-                      {sectionLimits.bag}
-                    </span>
-                  )}
-                </h3>
-                <Button size="sm" onClick={() => setEditingBagItem(true)}>
-                  <Plus className="size-3.5" />
-                  Add Item
-                </Button>
-              </div>
-              {bagItems.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center text-xs">
-                  No items in the bag
-                </p>
-              ) : filteredBagItems.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center text-xs">
-                  No items match
-                  {bagCategory !== "all" && ` "${bagCategory}"`}
-                  {bagSearch && ` "${bagSearch}"`}
-                </p>
-              ) : (
-                <div className="max-h-[60vh] space-y-1 overflow-y-auto">
-                  {filteredBagItems.map((item) => {
-                    const targetSlot = !item.equip_slot
-                      ? getEquipSlotForItem(item)
-                      : null
-                    return (
-                      <DraggableBagItemRow
-                        key={item.id}
-                        item={item}
-                        name={getItemDisplayName(item)}
-                        type={getItemDisplayType(item)}
-                        isDraggable
-                        isDragging={activeDragItem?.id === item.id}
-                        onDelete={() => deleteItemMutation.mutate(item.id)}
-                        onUnequip={
-                          item.equip_slot
-                            ? () =>
-                                updateItemMutation.mutate({
-                                  itemId: item.id,
-                                  equip_slot: null,
-                                })
-                            : undefined
-                        }
-                        onEquip={
-                          targetSlot
-                            ? () => equipToSlot(item, targetSlot)
-                            : undefined
-                        }
-                        onMoveToContainer={
-                          !item.equip_slot
-                            ? () =>
-                                updateItemMutation.mutate({
-                                  itemId: item.id,
-                                  storage: "container",
-                                })
-                            : undefined
-                        }
-                      />
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </BagDropZone>
-
-          {/* Right Column: Container */}
-          <ContainerDropZone
-            isOver={
-              activeDragItem !== null &&
-              activeDragItem.storage !== "container" &&
-              !activeDragItem.equip_slot
-            }
-          >
-            <div className="space-y-3">
-              <h3 className="font-medium">
-                <Package className="mr-1.5 inline size-4" />
-                Container ({filteredContainerItems.length})
-                {sectionLimits?.container && (
-                  <span className="text-muted-foreground ml-2 text-sm font-normal">
-                    {sectionLimits.container}
-                  </span>
-                )}
-              </h3>
-              {containerItems.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center text-xs">
-                  Drop items here to store them
-                </p>
-              ) : filteredContainerItems.length === 0 ? (
-                <p className="text-muted-foreground py-4 text-center text-xs">
-                  No items match filter
-                </p>
-              ) : (
-                <div className="max-h-[60vh] space-y-1 overflow-y-auto">
-                  {filteredContainerItems.map((item) => (
-                    <DraggableBagItemRow
-                      key={item.id}
-                      item={item}
-                      name={getItemDisplayName(item)}
-                      type={getItemDisplayType(item)}
-                      isDraggable
-                      isDragging={activeDragItem?.id === item.id}
-                      onDelete={() => deleteItemMutation.mutate(item.id)}
-                      onMoveToBag={() =>
-                        updateItemMutation.mutate({
-                          itemId: item.id,
-                          storage: "bag",
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </ContainerDropZone>
-        </div>
-
-        <DragOverlay dropAnimation={null}>
-          {activeDragItem && (
-            <div className="bg-card border-primary/50 rounded-lg border px-3 py-2 shadow-lg">
-              <div className="flex items-center gap-2">
-                <ItemIcon type={getItemDisplayType(activeDragItem)} size="sm" />
-                <span className="text-sm font-medium">
-                  {getItemDisplayName(activeDragItem)}
-                </span>
-              </div>
-            </div>
+      {/* Tabs */}
+      <div className="border-border/50 flex gap-0 border-b">
+        <button
+          type="button"
+          onClick={() => setActiveTab("equipment")}
+          className={cn(
+            "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "equipment"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           )}
-        </DragOverlay>
-      </DndContext>
+        >
+          <Package className="size-4" />
+          Equipment
+          {activeTab === "equipment" && (
+            <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("crafting")}
+          className={cn(
+            "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "crafting"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Hammer className="size-4" />
+          Crafting
+          {activeTab === "crafting" && (
+            <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
+          )}
+        </button>
+      </div>
 
-      {/* Slot Editor Dialog */}
-      {editingSlot && (
-        <SlotEditorDialog
-          slot={editingSlot}
-          existingItem={getSlotItem(editingSlot.key)}
-          blades={blades}
-          armor={armor}
-          grips={grips}
-          gems={gems}
-          consumables={consumables}
-          bladeMap={bladeMap}
-          bladeIdMap={bladeIdMap}
-          armorMap={armorMap}
-          armorIdMap={armorIdMap}
-          gripMap={gripMap}
-          gripIdMap={gripIdMap}
-          gemMap={gemMap}
-          gemIdMap={gemIdMap}
-          consumableMap={consumableMap}
-          consumableIdMap={consumableIdMap}
-          onSave={handleSlotSave}
-          onUnequip={
-            getSlotItem(editingSlot.key)
-              ? () => {
-                  const item = getSlotItem(editingSlot.key)!
-                  updateItemMutation.mutate(
-                    { itemId: item.id, equip_slot: null },
-                    { onSuccess: () => setEditingSlot(null) }
-                  )
-                }
-              : undefined
-          }
-          onClose={() => setEditingSlot(null)}
-          isPending={addItemMutation.isPending || updateItemMutation.isPending}
-        />
+      {/* Crafting Tab */}
+      {activeTab === "crafting" && (
+        <CraftingTab items={allItems} blades={blades} armor={armor} />
       )}
 
-      {/* Bag Item Editor Dialog */}
-      {editingBagItem && (
-        <SlotEditorDialog
-          slot={null}
-          existingItem={undefined}
-          blades={blades}
-          armor={armor}
-          grips={grips}
-          gems={gems}
-          consumables={consumables}
-          bladeMap={bladeMap}
-          bladeIdMap={bladeIdMap}
-          armorMap={armorMap}
-          armorIdMap={armorIdMap}
-          gripMap={gripMap}
-          gripIdMap={gripIdMap}
-          gemMap={gemMap}
-          gemIdMap={gemIdMap}
-          consumableMap={consumableMap}
-          consumableIdMap={consumableIdMap}
-          onSave={handleBagSave}
-          onClose={() => setEditingBagItem(false)}
-          isPending={addItemMutation.isPending}
-        />
+      {/* Equipment Tab */}
+      {activeTab === "equipment" && (
+        <>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            {/* Shared filter controls for bag + container */}
+            {allItems.length > 1 && (
+              <div className="flex items-center gap-2">
+                {itemCategories.length > 1 && (
+                  <Select value={bagCategory} onValueChange={setBagCategory}>
+                    <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        All ({allItems.length})
+                      </SelectItem>
+                      {itemCategories.map((c) => {
+                        const limitKey = ARMOR_POOL_TYPES.has(c.label)
+                          ? "Armor"
+                          : c.label
+                        const total =
+                          (BAG_LIMITS[limitKey] ?? 0) +
+                          (CONTAINER_LIMITS[limitKey] ?? 0)
+                        return (
+                          <SelectItem key={c.label} value={c.label}>
+                            {c.label} ({c.count}
+                            {total > 0 ? `/${total}` : ""})
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+                <div className="relative flex-1">
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input
+                    value={bagSearch}
+                    onChange={(e) => setBagSearch(e.target.value)}
+                    placeholder="Filter items..."
+                    className="pr-8 pl-9"
+                  />
+                  {bagSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setBagSearch("")}
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() =>
+                    setBagSort((s) =>
+                      s === "equipped"
+                        ? "added"
+                        : s === "added"
+                          ? "name"
+                          : "equipped"
+                    )
+                  }
+                >
+                  {bagSort === "name" ? (
+                    <ArrowDownAZ className="size-3.5" />
+                  ) : (
+                    <ArrowDownWideNarrow className="size-3.5" />
+                  )}
+                  {bagSort === "equipped"
+                    ? "Equipped"
+                    : bagSort === "added"
+                      ? "Added"
+                      : "Name"}
+                </Button>
+              </div>
+            )}
+
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
+              {/* Left Column: Equipment + Stats */}
+              <div className="space-y-6">
+                {/* Equipment Grid */}
+                <div className="mx-auto max-w-sm lg:max-w-none">
+                  <EquipmentGridDropZone
+                    isOver={
+                      activeDragItem !== null &&
+                      activeDragItem.equip_slot === null &&
+                      getEquipSlotForItem(activeDragItem) !== null
+                    }
+                  >
+                    <EquipmentGrid
+                      getSlotItem={getSlotItem}
+                      getItemDisplayName={getItemDisplayName}
+                      getItemDisplayType={getItemDisplayType}
+                      onSlotClick={setEditingSlot}
+                      onUnequip={(slotItem) =>
+                        updateItemMutation.mutate({
+                          itemId: slotItem.id,
+                          equip_slot: null,
+                        })
+                      }
+                      equippedBladeIs2H={equippedBladeIs2H}
+                    />
+                  </EquipmentGridDropZone>
+                </div>
+
+                {/* Combined Stats */}
+                {combinedStats &&
+                  inventory.items.some((i) => i.equip_slot != null) && (
+                    <CombinedStatsCard stats={combinedStats} />
+                  )}
+              </div>
+
+              {/* Middle Column: Item Bag */}
+              <BagDropZone
+                isOver={
+                  activeDragItem !== null &&
+                  (activeDragItem.equip_slot !== null ||
+                    activeDragItem.storage === "container")
+                }
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">
+                      <Package className="mr-1.5 inline size-4" />
+                      Item Bag ({filteredBagItems.length})
+                      {sectionLimits?.bag && (
+                        <span className="text-muted-foreground ml-2 text-sm font-normal">
+                          {sectionLimits.bag}
+                        </span>
+                      )}
+                    </h3>
+                    <Button size="sm" onClick={() => setEditingBagItem(true)}>
+                      <Plus className="size-3.5" />
+                      Add Item
+                    </Button>
+                  </div>
+                  {bagItems.length === 0 ? (
+                    <p className="text-muted-foreground py-4 text-center text-xs">
+                      No items in the bag
+                    </p>
+                  ) : filteredBagItems.length === 0 ? (
+                    <p className="text-muted-foreground py-4 text-center text-xs">
+                      No items match
+                      {bagCategory !== "all" && ` "${bagCategory}"`}
+                      {bagSearch && ` "${bagSearch}"`}
+                    </p>
+                  ) : (
+                    <div className="max-h-[60vh] space-y-1 overflow-y-auto">
+                      {filteredBagItems.map((item) => {
+                        const targetSlot = !item.equip_slot
+                          ? getEquipSlotForItem(item)
+                          : null
+                        return (
+                          <DraggableBagItemRow
+                            key={item.id}
+                            item={item}
+                            name={getItemDisplayName(item)}
+                            type={getItemDisplayType(item)}
+                            isDraggable
+                            isDragging={activeDragItem?.id === item.id}
+                            onDelete={() => deleteItemMutation.mutate(item.id)}
+                            onUnequip={
+                              item.equip_slot
+                                ? () =>
+                                    updateItemMutation.mutate({
+                                      itemId: item.id,
+                                      equip_slot: null,
+                                    })
+                                : undefined
+                            }
+                            onEquip={
+                              targetSlot
+                                ? () => equipToSlot(item, targetSlot)
+                                : undefined
+                            }
+                            onMoveToContainer={
+                              !item.equip_slot
+                                ? () =>
+                                    updateItemMutation.mutate({
+                                      itemId: item.id,
+                                      storage: "container",
+                                    })
+                                : undefined
+                            }
+                          />
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </BagDropZone>
+
+              {/* Right Column: Container */}
+              <ContainerDropZone
+                isOver={
+                  activeDragItem !== null &&
+                  activeDragItem.storage !== "container" &&
+                  !activeDragItem.equip_slot
+                }
+              >
+                <div className="space-y-3">
+                  <h3 className="font-medium">
+                    <Package className="mr-1.5 inline size-4" />
+                    Container ({filteredContainerItems.length})
+                    {sectionLimits?.container && (
+                      <span className="text-muted-foreground ml-2 text-sm font-normal">
+                        {sectionLimits.container}
+                      </span>
+                    )}
+                  </h3>
+                  {containerItems.length === 0 ? (
+                    <p className="text-muted-foreground py-4 text-center text-xs">
+                      Drop items here to store them
+                    </p>
+                  ) : filteredContainerItems.length === 0 ? (
+                    <p className="text-muted-foreground py-4 text-center text-xs">
+                      No items match filter
+                    </p>
+                  ) : (
+                    <div className="max-h-[60vh] space-y-1 overflow-y-auto">
+                      {filteredContainerItems.map((item) => (
+                        <DraggableBagItemRow
+                          key={item.id}
+                          item={item}
+                          name={getItemDisplayName(item)}
+                          type={getItemDisplayType(item)}
+                          isDraggable
+                          isDragging={activeDragItem?.id === item.id}
+                          onDelete={() => deleteItemMutation.mutate(item.id)}
+                          onMoveToBag={() =>
+                            updateItemMutation.mutate({
+                              itemId: item.id,
+                              storage: "bag",
+                            })
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </ContainerDropZone>
+            </div>
+
+            <DragOverlay dropAnimation={null}>
+              {activeDragItem && (
+                <div className="bg-card border-primary/50 rounded-lg border px-3 py-2 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <ItemIcon
+                      type={getItemDisplayType(activeDragItem)}
+                      size="sm"
+                    />
+                    <span className="text-sm font-medium">
+                      {getItemDisplayName(activeDragItem)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+
+          {/* Slot Editor Dialog */}
+          {editingSlot && (
+            <SlotEditorDialog
+              slot={editingSlot}
+              existingItem={getSlotItem(editingSlot.key)}
+              blades={blades}
+              armor={armor}
+              grips={grips}
+              gems={gems}
+              consumables={consumables}
+              bladeMap={bladeMap}
+              bladeIdMap={bladeIdMap}
+              armorMap={armorMap}
+              armorIdMap={armorIdMap}
+              gripMap={gripMap}
+              gripIdMap={gripIdMap}
+              gemMap={gemMap}
+              gemIdMap={gemIdMap}
+              consumableMap={consumableMap}
+              consumableIdMap={consumableIdMap}
+              onSave={handleSlotSave}
+              onUnequip={
+                getSlotItem(editingSlot.key)
+                  ? () => {
+                      const item = getSlotItem(editingSlot.key)!
+                      updateItemMutation.mutate(
+                        { itemId: item.id, equip_slot: null },
+                        { onSuccess: () => setEditingSlot(null) }
+                      )
+                    }
+                  : undefined
+              }
+              onClose={() => setEditingSlot(null)}
+              isPending={
+                addItemMutation.isPending || updateItemMutation.isPending
+              }
+            />
+          )}
+
+          {/* Bag Item Editor Dialog */}
+          {editingBagItem && (
+            <SlotEditorDialog
+              slot={null}
+              existingItem={undefined}
+              blades={blades}
+              armor={armor}
+              grips={grips}
+              gems={gems}
+              consumables={consumables}
+              bladeMap={bladeMap}
+              bladeIdMap={bladeIdMap}
+              armorMap={armorMap}
+              armorIdMap={armorIdMap}
+              gripMap={gripMap}
+              gripIdMap={gripIdMap}
+              gemMap={gemMap}
+              gemIdMap={gemIdMap}
+              consumableMap={consumableMap}
+              consumableIdMap={consumableIdMap}
+              onSave={handleBagSave}
+              onClose={() => setEditingBagItem(false)}
+              isPending={addItemMutation.isPending}
+            />
+          )}
+        </>
       )}
     </div>
   )
