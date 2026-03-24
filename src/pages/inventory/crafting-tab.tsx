@@ -396,11 +396,21 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
 // ── Discover results (forward) ───────────────────────────────────────
 
 function DiscoverResults({ results }: { results: CraftableResult[] }) {
-  if (results.length === 0) {
+  // Only show results that are upgrades (material or tier)
+  const upgrades = results.filter(
+    (r) => r.materialUpgrade || r.step.recipe.tier_change > 0
+  )
+
+  if (upgrades.length === 0) {
     return (
       <div className="text-muted-foreground py-6 text-center text-sm">
         <FlaskConical className="mx-auto mb-2 size-8 opacity-30" />
-        <p>No combinations found with your current inventory</p>
+        <p>No upgrades found with your current inventory</p>
+        <p className="mt-1 text-xs">
+          {results.length > 0
+            ? `${results.length} combinations exist but none produce a material or tier upgrade`
+            : "No combinations found"}
+        </p>
       </div>
     )
   }
@@ -408,26 +418,44 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
   return (
     <div className="space-y-3">
       <p className="text-muted-foreground text-xs">
-        {results.length} possible result{results.length !== 1 ? "s" : ""} — top
-        results shown first
+        {upgrades.length} upgrade{upgrades.length !== 1 ? "s" : ""} found
+        {results.length > upgrades.length && (
+          <span>
+            {" "}
+            ({results.length - upgrades.length} lateral moves hidden)
+          </span>
+        )}
       </p>
       <div className="space-y-2">
-        {results.slice(0, 20).map((r, i) => (
-          <Card
-            key={i}
-            className={cn("transition-colors", i < 3 && "border-primary/30")}
-          >
-            <CardContent className="flex items-center gap-3 p-3">
-              {i < 3 && (
-                <span className="text-primary text-xs font-bold">#{i + 1}</span>
-              )}
+        {upgrades.slice(0, 30).map((r, i) => (
+          <Card key={i} className="transition-colors">
+            <CardContent className="flex flex-wrap items-center gap-2 p-3">
+              {/* Result */}
               <div className="flex items-center gap-2">
                 <ItemIcon type={r.result.equipType} size="sm" />
                 <span className="text-sm font-medium">{r.result.name}</span>
                 {r.result.material && <MaterialBadge mat={r.result.material} />}
               </div>
-              <ChevronRight className="text-muted-foreground size-3" />
-              <div className="text-muted-foreground flex items-center gap-1 text-xs">
+
+              {/* Badges */}
+              {r.materialUpgrade && (
+                <span className="rounded bg-green-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-green-400">
+                  MAT UPGRADE
+                </span>
+              )}
+              {r.step.recipe.tier_change > 0 && (
+                <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold">
+                  TIER UP
+                </span>
+              )}
+              {r.steps > 1 && (
+                <span className="text-muted-foreground text-[10px]">
+                  {r.steps} steps
+                </span>
+              )}
+
+              {/* Recipe */}
+              <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
                 <span>{r.step.input1.name}</span>
                 {r.step.input1.material && (
                   <MaterialBadge mat={r.step.input1.material} />
@@ -438,11 +466,6 @@ function DiscoverResults({ results }: { results: CraftableResult[] }) {
                   <MaterialBadge mat={r.step.input2.material} />
                 )}
               </div>
-              {r.step.recipe.tier_change > 0 && (
-                <span className="text-primary ml-auto text-[10px] font-semibold">
-                  UPGRADE
-                </span>
-              )}
             </CardContent>
           </Card>
         ))}

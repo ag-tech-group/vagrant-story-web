@@ -538,7 +538,9 @@ export function findReachableItems(
 export interface CraftableResult {
   result: CraftableItem
   step: CraftingStep
+  steps: number
   score: number
+  materialUpgrade: boolean
 }
 
 /**
@@ -598,10 +600,20 @@ export function findAllCraftableResults(
           swapped: !isForward,
         }
 
-        // Score: material tier is primary, upgrade recipes get a bonus
-        const matScore = (MATERIAL_TIER[resultMaterial] ?? 0) * 10
-        const upgradeBonus = recipe.tier_change > 0 ? 5 : 0
-        // Penalize consuming high-tier inputs
+        const resultMatTier = MATERIAL_TIER[resultMaterial] ?? 0
+        const bestInputMatTier = Math.max(
+          MATERIAL_TIER[input1.material] ?? 0,
+          MATERIAL_TIER[input2.material] ?? 0
+        )
+        const materialUpgrade = resultMatTier > bestInputMatTier
+
+        // Score: material tier first, upgrade bonus, penalize consuming high-tier
+        const matScore = resultMatTier * 10
+        const upgradeBonus = materialUpgrade
+          ? 15
+          : recipe.tier_change > 0
+            ? 5
+            : 0
         const inputCost =
           (MATERIAL_TIER[input1.material] ?? 0) +
           (MATERIAL_TIER[input2.material] ?? 0)
@@ -609,7 +621,9 @@ export function findAllCraftableResults(
         results.push({
           result: resultItem,
           step,
+          steps: 1,
           score: matScore + upgradeBonus - inputCost,
+          materialUpgrade,
         })
       }
     }

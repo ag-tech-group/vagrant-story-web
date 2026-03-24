@@ -66,11 +66,18 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
           if (seen.has(key)) continue
           seen.add(key)
           const lastStep = r.path[r.path.length - 1]
-          const matScore = (MATERIAL_TIER[r.item.material] ?? 0) * 10
+          const resultMatTier = MATERIAL_TIER[r.item.material] ?? 0
+          // Compare against the original source item's material
+          const sourceMatTier = MATERIAL_TIER[item.material] ?? 0
+          const materialUpgrade = resultMatTier > sourceMatTier
+          const matScore = resultMatTier * 10
+          const upgradeBonus = materialUpgrade ? 15 : 0
           results.push({
             result: r.item,
             step: lastStep,
-            score: matScore - r.depth * 5,
+            steps: r.depth,
+            score: matScore + upgradeBonus - r.depth * 3,
+            materialUpgrade,
           })
         }
       }
