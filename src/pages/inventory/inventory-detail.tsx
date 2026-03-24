@@ -76,6 +76,28 @@ import { cn } from "@/lib/utils"
 
 // ── Slot configuration ──────────────────────────────────────────────
 
+// Game limits per section (bag / container)
+const BAG_LIMITS: Record<string, number> = {
+  Blade: 16,
+  Grip: 16,
+  Shield: 8,
+  Armor: 16, // shared: Helm + Body + Leg + Arm
+  Gem: 48,
+  Accessory: 16,
+  Consumable: 64,
+}
+const CONTAINER_LIMITS: Record<string, number> = {
+  Blade: 64,
+  Grip: 64,
+  Shield: 32,
+  Armor: 64, // shared: Helm + Body + Leg + Arm
+  Gem: 192,
+  Accessory: 64,
+  Consumable: 256,
+}
+// Armor sub-types share one pool
+const ARMOR_POOL_TYPES = new Set(["Helm", "Body", "Leg", "Arm"])
+
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const ARMOR_MATS = ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const SHIELD_MATS = ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
@@ -349,15 +371,14 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     [armorIdMap]
   )
 
-  // Derive bag categories with counts from current items
-  const bagCategories = useMemo(() => {
+  // Categories from all items (bag + container), shared filter controls
+  const itemCategories = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const item of bagItems) {
+    for (const item of allItems) {
       const displayType = getItemDisplayType(item)
       const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
       counts.set(category, (counts.get(category) ?? 0) + 1)
     }
-    // Sort categories in a stable order
     const order = [
       "Blade",
       "Grip",
@@ -373,11 +394,11 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
     return order
       .filter((c) => counts.has(c))
       .map((c) => ({ label: c, count: counts.get(c)! }))
-  }, [bagItems, getItemDisplayType])
+  }, [allItems, getItemDisplayType])
 
-  // Filtered and sorted bag items
-  const filteredBagItems = useMemo(() => {
-    let list = bagItems
+  // Filter + sort applied to all items, then split by storage
+  const filteredSorted = useMemo(() => {
+    let list = allItems
     if (bagCategory !== "all") {
       list = list.filter((item) => {
         const displayType = getItemDisplayType(item)
@@ -403,13 +424,56 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       return b.id - a.id
     })
   }, [
-    bagItems,
+    allItems,
     bagCategory,
     bagSearch,
     bagSort,
     getItemDisplayName,
     getItemDisplayType,
   ])
+
+  const filteredBagItems = useMemo(
+    () => filteredSorted.filter((i) => i.storage !== "container"),
+    [filteredSorted]
+  )
+  const filteredContainerItems = useMemo(
+    () => filteredSorted.filter((i) => i.storage === "container"),
+    [filteredSorted]
+  )
+
+  // Per-section limit info when a category filter is active
+  const sectionLimits = useMemo(() => {
+    if (bagCategory === "all") return null
+    const isArmorType = ARMOR_POOL_TYPES.has(bagCategory)
+    const limitKey = isArmorType ? "Armor" : bagCategory
+    const bagMax = BAG_LIMITS[limitKey]
+    const containerMax = CONTAINER_LIMITS[limitKey]
+    if (!bagMax && !containerMax) return null
+
+    // Count all items in the pool (not just filtered — armor pool includes all sub-types)
+    const poolFilter = isArmorType
+      ? (item: InventoryItem) => {
+          const dt = getItemDisplayType(item)
+          const cat = DISPLAY_TYPE_TO_CATEGORY[dt] ?? dt
+          return ARMOR_POOL_TYPES.has(cat)
+        }
+      : (item: InventoryItem) => {
+          const dt = getItemDisplayType(item)
+          const cat = DISPLAY_TYPE_TO_CATEGORY[dt] ?? dt
+          return cat === bagCategory
+        }
+
+    const bagCount = bagItems.filter(poolFilter).length
+    const containerCount = containerItems.filter(poolFilter).length
+    const label = isArmorType ? "Armor" : bagCategory
+
+    return {
+      bag: bagMax ? `${label} ${bagCount}/${bagMax}` : null,
+      container: containerMax
+        ? `${label} ${containerCount}/${containerMax}`
+        : null,
+    }
+  }, [bagCategory, bagItems, containerItems, getItemDisplayType])
 
   // Handle slot save
   const handleSlotSave = useCallback(
@@ -752,6 +816,79 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
+        {/* Shared filter controls for bag + container */}
+        {allItems.length > 1 && (
+          <div className="flex items-center gap-2">
+            {itemCategories.length > 1 && (
+              <Select value={bagCategory} onValueChange={setBagCategory}>
+                <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ({allItems.length})</SelectItem>
+                  {itemCategories.map((c) => {
+                    const limitKey = ARMOR_POOL_TYPES.has(c.label)
+                      ? "Armor"
+                      : c.label
+                    const total =
+                      (BAG_LIMITS[limitKey] ?? 0) +
+                      (CONTAINER_LIMITS[limitKey] ?? 0)
+                    return (
+                      <SelectItem key={c.label} value={c.label}>
+                        {c.label} ({c.count}
+                        {total > 0 ? `/${total}` : ""})
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+            )}
+            <div className="relative flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={bagSearch}
+                onChange={(e) => setBagSearch(e.target.value)}
+                placeholder="Filter items..."
+                className="pr-8 pl-9"
+              />
+              {bagSearch && (
+                <button
+                  type="button"
+                  onClick={() => setBagSearch("")}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() =>
+                setBagSort((s) =>
+                  s === "equipped"
+                    ? "added"
+                    : s === "added"
+                      ? "name"
+                      : "equipped"
+                )
+              }
+            >
+              {bagSort === "name" ? (
+                <ArrowDownAZ className="size-3.5" />
+              ) : (
+                <ArrowDownWideNarrow className="size-3.5" />
+              )}
+              {bagSort === "equipped"
+                ? "Equipped"
+                : bagSort === "added"
+                  ? "Added"
+                  : "Name"}
+            </Button>
+          </div>
+        )}
+
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
           {/* Left Column: Equipment + Stats */}
           <div className="space-y-6">
@@ -797,79 +934,20 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">
+                <h3 className="font-medium">
                   <Package className="mr-1.5 inline size-4" />
-                  Item Bag ({bagItems.length})
+                  Item Bag ({filteredBagItems.length})
+                  {sectionLimits?.bag && (
+                    <span className="text-muted-foreground ml-2 text-sm font-normal">
+                      {sectionLimits.bag}
+                    </span>
+                  )}
                 </h3>
                 <Button size="sm" onClick={() => setEditingBagItem(true)}>
                   <Plus className="size-3.5" />
                   Add Item
                 </Button>
               </div>
-              {bagItems.length > 1 && (
-                <div className="flex items-center gap-2">
-                  {bagCategories.length > 1 && (
-                    <Select value={bagCategory} onValueChange={setBagCategory}>
-                      <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">
-                          All ({bagItems.length})
-                        </SelectItem>
-                        {bagCategories.map((c) => (
-                          <SelectItem key={c.label} value={c.label}>
-                            {c.label} ({c.count})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  <div className="relative flex-1">
-                    <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                      value={bagSearch}
-                      onChange={(e) => setBagSearch(e.target.value)}
-                      placeholder="Filter items..."
-                      className="pr-8 pl-9"
-                    />
-                    {bagSearch && (
-                      <button
-                        type="button"
-                        onClick={() => setBagSearch("")}
-                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0"
-                    onClick={() =>
-                      setBagSort((s) =>
-                        s === "equipped"
-                          ? "added"
-                          : s === "added"
-                            ? "name"
-                            : "equipped"
-                      )
-                    }
-                  >
-                    {bagSort === "name" ? (
-                      <ArrowDownAZ className="size-3.5" />
-                    ) : (
-                      <ArrowDownWideNarrow className="size-3.5" />
-                    )}
-                    {bagSort === "equipped"
-                      ? "Equipped"
-                      : bagSort === "added"
-                        ? "Added"
-                        : "Name"}
-                  </Button>
-                </div>
-              )}
               {bagItems.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-xs">
                   No items in the bag
@@ -935,17 +1013,26 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             }
           >
             <div className="space-y-3">
-              <h3 className="text-sm font-medium">
+              <h3 className="font-medium">
                 <Package className="mr-1.5 inline size-4" />
-                Container ({containerItems.length})
+                Container ({filteredContainerItems.length})
+                {sectionLimits?.container && (
+                  <span className="text-muted-foreground ml-2 text-sm font-normal">
+                    {sectionLimits.container}
+                  </span>
+                )}
               </h3>
               {containerItems.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-xs">
                   Drop items here to store them
                 </p>
+              ) : filteredContainerItems.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center text-xs">
+                  No items match filter
+                </p>
               ) : (
                 <div className="space-y-1">
-                  {containerItems.map((item) => (
+                  {filteredContainerItems.map((item) => (
                     <DraggableBagItemRow
                       key={item.id}
                       item={item}
