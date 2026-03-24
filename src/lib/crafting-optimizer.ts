@@ -673,3 +673,174 @@ function scorePath(
 
   return score
 }
+
+// ── Recipe decomposition tree ────────────────────────────────────────
+
+export interface DecompNode {
+  /** Item name */
+  name: string
+  /** Whether this item exists in the player's inventory */
+  available: boolean
+  /** The inventory item if available */
+  inventoryItem: CraftableItem | null
+  /** Recipe that produces this item (null for leaf nodes / inventory items) */
+  recipe: CraftingRecipe | null
+  /** Input nodes (the two items needed to craft this) */
+  inputs: [DecompNode, DecompNode] | null
+  /** Depth in the tree (0 = target) */
+  depth: number
+}
+
+/**
+ * Decompose a target item into a recipe tree, showing which ingredients
+ * the player has and which are missing.
+ *
+ * Works backwards from the target: for each item, checks if the player
+ * has it in inventory. If not, finds recipes that produce it and recurses.
+ */
+export function decomposeRecipeTree(
+  targetName: string,
+  craftables: CraftableItem[],
+  index: RecipeIndex,
+  maxDepth: number = 3
+): DecompNode[] {
+  // Build a set of available item names for quick lookup
+  const availableByName = new Map<string, CraftableItem[]>()
+  for (const c of craftables) {
+    const list = availableByName.get(c.name) ?? []
+    list.push(c)
+    availableByName.set(c.name, list)
+  }
+
+  // Find all recipes that produce the target
+  const recipes = index.byResult.get(targetName)
+  if (!recipes || recipes.length === 0) return []
+
+  const results: DecompNode[] = []
+
+  for (const recipe of recipes) {
+    const tree = buildNode(
+      targetName,
+      recipe,
+      availableByName,
+      index,
+      0,
+      maxDepth
+    )
+    if (tree) results.push(tree)
+  }
+
+  // Sort: trees with more available items first (closer to craftable)
+  return results.sort((a, b) => {
+    const aAvail = countAvailable(a)
+    const bAvail = countAvailable(b)
+    const aTotal = countTotal(a)
+    const bTotal = countTotal(b)
+    // Higher ratio of available/total is better
+    return bAvail / bTotal - aAvail / aTotal
+  })
+}
+
+function buildNode(
+  name: string,
+  recipe: CraftingRecipe | null,
+  available: Map<string, CraftableItem[]>,
+  index: RecipeIndex,
+  depth: number,
+  maxDepth: number
+): DecompNode | null {
+  const inventoryItems = available.get(name)
+  const hasItem = inventoryItems && inventoryItems.length > 0
+
+  // If we have the item, it's a leaf
+  if (hasItem) {
+    return {
+      name,
+      available: true,
+      inventoryItem: inventoryItems[0],
+      recipe: null,
+      inputs: null,
+      depth,
+    }
+  }
+
+  // If no recipe provided, try to find one
+  if (!recipe) {
+    // Can't go deeper
+    if (depth >= maxDepth) {
+      return {
+        name,
+        available: false,
+        inventoryItem: null,
+        recipe: null,
+        inputs: null,
+        depth,
+      }
+    }
+
+    const recipes = index.byResult.get(name)
+    if (!recipes || recipes.length === 0) {
+      return {
+        name,
+        available: false,
+        inventoryItem: null,
+        recipe: null,
+        inputs: null,
+        depth,
+      }
+    }
+    // Use the first recipe (simplest heuristic)
+    recipe = recipes[0]
+  }
+
+  if (depth >= maxDepth) {
+    return {
+      name,
+      available: false,
+      inventoryItem: null,
+      recipe,
+      inputs: null,
+      depth,
+    }
+  }
+
+  // Recursively decompose inputs
+  const input1 = buildNode(
+    recipe.input_1,
+    null,
+    available,
+    index,
+    depth + 1,
+    maxDepth
+  )
+  const input2 = buildNode(
+    recipe.input_2,
+    null,
+    available,
+    index,
+    depth + 1,
+    maxDepth
+  )
+
+  if (!input1 || !input2) return null
+
+  return {
+    name,
+    available: false,
+    inventoryItem: null,
+    recipe,
+    inputs: [input1, input2],
+    depth,
+  }
+}
+
+function countAvailable(node: DecompNode): number {
+  if (node.available) return 1
+  if (!node.inputs) return 0
+  return countAvailable(node.inputs[0]) + countAvailable(node.inputs[1])
+}
+
+function countTotal(node: DecompNode): number {
+  if (!node.inputs) return 1
+  return countTotal(node.inputs[0]) + countTotal(node.inputs[1])
+}

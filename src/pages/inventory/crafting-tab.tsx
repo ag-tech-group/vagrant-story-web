@@ -26,6 +26,7 @@ import {
   inventoryToCraftables,
   type CraftableResult,
   type CraftingPath,
+  type DecompNode,
 } from "@/lib/crafting-optimizer"
 import type { WorkerRequest, WorkerResponse } from "@/lib/crafting-worker"
 import { cn } from "@/lib/utils"
@@ -100,6 +101,8 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const [discoverSearched, setDiscoverSearched] = useState(false)
   const [reversePaths, setReversePaths] = useState<CraftingPath[]>([])
   const [reverseSearched, setReverseSearched] = useState(false)
+  const [decompTrees, setDecompTrees] = useState<DecompNode[]>([])
+  const [decompSearched, setDecompSearched] = useState(false)
   const [searching, setSearching] = useState(false)
 
   // ── Web Worker ─────────────────────────────────────────────────────
@@ -120,6 +123,9 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
       } else if (res.type === "reverse" && res.reversePaths) {
         setReversePaths(res.reversePaths)
         setReverseSearched(true)
+      } else if (res.type === "decompose" && res.decompTrees) {
+        setDecompTrees(res.decompTrees)
+        setDecompSearched(true)
       }
     }
     workerRef.current = worker
@@ -196,6 +202,35 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const runReverse = () => {
     if (!recipesReady || !targetItem) return
     setReverseSearched(false)
+    setDecompSearched(false)
+
+    const blade = blades.find((b) => b.name === targetItem)
+    const armorItem = armor.find((a) => a.name === targetItem)
+    const targetCategory = blade
+      ? "blade"
+      : armorItem?.armor_type === "Shield"
+        ? "shield"
+        : "armor"
+
+    const filtered = craftables.filter((c) => c.category === targetCategory)
+    const filteredRecipes = craftingRecipes.filter(
+      (r) => r.category === targetCategory
+    )
+
+    // Fire decompose first (fast, tree walk)
+    postWorker({
+      type: "decompose",
+      craftingRecipes: filteredRecipes,
+      materialRecipes,
+      craftables: filtered,
+      targetName: targetItem,
+      maxDepth: searchDepth,
+    })
+  }
+
+  // After decompose completes, fire the reverse BFS search
+  useEffect(() => {
+    if (!decompSearched || !recipesReady || !targetItem) return
 
     const blade = blades.find((b) => b.name === targetItem)
     const armorItem = armor.find((a) => a.name === targetItem)
@@ -219,7 +254,8 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
       targetMaterial,
       maxDepth: searchDepth,
     })
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decompSearched])
 
   // ── Render ─────────────────────────────────────────────────────────
 
@@ -381,6 +417,12 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
             )}
           </div>
 
+          {/* Recipe decomposition tree */}
+          {decompSearched && decompTrees.length > 0 && (
+            <RecipeTree trees={decompTrees} targetName={targetItem ?? ""} />
+          )}
+
+          {/* Inventory-based paths */}
           {reverseSearched && (
             <ReverseResults
               paths={reversePaths}
@@ -666,6 +708,106 @@ function DiscoverCard({ result: r }: { result: CraftableResult }) {
       </CardContent>
     </Card>
   )
+}
+
+// ── Recipe decomposition tree ────────────────────────────────────────
+
+function RecipeTree({
+  trees,
+  targetName,
+}: {
+  trees: DecompNode[]
+  targetName: string
+}) {
+  if (trees.length === 0) return null
+
+  // Show the best tree (most ingredients available)
+  const tree = trees[0]
+  const available = countTreeAvailable(tree)
+  const total = countTreeTotal(tree)
+
+  return (
+    <div className="space-y-2">
+      <p className="text-muted-foreground text-xs">
+        Recipe blueprint for <span className="font-medium">{targetName}</span>
+        {" — "}
+        <span className={available === total ? "text-green-400" : ""}>
+          {available}/{total} ingredients available
+        </span>
+      </p>
+      <Card>
+        <CardContent className="p-3">
+          <TreeNode node={tree} />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function TreeNode({ node }: { node: DecompNode }) {
+  const indent = node.depth * 16
+
+  if (!node.inputs) {
+    // Leaf node — inventory item or missing item
+    return (
+      <div
+        className="flex items-center gap-2 py-1"
+        style={{ paddingLeft: indent }}
+      >
+        <span
+          className={cn(
+            "size-2 shrink-0 rounded-full",
+            node.available ? "bg-green-400" : "bg-red-400"
+          )}
+        />
+        <span
+          className={cn(
+            "text-xs font-medium",
+            !node.available && "text-muted-foreground"
+          )}
+        >
+          {node.name}
+        </span>
+        {node.available && node.inventoryItem?.material && (
+          <MaterialBadge mat={node.inventoryItem.material} />
+        )}
+        {!node.available && (
+          <span className="text-[10px] text-red-400/70">missing</span>
+        )}
+      </div>
+    )
+  }
+
+  // Internal node — crafting step
+  return (
+    <div>
+      <div
+        className="flex items-center gap-2 py-1"
+        style={{ paddingLeft: indent }}
+      >
+        <ChevronRight className="text-muted-foreground size-3" />
+        <span className="text-xs font-medium">{node.name}</span>
+        {node.recipe && (
+          <span className="text-muted-foreground text-[10px]">
+            = {node.recipe.input_1} + {node.recipe.input_2}
+          </span>
+        )}
+      </div>
+      <TreeNode node={node.inputs[0]} />
+      <TreeNode node={node.inputs[1]} />
+    </div>
+  )
+}
+
+function countTreeAvailable(node: DecompNode): number {
+  if (node.available) return 1
+  if (!node.inputs) return 0
+  return countTreeAvailable(node.inputs[0]) + countTreeAvailable(node.inputs[1])
+}
+
+function countTreeTotal(node: DecompNode): number {
+  if (!node.inputs) return 1
+  return countTreeTotal(node.inputs[0]) + countTreeTotal(node.inputs[1])
 }
 
 // ── Reverse results (find path to target) ────────────────────────────

@@ -5,6 +5,7 @@
 
 import {
   buildRecipeIndex,
+  decomposeRecipeTree,
   findAllCraftableResults,
   findCraftingPaths,
   findReachableItems,
@@ -12,6 +13,7 @@ import {
   type CraftableItem,
   type CraftableResult,
   type CraftingPath,
+  type DecompNode,
   type OptimizerConfig,
   type StatComparison,
 } from "./crafting-optimizer"
@@ -26,7 +28,7 @@ import type {
 // ── Message types ────────────────────────────────────────────────────
 
 export interface WorkerRequest {
-  type: "discover" | "reverse"
+  type: "discover" | "reverse" | "decompose"
   craftingRecipes: CraftingRecipe[]
   materialRecipes: MaterialRecipe[]
   craftables: CraftableItem[]
@@ -36,7 +38,7 @@ export interface WorkerRequest {
   materials?: Material[]
   // Discover-specific
   maxDepth?: number
-  // Reverse-specific (find path to target)
+  // Reverse/decompose-specific (find path to target)
   targetName?: string
   targetMaterial?: string | null
   // Config
@@ -44,9 +46,10 @@ export interface WorkerRequest {
 }
 
 export interface WorkerResponse {
-  type: "discover" | "reverse"
+  type: "discover" | "reverse" | "decompose"
   discoverResults?: CraftableResult[]
   reversePaths?: CraftingPath[]
+  decompTrees?: DecompNode[]
   elapsed: number
 }
 
@@ -238,6 +241,19 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     const response: WorkerResponse = {
       type: "reverse",
       reversePaths: paths,
+      elapsed: performance.now() - start,
+    }
+    self.postMessage(response)
+  } else if (req.type === "decompose" && req.targetName) {
+    const trees = decomposeRecipeTree(
+      req.targetName,
+      req.craftables,
+      index,
+      req.maxDepth ?? 3
+    )
+    const response: WorkerResponse = {
+      type: "decompose",
+      decompTrees: trees.slice(0, 10),
       elapsed: performance.now() - start,
     }
     self.postMessage(response)
