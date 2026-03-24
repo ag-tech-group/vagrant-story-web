@@ -1,14 +1,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import {
+  flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ExpandedState,
+  type SortingState,
+} from "@tanstack/react-table"
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronRight,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronsRight,
   FlaskConical,
   Loader2,
-  Search,
-  Settings2,
+  RotateCcw,
+  X,
+  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -17,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ItemIcon } from "@/components/item-icon"
-import { MaterialBadge } from "@/components/stat-display"
+import { DamageTypeBadge, MaterialBadge } from "@/components/stat-display"
 import { ItemPicker, type PickerItem } from "@/components/item-picker"
 import { MaterialSelect } from "@/components/material-select"
 import { gameApi, type Armor, type Blade } from "@/lib/game-api"
@@ -26,12 +47,13 @@ import {
   inventoryToCraftables,
   type CraftableResult,
   type CraftingPath,
+  type CraftingStep,
   type DecompNode,
 } from "@/lib/crafting-optimizer"
 import type { WorkerRequest, WorkerResponse } from "@/lib/crafting-worker"
 import { cn } from "@/lib/utils"
 
-// ── Materials ────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────
 
 const BLADE_MATS = ["Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 const ALL_MATERIALS = [
@@ -44,10 +66,51 @@ const ALL_MATERIALS = [
   "Damascus",
 ]
 
-// ── Types ────────────────────────────────────────────────────────────
+const BLADE_HANDS: Record<string, string> = {
+  Dagger: "1H",
+  Sword: "1H",
+  "Axe / Mace": "1H",
+  "Great Sword": "2H",
+  "Great Axe": "2H",
+  Staff: "2H",
+  "Heavy Mace": "2H",
+  Polearm: "2H",
+  Crossbow: "2H",
+}
 
-type Mode = "forward" | "reverse"
+// ── Types ─────────────────────────────────────────────────────────────
+
 type Category = "blade" | "shield" | "armor"
+
+/** Unified row for both forward and reverse results */
+interface ResultRow {
+  key: string
+  resultName: string
+  resultMaterial: string
+  resultEquipType: string
+  resultDamageType?: string
+  resultHands?: string
+  statDiff: { str: number; int: number; agi: number; total: number } | null
+  steps: number
+  slot1Name: string
+  slot1Material: string
+  slot1EquipType: string
+  slot1DamageType?: string
+  slot1Hands?: string
+  slot2Name: string
+  slot2Material: string
+  slot2EquipType: string
+  slot2DamageType?: string
+  slot2Hands?: string
+  workshops: { id: number; name: string }[]
+  /** Full path for step tree detail */
+  path: CraftingStep[]
+  /** For reverse mode: decomp tree if available */
+  decompTree?: DecompNode
+  /** Source data for badges */
+  materialUpgrade: boolean
+  tierChange: number
+}
 
 interface CraftingTabProps {
   items: InventoryItem[]
@@ -55,18 +118,17 @@ interface CraftingTabProps {
   armor: Armor[]
 }
 
-// ── Main component ───────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────
 
 export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
-  const [mode, setMode] = useState<Mode>("forward")
-  const [workshopId, setWorkshopId] = useState<string>("6")
-  const [includeEquipped, setIncludeEquipped] = useState(true)
-  const [forwardCategory, setForwardCategory] = useState<Category>("blade")
-  const [searchDepth, setSearchDepth] = useState<number>(1)
-
-  // Reverse mode state
+  // Controls
+  const [forwardCategory, setForwardCategory] = useState<Category | null>(null)
   const [targetItem, setTargetItem] = useState<string | null>(null)
   const [targetMaterial, setTargetMaterial] = useState<string | null>(null)
+  const [searchDepth, setSearchDepth] = useState<number>(1)
+  const [includeEquipped, setIncludeEquipped] = useState(true)
+  const [includeBag, setIncludeBag] = useState(true)
+  const [includeContainer, setIncludeContainer] = useState(true)
 
   // Fetch data
   const { data: workshops = [] } = useQuery({
@@ -81,7 +143,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     queryKey: ["materialRecipes"],
     queryFn: () => gameApi.materialRecipes("limit=10000"),
   })
-
   const { data: materials = [] } = useQuery({
     queryKey: ["materials"],
     queryFn: gameApi.materials,
@@ -89,13 +150,57 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
 
   const recipesReady = craftingRecipes.length > 0 && materialRecipes.length > 0
 
-  const craftables = useMemo(() => {
-    const all = inventoryToCraftables(items, blades, armor)
-    if (includeEquipped) return all
-    return all.filter((c) => !c.sourceItem?.equip_slot)
-  }, [items, blades, armor, includeEquipped])
+  const mode: "forward" | "reverse" | null = forwardCategory
+    ? "forward"
+    : targetItem
+      ? "reverse"
+      : null
 
-  // ── Search state ───────────────────────────────────────────────────
+  // Filter inventory items based on checkboxes
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (item.equip_slot && !includeEquipped) return false
+      if (item.storage === "bag" && !includeBag) return false
+      if (item.storage === "container" && !includeContainer) return false
+      return true
+    })
+  }, [items, includeEquipped, includeBag, includeContainer])
+
+  const craftables = useMemo(
+    () => inventoryToCraftables(filteredItems, blades, armor),
+    [filteredItems, blades, armor]
+  )
+
+  // Build blade info maps for displaying damage type + hands
+  const bladeDamageMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const b of blades) map.set(b.name, b.damage_type)
+    return map
+  }, [blades])
+
+  const bladeHandsMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const b of blades) {
+      const h = BLADE_HANDS[b.blade_type]
+      if (h) map.set(b.name, h)
+    }
+    return map
+  }, [blades])
+
+  // Build ID lookup maps for linking to detail pages
+  const bladeIdMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const b of blades) map.set(b.name, b.id)
+    return map
+  }, [blades])
+
+  const armorIdMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const a of armor) map.set(a.name, a.id)
+    return map
+  }, [armor])
+
+  // ── Search state ────────────────────────────────────────────────────
 
   const [discoverResults, setDiscoverResults] = useState<CraftableResult[]>([])
   const [discoverSearched, setDiscoverSearched] = useState(false)
@@ -105,7 +210,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   const [decompSearched, setDecompSearched] = useState(false)
   const [searching, setSearching] = useState(false)
 
-  // ── Web Worker ─────────────────────────────────────────────────────
+  // ── Web Worker ──────────────────────────────────────────────────────
 
   const workerRef = useRef<Worker | null>(null)
 
@@ -138,94 +243,53 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     workerRef.current.postMessage(req)
   }, [])
 
-  // ── Forward: discover what you can make ────────────────────────────
+  // ── Search actions ──────────────────────────────────────────────────
 
-  const runDiscover = () => {
+  const runSearch = () => {
     if (!recipesReady) return
-    setDiscoverSearched(false)
-    const filtered = craftables.filter((c) => c.category === forwardCategory)
-    const filteredRecipes = craftingRecipes.filter(
-      (r) => r.category === forwardCategory
-    )
-    postWorker({
-      type: "discover",
-      craftingRecipes: filteredRecipes,
-      materialRecipes,
-      craftables: filtered,
-      blades,
-      armor,
-      materials,
-      maxDepth: searchDepth,
-    })
-  }
 
-  // ── Reverse: find path to a target ─────────────────────────────────
+    if (mode === "forward" && forwardCategory) {
+      setDiscoverSearched(false)
+      const filtered = craftables.filter((c) => c.category === forwardCategory)
+      const filteredRecipes = craftingRecipes.filter(
+        (r) => r.category === forwardCategory
+      )
+      postWorker({
+        type: "discover",
+        craftingRecipes: filteredRecipes,
+        materialRecipes,
+        craftables: filtered,
+        blades,
+        armor,
+        materials,
+        maxDepth: searchDepth,
+      })
+    } else if (mode === "reverse" && targetItem) {
+      setReverseSearched(false)
+      setDecompSearched(false)
 
-  const bladePickerItems: PickerItem[] = useMemo(
-    () =>
-      blades.map((b) => ({
-        name: b.name,
-        type: b.blade_type,
-        level: b.game_id,
-        suffix: b.hands,
-      })),
-    [blades]
-  )
+      const blade = blades.find((b) => b.name === targetItem)
+      const armorItem = armor.find((a) => a.name === targetItem)
+      const targetCategory = blade
+        ? "blade"
+        : armorItem?.armor_type === "Shield"
+          ? "shield"
+          : "armor"
 
-  const armorPickerItems: PickerItem[] = useMemo(
-    () =>
-      armor.map((a) => ({
-        name: a.name,
-        type: a.armor_type,
-        level: a.game_id,
-      })),
-    [armor]
-  )
+      const filtered = craftables.filter((c) => c.category === targetCategory)
+      const filteredRecipes = craftingRecipes.filter(
+        (r) => r.category === targetCategory
+      )
 
-  const allPickerItems = useMemo(
-    () => [...bladePickerItems, ...armorPickerItems],
-    [bladePickerItems, armorPickerItems]
-  )
-
-  const targetMaterials = useMemo(() => {
-    if (!targetItem) return []
-    const blade = blades.find((b) => b.name === targetItem)
-    if (blade) return BLADE_MATS
-    const a = armor.find((ar) => ar.name === targetItem)
-    if (a?.armor_type === "Shield")
-      return ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
-    if (a?.armor_type === "Accessory") return []
-    if (a) return ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
-    return ALL_MATERIALS
-  }, [targetItem, blades, armor])
-
-  const runReverse = () => {
-    if (!recipesReady || !targetItem) return
-    setReverseSearched(false)
-    setDecompSearched(false)
-
-    const blade = blades.find((b) => b.name === targetItem)
-    const armorItem = armor.find((a) => a.name === targetItem)
-    const targetCategory = blade
-      ? "blade"
-      : armorItem?.armor_type === "Shield"
-        ? "shield"
-        : "armor"
-
-    const filtered = craftables.filter((c) => c.category === targetCategory)
-    const filteredRecipes = craftingRecipes.filter(
-      (r) => r.category === targetCategory
-    )
-
-    // Fire decompose first (fast, tree walk)
-    postWorker({
-      type: "decompose",
-      craftingRecipes: filteredRecipes,
-      materialRecipes,
-      craftables: filtered,
-      targetName: targetItem,
-      maxDepth: searchDepth,
-    })
+      postWorker({
+        type: "decompose",
+        craftingRecipes: filteredRecipes,
+        materialRecipes,
+        craftables: filtered,
+        targetName: targetItem,
+        maxDepth: searchDepth,
+      })
+    }
   }
 
   // After decompose completes, fire the reverse BFS search
@@ -257,179 +321,375 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decompSearched])
 
-  // ── Render ─────────────────────────────────────────────────────────
+  // ── Picker items ────────────────────────────────────────────────────
+
+  const allPickerItems: PickerItem[] = useMemo(
+    () => [
+      ...blades.map((b) => ({
+        name: b.name,
+        type: b.blade_type,
+        level: b.game_id,
+        suffix: b.hands,
+      })),
+      ...armor.map((a) => ({
+        name: a.name,
+        type: a.armor_type,
+        level: a.game_id,
+      })),
+    ],
+    [blades, armor]
+  )
+
+  const targetMaterials = useMemo(() => {
+    if (!targetItem) return []
+    const blade = blades.find((b) => b.name === targetItem)
+    if (blade) return BLADE_MATS
+    const a = armor.find((ar) => ar.name === targetItem)
+    if (a?.armor_type === "Shield")
+      return ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
+    if (a?.armor_type === "Accessory") return []
+    if (a) return ["Leather", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
+    return ALL_MATERIALS
+  }, [targetItem, blades, armor])
+
+  // ── Build unified result rows ───────────────────────────────────────
+
+  const findWorkshops = useCallback(
+    (material: string): { id: number; name: string }[] => {
+      return workshops
+        .filter((w) =>
+          w.available_materials
+            .split(",")
+            .map((s) => s.trim())
+            .includes(material)
+        )
+        .map((w) => ({ id: w.id, name: w.name }))
+    },
+    [workshops]
+  )
+
+  const enrichItem = useCallback(
+    (name: string, equipType: string, material: string) => ({
+      name,
+      material,
+      equipType,
+      damageType: bladeDamageMap.get(name),
+      hands: bladeHandsMap.get(name),
+    }),
+    [bladeDamageMap, bladeHandsMap]
+  )
+
+  const resultRows: ResultRow[] = useMemo(() => {
+    if (mode === "forward" && discoverSearched) {
+      return discoverResults
+        .filter(
+          (r) =>
+            r.materialUpgrade ||
+            r.step.recipe.tier_change > 0 ||
+            (r.statDiff && r.statDiff.total > 0)
+        )
+        .sort((a, b) => b.score - a.score)
+        .map((r, i) => {
+          const lastStep = r.step
+          const result = enrichItem(
+            r.result.name,
+            r.result.equipType,
+            r.result.material
+          )
+          const s1 = enrichItem(
+            lastStep.input1.name,
+            lastStep.input1.equipType,
+            lastStep.input1.material
+          )
+          const s2 = enrichItem(
+            lastStep.input2.name,
+            lastStep.input2.equipType,
+            lastStep.input2.material
+          )
+          return {
+            key: `fwd-${i}`,
+            resultName: result.name,
+            resultMaterial: result.material,
+            resultEquipType: result.equipType,
+            resultDamageType: result.damageType,
+            resultHands: result.hands,
+            statDiff: r.statDiff,
+            steps: r.steps,
+            slot1Name: s1.name,
+            slot1Material: s1.material,
+            slot1EquipType: s1.equipType,
+            slot1DamageType: s1.damageType,
+            slot1Hands: s1.hands,
+            slot2Name: s2.name,
+            slot2Material: s2.material,
+            slot2EquipType: s2.equipType,
+            slot2DamageType: s2.damageType,
+            slot2Hands: s2.hands,
+            workshops: findWorkshops(result.material),
+            path: r.path,
+            materialUpgrade: r.materialUpgrade,
+            tierChange: r.step.recipe.tier_change,
+          }
+        })
+    }
+
+    if (mode === "reverse" && reverseSearched) {
+      return reversePaths
+        .sort((a, b) => b.score - a.score)
+        .map((p, i) => {
+          const lastStep = p.steps[p.steps.length - 1]
+          const result = enrichItem(
+            p.result.name,
+            p.result.equipType,
+            p.result.material
+          )
+          const s1 = enrichItem(
+            lastStep.input1.name,
+            lastStep.input1.equipType,
+            lastStep.input1.material
+          )
+          const s2 = enrichItem(
+            lastStep.input2.name,
+            lastStep.input2.equipType,
+            lastStep.input2.material
+          )
+          return {
+            key: `rev-${i}`,
+            resultName: result.name,
+            resultMaterial: result.material,
+            resultEquipType: result.equipType,
+            resultDamageType: result.damageType,
+            resultHands: result.hands,
+            statDiff: null,
+            steps: p.steps.length,
+            slot1Name: s1.name,
+            slot1Material: s1.material,
+            slot1EquipType: s1.equipType,
+            slot1DamageType: s1.damageType,
+            slot1Hands: s1.hands,
+            slot2Name: s2.name,
+            slot2Material: s2.material,
+            slot2EquipType: s2.equipType,
+            slot2DamageType: s2.damageType,
+            slot2Hands: s2.hands,
+            workshops: findWorkshops(result.material),
+            path: p.steps,
+            decompTree: decompTrees[0],
+            materialUpgrade: false,
+            tierChange: lastStep.recipe.tier_change,
+          }
+        })
+    }
+
+    return []
+  }, [
+    mode,
+    discoverSearched,
+    discoverResults,
+    reverseSearched,
+    reversePaths,
+    decompTrees,
+    enrichItem,
+    findWorkshops,
+  ])
+
+  const hasSearched =
+    (mode === "forward" && discoverSearched) ||
+    (mode === "reverse" && reverseSearched)
+
+  // ── Reset ───────────────────────────────────────────────────────────
+
+  const handleReset = () => {
+    setForwardCategory(null)
+    setTargetItem(null)
+    setTargetMaterial(null)
+    setDiscoverSearched(false)
+    setReverseSearched(false)
+    setDecompSearched(false)
+    setDiscoverResults([])
+    setReversePaths([])
+    setDecompTrees([])
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-4">
       {/* Controls row */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={workshopId} onValueChange={setWorkshopId}>
-          <SelectTrigger className="h-9 w-auto min-w-[12rem]">
-            <Settings2 className="mr-1.5 size-3.5" />
-            <SelectValue placeholder="Workshop" />
-          </SelectTrigger>
-          <SelectContent>
-            {workshops.map((w) => (
-              <SelectItem key={w.id} value={String(w.id)}>
-                <div>
-                  <div className="font-medium">{w.name}</div>
-                  <div className="text-muted-foreground text-xs">
-                    {w.available_materials}
-                  </div>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <div className="flex rounded-lg border">
-          <button
-            type="button"
-            onClick={() => setMode("forward")}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium transition-colors",
-              mode === "forward"
-                ? "bg-primary text-primary-foreground rounded-l-lg"
-                : "text-muted-foreground hover:text-foreground"
-            )}
+      <div className="flex flex-wrap items-end gap-3 lg:flex-nowrap">
+        <div className="shrink-0">
+          <div className="mb-1 text-[11px]">&nbsp;</div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            className="h-9 gap-1.5"
           >
-            What Can I Make?
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("reverse")}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium transition-colors",
-              mode === "reverse"
-                ? "bg-primary text-primary-foreground rounded-r-lg"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            How Do I Make...?
-          </button>
+            <RotateCcw className="size-3.5" />
+            Reset
+          </Button>
         </div>
 
-        <label className="flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
-            checked={includeEquipped}
-            onChange={(e) => setIncludeEquipped(e.target.checked)}
-            className="accent-primary size-3.5"
-          />
-          <span className="text-muted-foreground">Include equipped</span>
-        </label>
+        <div className="w-full min-w-[10rem] flex-1">
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+            Select a Category
+          </label>
+          <Select
+            value={forwardCategory ?? ""}
+            onValueChange={(v) => {
+              setForwardCategory(v as Category)
+              setTargetItem(null)
+              setTargetMaterial(null)
+              setDiscoverSearched(false)
+              setReverseSearched(false)
+            }}
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue placeholder="Select..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="blade">Blades</SelectItem>
+              <SelectItem value="shield">Shields</SelectItem>
+              <SelectItem value="armor">Armor</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          value={String(searchDepth)}
-          onValueChange={(v) => setSearchDepth(Number(v))}
-        >
-          <SelectTrigger className="h-9 w-auto min-w-[6rem]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">1 step</SelectItem>
-            <SelectItem value="2">2 steps</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Forward: What Can I Make? */}
-      {mode === "forward" && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Select
-              value={forwardCategory}
-              onValueChange={(v) => {
-                setForwardCategory(v as Category)
-                setDiscoverSearched(false)
-              }}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-[8rem]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="blade">Blades</SelectItem>
-                <SelectItem value="shield">Shields</SelectItem>
-                <SelectItem value="armor">Armor</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={runDiscover}
-              size="sm"
-              disabled={searching || !recipesReady}
-            >
-              {searching ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Search className="size-3.5" />
-              )}
-              {searching ? "Searching..." : "Find Best Results"}
-            </Button>
-            <span className="text-muted-foreground text-xs">
-              {craftables.filter((c) => c.category === forwardCategory).length}{" "}
-              items in inventory
+        <div className="hidden shrink-0 lg:block">
+          <div className="mb-1 text-[11px]">&nbsp;</div>
+          <div className="flex h-9 items-center">
+            <span className="text-muted-foreground text-xs font-medium">
+              OR
             </span>
           </div>
+        </div>
 
-          {discoverSearched && <DiscoverResults results={discoverResults} />}
+        <div className="w-full min-w-[10rem] flex-1">
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+            Select an Item
+          </label>
+          <ItemPicker
+            items={allPickerItems}
+            value={targetItem}
+            onSelect={(name) => {
+              setTargetItem(name)
+              setForwardCategory(null)
+              setTargetMaterial(null)
+              setDiscoverSearched(false)
+              setReverseSearched(false)
+            }}
+            placeholder="Search for item..."
+            triggerClassName="!min-h-9 !h-9 py-1"
+          />
+        </div>
+
+        {targetItem && targetMaterials.length > 0 && (
+          <div className="min-w-[10rem]">
+            <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+              Material
+            </label>
+            <MaterialSelect
+              materials={targetMaterials}
+              value={targetMaterial}
+              onSelect={(m) => {
+                setTargetMaterial(m)
+                setReverseSearched(false)
+              }}
+            />
+          </div>
+        )}
+
+        <div className="shrink-0">
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+            Depth
+          </label>
+          <Select
+            value={String(searchDepth)}
+            onValueChange={(v) => setSearchDepth(Number(v))}
+          >
+            <SelectTrigger className="h-9 w-auto min-w-[6rem]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 step</SelectItem>
+              <SelectItem value="2">2 steps</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="shrink-0">
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+            Include
+          </label>
+          <div className="flex h-9 items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs">
+              <input
+                type="checkbox"
+                checked={includeEquipped}
+                onChange={(e) => setIncludeEquipped(e.target.checked)}
+                className="accent-primary size-3.5"
+              />
+              <span className="text-muted-foreground">Equipped</span>
+            </label>
+            <label className="flex items-center gap-1.5 text-xs">
+              <input
+                type="checkbox"
+                checked={includeBag}
+                onChange={(e) => setIncludeBag(e.target.checked)}
+                className="accent-primary size-3.5"
+              />
+              <span className="text-muted-foreground">Bag</span>
+            </label>
+            <label className="flex items-center gap-1.5 text-xs">
+              <input
+                type="checkbox"
+                checked={includeContainer}
+                onChange={(e) => setIncludeContainer(e.target.checked)}
+                className="accent-primary size-3.5"
+              />
+              <span className="text-muted-foreground">Container</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Search button */}
+      {mode && (
+        <div className="flex justify-center py-2">
+          <Button
+            onClick={runSearch}
+            size="lg"
+            disabled={searching || !recipesReady}
+            className="min-w-[16rem] text-base"
+          >
+            {searching ? (
+              <Loader2 className="mr-2 size-5 animate-spin" />
+            ) : (
+              <Zap className="mr-2 size-5" />
+            )}
+            {searching ? "Optimizing..." : "Optimize"}
+          </Button>
         </div>
       )}
 
-      {/* Reverse: How Do I Make...? */}
-      {mode === "reverse" && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[14rem] flex-1">
-              <ItemPicker
-                items={allPickerItems}
-                value={targetItem}
-                onSelect={(name) => {
-                  setTargetItem(name)
-                  setTargetMaterial(null)
-                  setReverseSearched(false)
-                }}
-                placeholder="Select target item..."
-                label="I want to make..."
-              />
-            </div>
-            {targetItem && targetMaterials.length > 0 && (
-              <div className="min-w-[10rem]">
-                <MaterialSelect
-                  materials={targetMaterials}
-                  value={targetMaterial}
-                  onSelect={(m) => {
-                    setTargetMaterial(m)
-                    setReverseSearched(false)
-                  }}
-                  label="Material (optional)"
-                />
-              </div>
-            )}
-            {targetItem && recipesReady && (
-              <Button onClick={runReverse} size="sm" disabled={searching}>
-                {searching ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Search className="size-3.5" />
-                )}
-                {searching ? "Searching..." : "Find Paths"}
-              </Button>
-            )}
-          </div>
+      {/* Results table */}
+      {hasSearched && resultRows.length > 0 && (
+        <ResultsTable
+          rows={resultRows}
+          isReverse={mode === "reverse"}
+          bladeIdMap={bladeIdMap}
+          armorIdMap={armorIdMap}
+        />
+      )}
 
-          {/* Recipe decomposition tree */}
-          {decompSearched && decompTrees.length > 0 && (
-            <RecipeTree trees={decompTrees} targetName={targetItem ?? ""} />
-          )}
-
-          {/* Inventory-based paths */}
-          {reverseSearched && (
-            <ReverseResults
-              paths={reversePaths}
-              targetName={targetItem ?? ""}
-              targetMaterial={targetMaterial}
-            />
-          )}
+      {/* Empty state */}
+      {hasSearched && resultRows.length === 0 && (
+        <div className="text-muted-foreground py-6 text-center text-sm">
+          <FlaskConical className="mx-auto mb-2 size-8 opacity-30" />
+          <p>No results found with your current inventory</p>
+          <p className="mt-1 text-xs">
+            Try different settings or add more items to your inventory
+          </p>
         </div>
       )}
 
@@ -442,313 +702,669 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
   )
 }
 
-// ── Discover results (forward) ───────────────────────────────────────
+// ── Results table ─────────────────────────────────────────────────────
 
-type DiscoverSort = "score" | "material" | "stats" | "steps"
-type DiscoverFilter = "all" | "mat-upgrade" | "tier-up" | "stat-up"
+function ResultsTable({
+  rows,
+  isReverse,
+  bladeIdMap,
+  armorIdMap,
+}: {
+  rows: ResultRow[]
+  isReverse: boolean
+  bladeIdMap: Map<string, number>
+  armorIdMap: Map<string, number>
+}) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = useState("")
+  const [expanded, setExpanded] = useState<ExpandedState>({})
 
-const MATERIAL_ORDER: Record<string, number> = {
-  Wood: 0,
-  Leather: 1,
-  Bronze: 2,
-  Iron: 3,
-  Hagane: 4,
-  Silver: 5,
-  Damascus: 6,
-}
+  const getItemLink = useCallback(
+    (name: string) => {
+      const bId = bladeIdMap.get(name)
+      if (bId) return { linkTo: "/blades/$id", linkId: bId }
+      const aId = armorIdMap.get(name)
+      if (aId) return { linkTo: "/armor/$id", linkId: aId }
+      return {}
+    },
+    [bladeIdMap, armorIdMap]
+  )
 
-function DiscoverResults({ results }: { results: CraftableResult[] }) {
-  const [showAll, setShowAll] = useState(false)
-  const [sortBy, setSortBy] = useState<DiscoverSort>("score")
-  const [filterBy, setFilterBy] = useState<DiscoverFilter>("all")
-  const PAGE_SIZE = 20
+  const columns = useMemo<ColumnDef<ResultRow>[]>(() => {
+    const cols: ColumnDef<ResultRow>[] = [
+      {
+        accessorKey: "resultName",
+        header: "Result",
+        cell: ({ row }) => (
+          <div>
+            <ItemCell
+              name={row.original.resultName}
+              material={row.original.resultMaterial}
+              equipType={row.original.resultEquipType}
+              damageType={row.original.resultDamageType}
+              hands={row.original.resultHands}
+              {...getItemLink(row.original.resultName)}
+            />
+            <div className="mt-0.5 flex gap-1">
+              {row.original.materialUpgrade && (
+                <span className="rounded bg-green-500/15 px-1 py-0.5 text-[9px] font-semibold text-green-400">
+                  MAT UP
+                </span>
+              )}
+              {row.original.tierChange > 0 && (
+                <span className="bg-primary/15 text-primary rounded px-1 py-0.5 text-[9px] font-semibold">
+                  TIER UP
+                </span>
+              )}
+            </div>
+          </div>
+        ),
+      },
+    ]
 
-  // Only show results that are upgrades (material or tier or stat improvement)
-  const upgrades = useMemo(() => {
-    let filtered = results.filter(
-      (r) =>
-        r.materialUpgrade ||
-        r.step.recipe.tier_change > 0 ||
-        (r.statDiff && r.statDiff.total > 0)
-    )
-
-    // Apply user filter
-    if (filterBy === "mat-upgrade") {
-      filtered = filtered.filter((r) => r.materialUpgrade)
-    } else if (filterBy === "tier-up") {
-      filtered = filtered.filter((r) => r.step.recipe.tier_change > 0)
-    } else if (filterBy === "stat-up") {
-      filtered = filtered.filter((r) => r.statDiff && r.statDiff.total > 0)
+    if (!isReverse) {
+      cols.push({
+        accessorFn: (row) => row.statDiff?.total ?? 0,
+        id: "statDiff",
+        header: "Stat Diff",
+        cell: ({ row }) => <StatDiffCell diff={row.original.statDiff} />,
+      })
     }
 
-    // Apply sort
-    return [...filtered].sort((a, b) => {
-      if (sortBy === "material") {
-        return (
-          (MATERIAL_ORDER[b.result.material] ?? 0) -
-          (MATERIAL_ORDER[a.result.material] ?? 0)
-        )
+    cols.push(
+      {
+        accessorKey: "steps",
+        header: "Steps",
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.steps}</span>
+        ),
+      },
+      {
+        accessorKey: "slot1Name",
+        header: "Slot 1",
+        cell: ({ row }) => (
+          <ItemCell
+            name={row.original.slot1Name}
+            material={row.original.slot1Material}
+            equipType={row.original.slot1EquipType}
+            damageType={row.original.slot1DamageType}
+            hands={row.original.slot1Hands}
+            {...getItemLink(row.original.slot1Name)}
+          />
+        ),
+      },
+      {
+        accessorKey: "slot2Name",
+        header: "Slot 2",
+        cell: ({ row }) => (
+          <ItemCell
+            name={row.original.slot2Name}
+            material={row.original.slot2Material}
+            equipType={row.original.slot2EquipType}
+            damageType={row.original.slot2DamageType}
+            hands={row.original.slot2Hands}
+            {...getItemLink(row.original.slot2Name)}
+          />
+        ),
+      },
+      {
+        accessorFn: (row) => row.workshops.map((w) => w.name).join(", "),
+        id: "workshops",
+        header: "Workshops",
+        cell: ({ row }) => (
+          <span className="text-[11px]">
+            {row.original.workshops.length > 0 ? (
+              row.original.workshops.map((w, i) => (
+                <span key={w.id}>
+                  {i > 0 && <span className="text-muted-foreground">, </span>}
+                  <Link
+                    to="/workshops/$id"
+                    params={{ id: String(w.id) }}
+                    target="_blank"
+                    className="text-primary/80 hover:text-primary underline decoration-transparent transition-colors hover:decoration-current"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {w.name}
+                  </Link>
+                </span>
+              ))
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </span>
+        ),
       }
-      if (sortBy === "stats") {
-        return (b.statDiff?.total ?? 0) - (a.statDiff?.total ?? 0)
-      }
-      if (sortBy === "steps") {
-        return a.steps - b.steps
-      }
-      return b.score - a.score
-    })
-  }, [results, sortBy, filterBy])
-
-  if (upgrades.length === 0) {
-    return (
-      <div className="text-muted-foreground py-6 text-center text-sm">
-        <FlaskConical className="mx-auto mb-2 size-8 opacity-30" />
-        <p>No upgrades found with your current inventory</p>
-        <p className="mt-1 text-xs">
-          {results.length > 0
-            ? `${results.length} combinations exist but none match the filter`
-            : "No combinations found"}
-        </p>
-      </div>
     )
-  }
 
-  const visible = showAll ? upgrades : upgrades.slice(0, PAGE_SIZE)
-  const hasMore = upgrades.length > PAGE_SIZE && !showAll
+    return cols
+  }, [isReverse, getItemLink])
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: { sorting, globalFilter, expanded },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onExpandedChange: setExpanded,
+    getRowId: (row) => row.key,
+    getRowCanExpand: () => true,
+    globalFilterFn: (row, _columnId, filterValue: string) => {
+      const q = filterValue.toLowerCase()
+      const r = row.original
+      // Search visible columns
+      if (r.resultName.toLowerCase().includes(q)) return true
+      if (r.slot1Name.toLowerCase().includes(q)) return true
+      if (r.slot2Name.toLowerCase().includes(q)) return true
+      if (r.resultMaterial.toLowerCase().includes(q)) return true
+      if (r.workshops.some((w) => w.name.toLowerCase().includes(q))) return true
+      // Search step tree items
+      for (const step of r.path) {
+        if (step.input1.name.toLowerCase().includes(q)) return true
+        if (step.input2.name.toLowerCase().includes(q)) return true
+        if (step.result.name.toLowerCase().includes(q)) return true
+      }
+      return false
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    initialState: { pagination: { pageSize: 20 } },
+  })
+
+  const filtered = table.getFilteredRowModel().rows.length
+  const totalPages = table.getPageCount()
+  const page = table.getState().pagination.pageIndex
+  const colCount = columns.length
 
   return (
     <div className="space-y-3">
-      {/* Sort + filter controls */}
+      {/* Search + count */}
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={sortBy}
-          onValueChange={(v) => setSortBy(v as DiscoverSort)}
-        >
-          <SelectTrigger className="h-8 w-auto min-w-[7rem] text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="score">Best Overall</SelectItem>
-            <SelectItem value="material">Material Tier</SelectItem>
-            <SelectItem value="stats">Stat Gain</SelectItem>
-            <SelectItem value="steps">Fewest Steps</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={filterBy}
-          onValueChange={(v) => setFilterBy(v as DiscoverFilter)}
-        >
-          <SelectTrigger className="h-8 w-auto min-w-[7rem] text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Upgrades</SelectItem>
-            <SelectItem value="mat-upgrade">Material Upgrades</SelectItem>
-            <SelectItem value="tier-up">Tier Up Only</SelectItem>
-            <SelectItem value="stat-up">Stat Gains Only</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="relative max-w-xs flex-1">
+          <Input
+            placeholder="Filter results..."
+            value={globalFilter}
+            onChange={(e) => {
+              setGlobalFilter(e.target.value)
+              table.setPageIndex(0)
+            }}
+            className="h-8 pr-8 text-xs"
+          />
+          {globalFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setGlobalFilter("")
+                table.setPageIndex(0)
+              }}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
         <span className="text-muted-foreground text-xs">
-          {upgrades.length} result{upgrades.length !== 1 ? "s" : ""}
+          {filtered} result{filtered !== 1 ? "s" : ""}
         </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() =>
+            table.toggleAllRowsExpanded(!table.getIsAllRowsExpanded())
+          }
+          className="ml-auto h-7 gap-1.5 px-2 text-xs"
+        >
+          <ChevronsRight
+            className={cn(
+              "size-3.5 transition-transform",
+              table.getIsAllRowsExpanded() ? "-rotate-90" : "rotate-90"
+            )}
+          />
+          {table.getIsAllRowsExpanded() ? "Collapse all" : "Expand all"}
+        </Button>
       </div>
 
-      <div className="space-y-2">
-        {visible.map((r, i) => (
-          <DiscoverCard key={i} result={r} />
-        ))}
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            {table.getHeaderGroups().map((hg) => (
+              <tr
+                key={hg.id}
+                className="border-border text-muted-foreground border-b text-left"
+              >
+                {hg.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className={cn(
+                      "px-2 py-2 font-medium",
+                      header.id === "steps" && "text-center",
+                      header.column.getCanSort() && "cursor-pointer select-none"
+                    )}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header.column.getCanSort() && (
+                        <SortIcon sorted={header.column.getIsSorted()} />
+                      )}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <>
+                <tr
+                  key={row.id}
+                  onClick={() => row.toggleExpanded()}
+                  className={cn(
+                    "border-border/50 cursor-pointer border-b transition-colors",
+                    row.getIsExpanded() ? "bg-primary/10" : "hover:bg-muted/30"
+                  )}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className={cn(
+                        "px-2 py-2",
+                        cell.column.id === "steps" && "text-center"
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                {row.getIsExpanded() && (
+                  <tr key={`${row.id}-detail`}>
+                    <td
+                      colSpan={colCount}
+                      className="border-border/50 border-b p-0"
+                    >
+                      <ExpandedDetail
+                        row={row.original}
+                        bladeIdMap={bladeIdMap}
+                        armorIdMap={armorIdMap}
+                        isReverse={isReverse}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </>
+            ))}
+          </tbody>
+        </table>
       </div>
-      {hasMore && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAll(true)}
-          className="w-full"
+
+      {/* Pagination */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground text-xs">Rows</span>
+            <Select
+              value={String(table.getState().pagination.pageSize)}
+              onValueChange={(v) => {
+                table.setPageSize(Number(v))
+                table.setPageIndex(0)
+              }}
+            >
+              <SelectTrigger className="h-7 w-20 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 20, 50, 100].map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ChevronsLeft className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="text-muted-foreground px-2 text-xs">
+              {page + 1} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(totalPages - 1)}
+              disabled={!table.getCanNextPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ChevronsRight className="size-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
+  if (sorted === "asc") return <ArrowUp className="size-3" />
+  if (sorted === "desc") return <ArrowDown className="size-3" />
+  return <ArrowUpDown className="text-muted-foreground/50 size-3" />
+}
+
+function ItemCell({
+  name,
+  material,
+  equipType,
+  damageType,
+  hands,
+  linkTo,
+  linkId,
+}: {
+  name: string
+  material: string
+  equipType: string
+  damageType?: string
+  hands?: string
+  linkTo?: string
+  linkId?: number
+}) {
+  const nameEl =
+    linkTo && linkId ? (
+      <Link
+        to={linkTo}
+        params={{ id: String(linkId) }}
+        target="_blank"
+        className="hover:text-primary truncate font-medium underline decoration-transparent transition-colors hover:decoration-current"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {name}
+      </Link>
+    ) : (
+      <span className="truncate font-medium">{name}</span>
+    )
+
+  return (
+    <div className="flex items-center gap-2">
+      <ItemIcon type={equipType} size="sm" />
+      <div className="min-w-0 space-y-0.5">
+        <div className="flex flex-wrap items-center gap-1">
+          {nameEl}
+          {material && <MaterialBadge mat={material} />}
+        </div>
+        {(damageType || hands) && (
+          <div className="flex flex-wrap items-center gap-1">
+            {damageType && <DamageTypeBadge type={damageType} />}
+            {hands && (
+              <span className="text-muted-foreground text-[10px]">{hands}</span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function StatDiffCell({
+  diff,
+}: {
+  diff: { str: number; int: number; agi: number } | null
+}) {
+  if (!diff) return <span className="text-muted-foreground">—</span>
+
+  const stats = [
+    { label: "STR", value: diff.str },
+    { label: "INT", value: diff.int },
+    { label: "AGI", value: diff.agi },
+  ].filter((s) => s.value !== 0)
+
+  if (stats.length === 0)
+    return <span className="text-muted-foreground">—</span>
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {stats.map((s) => (
+        <span
+          key={s.label}
+          className={cn(
+            "text-[10px] font-medium",
+            s.value > 0 ? "text-green-400" : "text-red-400"
+          )}
         >
-          Show all {upgrades.length} results
-        </Button>
+          {s.label} {s.value > 0 ? "+" : ""}
+          {s.value}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ── Expanded row detail ───────────────────────────────────────────────
+
+function ExpandedDetail({
+  row,
+  bladeIdMap,
+  armorIdMap,
+  isReverse,
+}: {
+  row: ResultRow
+  bladeIdMap: Map<string, number>
+  armorIdMap: Map<string, number>
+  isReverse: boolean
+}) {
+  return (
+    <div className="bg-muted/20 space-y-1.5 px-4 py-3">
+      {/* Steps */}
+      {row.path.map((step, i) => (
+        <div
+          key={i}
+          className="bg-background/50 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 text-xs"
+        >
+          <span className="text-muted-foreground font-mono">{i + 1}.</span>
+          <StepItemLink
+            name={step.input1.name}
+            equipType={step.input1.equipType}
+            material={step.input1.material}
+            bladeIdMap={bladeIdMap}
+            armorIdMap={armorIdMap}
+          />
+          <span className="text-muted-foreground">+</span>
+          <StepItemLink
+            name={step.input2.name}
+            equipType={step.input2.equipType}
+            material={step.input2.material}
+            bladeIdMap={bladeIdMap}
+            armorIdMap={armorIdMap}
+          />
+          <ChevronRight className="text-muted-foreground size-3" />
+          <div className="flex items-center gap-1">
+            <span className="text-primary font-medium">{step.result.name}</span>
+            {step.result.material && (
+              <MaterialBadge mat={step.result.material} />
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Decomp tree for reverse mode */}
+      {isReverse && row.decompTree && (
+        <RecipeTree
+          tree={row.decompTree}
+          bladeIdMap={bladeIdMap}
+          armorIdMap={armorIdMap}
+        />
       )}
     </div>
   )
 }
 
-function DiscoverCard({ result: r }: { result: CraftableResult }) {
-  const [expanded, setExpanded] = useState(false)
-  const isMultiStep = r.steps > 1
+function StepItemLink({
+  name,
+  equipType,
+  material,
+  bladeIdMap,
+  armorIdMap,
+}: {
+  name: string
+  equipType: string
+  material: string
+  bladeIdMap: Map<string, number>
+  armorIdMap: Map<string, number>
+}) {
+  const bladeId = bladeIdMap.get(name)
+  const armorId = armorIdMap.get(name)
 
-  return (
-    <Card
-      className={cn("transition-colors", isMultiStep && "cursor-pointer")}
-      onClick={isMultiStep ? () => setExpanded(!expanded) : undefined}
-    >
-      <CardContent className="p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Result */}
-          <div className="flex items-center gap-2">
-            <ItemIcon type={r.result.equipType} size="sm" />
-            <span className="text-sm font-medium">{r.result.name}</span>
-            {r.result.material && <MaterialBadge mat={r.result.material} />}
-          </div>
-
-          {/* Badges */}
-          {r.materialUpgrade && (
-            <span className="rounded bg-green-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-green-400">
-              MAT UPGRADE
-            </span>
-          )}
-          {r.step.recipe.tier_change > 0 && (
-            <span className="bg-primary/15 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold">
-              TIER UP
-            </span>
-          )}
-          {isMultiStep && (
-            <span className="text-muted-foreground text-[10px]">
-              {r.steps} steps
-            </span>
-          )}
-
-          {/* Stat diff */}
-          {r.statDiff && (
-            <div className="flex items-center gap-1.5 text-[10px] font-medium">
-              {r.statDiff.str !== 0 && (
-                <span
-                  className={
-                    r.statDiff.str > 0 ? "text-green-400" : "text-red-400"
-                  }
-                >
-                  STR {r.statDiff.str > 0 ? "+" : ""}
-                  {r.statDiff.str}
-                </span>
-              )}
-              {r.statDiff.int !== 0 && (
-                <span
-                  className={
-                    r.statDiff.int > 0 ? "text-green-400" : "text-red-400"
-                  }
-                >
-                  INT {r.statDiff.int > 0 ? "+" : ""}
-                  {r.statDiff.int}
-                </span>
-              )}
-              {r.statDiff.agi !== 0 && (
-                <span
-                  className={
-                    r.statDiff.agi > 0 ? "text-green-400" : "text-red-400"
-                  }
-                >
-                  AGI {r.statDiff.agi > 0 ? "+" : ""}
-                  {r.statDiff.agi}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Recipe (last step for 1-step, or summary) */}
-          <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
-            <span>{r.step.input1.name}</span>
-            {r.step.input1.material && (
-              <MaterialBadge mat={r.step.input1.material} />
-            )}
-            <span>+</span>
-            <span>{r.step.input2.name}</span>
-            {r.step.input2.material && (
-              <MaterialBadge mat={r.step.input2.material} />
-            )}
-          </div>
-
-          {isMultiStep && (
-            <ChevronRight
-              className={cn(
-                "text-muted-foreground size-4 transition-transform",
-                expanded && "rotate-90"
-              )}
-            />
-          )}
-        </div>
-
-        {/* Expanded steps */}
-        {expanded && isMultiStep && (
-          <div className="mt-3 space-y-2">
-            {r.path.map((step, i) => (
-              <div
-                key={i}
-                className="bg-muted/30 flex items-center gap-2 rounded-lg px-3 py-2 text-xs"
-              >
-                <span className="text-muted-foreground font-mono">
-                  {i + 1}.
-                </span>
-                <div className="flex items-center gap-1">
-                  <ItemIcon type={step.input1.equipType} size="sm" />
-                  <span className="font-medium">{step.input1.name}</span>
-                  {step.input1.material && (
-                    <MaterialBadge mat={step.input1.material} />
-                  )}
-                </div>
-                <span className="text-muted-foreground">+</span>
-                <div className="flex items-center gap-1">
-                  <ItemIcon type={step.input2.equipType} size="sm" />
-                  <span className="font-medium">{step.input2.name}</span>
-                  {step.input2.material && (
-                    <MaterialBadge mat={step.input2.material} />
-                  )}
-                </div>
-                <ChevronRight className="text-muted-foreground size-3" />
-                <div className="flex items-center gap-1">
-                  <span className="text-primary font-medium">
-                    {step.result.name}
-                  </span>
-                  {step.result.material && (
-                    <MaterialBadge mat={step.result.material} />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+  const content = (
+    <div className="flex items-center gap-1">
+      <ItemIcon type={equipType} size="sm" />
+      <span className="font-medium">{name}</span>
+      {material && <MaterialBadge mat={material} />}
+    </div>
   )
+
+  if (bladeId) {
+    return (
+      <Link
+        to="/blades/$id"
+        params={{ id: String(bladeId) }}
+        target="_blank"
+        className="hover:text-primary transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  if (armorId) {
+    return (
+      <Link
+        to="/armor/$id"
+        params={{ id: String(armorId) }}
+        target="_blank"
+        className="hover:text-primary transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return content
 }
 
-// ── Recipe decomposition tree ────────────────────────────────────────
+// ── Recipe decomposition tree ─────────────────────────────────────────
 
 function RecipeTree({
-  trees,
-  targetName,
+  tree,
+  bladeIdMap,
+  armorIdMap,
 }: {
-  trees: DecompNode[]
-  targetName: string
+  tree: DecompNode
+  bladeIdMap: Map<string, number>
+  armorIdMap: Map<string, number>
 }) {
-  if (trees.length === 0) return null
-
-  // Show the best tree (most ingredients available)
-  const tree = trees[0]
   const available = countTreeAvailable(tree)
   const total = countTreeTotal(tree)
 
   return (
     <div className="space-y-2">
       <p className="text-muted-foreground text-xs">
-        Recipe blueprint for <span className="font-medium">{targetName}</span>
-        {" — "}
+        Recipe blueprint —{" "}
         <span className={available === total ? "text-green-400" : ""}>
           {available}/{total} ingredients available
         </span>
       </p>
       <Card>
         <CardContent className="p-3">
-          <TreeNode node={tree} />
+          <TreeNode
+            node={tree}
+            bladeIdMap={bladeIdMap}
+            armorIdMap={armorIdMap}
+          />
         </CardContent>
       </Card>
     </div>
   )
 }
 
-function TreeNode({ node }: { node: DecompNode }) {
+function TreeNode({
+  node,
+  bladeIdMap,
+  armorIdMap,
+}: {
+  node: DecompNode
+  bladeIdMap: Map<string, number>
+  armorIdMap: Map<string, number>
+}) {
   const indent = node.depth * 16
 
   if (!node.inputs) {
-    // Leaf node — inventory item or missing item
+    const bladeId = bladeIdMap.get(node.name)
+    const armorId = armorIdMap.get(node.name)
+    const linkTo = bladeId ? "/blades/$id" : armorId ? "/armor/$id" : null
+    const linkId = bladeId ?? armorId
+
+    const nameEl =
+      linkTo && linkId ? (
+        <Link
+          to={linkTo}
+          params={{ id: String(linkId) }}
+          target="_blank"
+          className={cn(
+            "text-xs font-medium transition-colors",
+            node.available
+              ? "hover:text-primary"
+              : "text-red-400 hover:text-red-300"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {node.name}
+        </Link>
+      ) : (
+        <span
+          className={cn(
+            "text-xs font-medium",
+            !node.available && "text-red-400"
+          )}
+        >
+          {node.name}
+        </span>
+      )
+
     return (
       <div
         className="flex items-center gap-2 py-1"
@@ -760,14 +1376,7 @@ function TreeNode({ node }: { node: DecompNode }) {
             node.available ? "bg-green-400" : "bg-red-400"
           )}
         />
-        <span
-          className={cn(
-            "text-xs font-medium",
-            !node.available && "text-muted-foreground"
-          )}
-        >
-          {node.name}
-        </span>
+        {nameEl}
         {node.available && node.inventoryItem?.material && (
           <MaterialBadge mat={node.inventoryItem.material} />
         )}
@@ -778,7 +1387,6 @@ function TreeNode({ node }: { node: DecompNode }) {
     )
   }
 
-  // Internal node — crafting step
   return (
     <div>
       <div
@@ -793,8 +1401,16 @@ function TreeNode({ node }: { node: DecompNode }) {
           </span>
         )}
       </div>
-      <TreeNode node={node.inputs[0]} />
-      <TreeNode node={node.inputs[1]} />
+      <TreeNode
+        node={node.inputs[0]}
+        bladeIdMap={bladeIdMap}
+        armorIdMap={armorIdMap}
+      />
+      <TreeNode
+        node={node.inputs[1]}
+        bladeIdMap={bladeIdMap}
+        armorIdMap={armorIdMap}
+      />
     </div>
   )
 }
@@ -808,148 +1424,4 @@ function countTreeAvailable(node: DecompNode): number {
 function countTreeTotal(node: DecompNode): number {
   if (!node.inputs) return 1
   return countTreeTotal(node.inputs[0]) + countTreeTotal(node.inputs[1])
-}
-
-// ── Reverse results (find path to target) ────────────────────────────
-
-function ReverseResults({
-  paths,
-  targetName,
-  targetMaterial,
-}: {
-  paths: CraftingPath[]
-  targetName: string
-  targetMaterial: string | null
-}) {
-  if (paths.length === 0) {
-    return (
-      <div className="text-muted-foreground py-6 text-center text-sm">
-        <FlaskConical className="mx-auto mb-2 size-8 opacity-30" />
-        <p>
-          No crafting paths found for{" "}
-          <span className="font-medium">{targetName}</span>
-          {targetMaterial && (
-            <>
-              {" "}
-              in <span className="font-medium">{targetMaterial}</span>
-            </>
-          )}
-        </p>
-        <p className="mt-1 text-xs">
-          Try a different material, or check that your inventory has compatible
-          items
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-3">
-      <p className="text-muted-foreground text-xs">
-        {paths.length} path{paths.length !== 1 ? "s" : ""} found
-      </p>
-      {paths.map((path, i) => (
-        <PathCard key={i} path={path} rank={i + 1} />
-      ))}
-    </div>
-  )
-}
-
-function PathCard({ path, rank }: { path: CraftingPath; rank: number }) {
-  const isMultiStep = path.steps.length > 1
-  const [expanded, setExpanded] = useState(rank === 1 && isMultiStep)
-
-  // 1-step: show inline recipe. Multi-step: collapsible.
-  return (
-    <Card
-      className={cn(
-        "transition-colors",
-        isMultiStep && "cursor-pointer",
-        rank === 1 && "border-primary/30"
-      )}
-      onClick={isMultiStep ? () => setExpanded(!expanded) : undefined}
-    >
-      <CardContent className="p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <ItemIcon type={path.result.equipType} size="sm" />
-            <span className="text-sm font-medium">{path.result.name}</span>
-            {path.result.material && (
-              <MaterialBadge mat={path.result.material} />
-            )}
-          </div>
-          {isMultiStep && (
-            <span className="text-muted-foreground text-[10px]">
-              {path.steps.length} steps
-            </span>
-          )}
-
-          {/* Inline recipe for 1-step */}
-          <div className="text-muted-foreground ml-auto flex items-center gap-1 text-xs">
-            {!isMultiStep && path.steps[0] && (
-              <>
-                <span>{path.steps[0].input1.name}</span>
-                {path.steps[0].input1.material && (
-                  <MaterialBadge mat={path.steps[0].input1.material} />
-                )}
-                <span>+</span>
-                <span>{path.steps[0].input2.name}</span>
-                {path.steps[0].input2.material && (
-                  <MaterialBadge mat={path.steps[0].input2.material} />
-                )}
-              </>
-            )}
-          </div>
-
-          {isMultiStep && (
-            <ChevronRight
-              className={cn(
-                "text-muted-foreground size-4 transition-transform",
-                expanded && "rotate-90"
-              )}
-            />
-          )}
-        </div>
-
-        {expanded && isMultiStep && (
-          <div className="mt-3 space-y-2">
-            {path.steps.map((step, i) => (
-              <div
-                key={i}
-                className="bg-muted/30 flex items-center gap-2 rounded-lg px-3 py-2 text-xs"
-              >
-                <span className="text-muted-foreground font-mono">
-                  {i + 1}.
-                </span>
-                <div className="flex items-center gap-1">
-                  <ItemIcon type={step.input1.equipType} size="sm" />
-                  <span className="font-medium">{step.input1.name}</span>
-                  {step.input1.material && (
-                    <MaterialBadge mat={step.input1.material} />
-                  )}
-                </div>
-                <span className="text-muted-foreground">+</span>
-                <div className="flex items-center gap-1">
-                  <ItemIcon type={step.input2.equipType} size="sm" />
-                  <span className="font-medium">{step.input2.name}</span>
-                  {step.input2.material && (
-                    <MaterialBadge mat={step.input2.material} />
-                  )}
-                </div>
-                <ChevronRight className="text-muted-foreground size-3" />
-                <div className="flex items-center gap-1">
-                  <span className="text-primary font-medium">
-                    {step.result.name}
-                  </span>
-                  {step.result.material && (
-                    <MaterialBadge mat={step.result.material} />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
 }

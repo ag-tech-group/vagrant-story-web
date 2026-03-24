@@ -11,7 +11,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link, useParams } from "@tanstack/react-router"
+import { Link, useMatchRoute, useParams } from "@tanstack/react-router"
 import {
   ArrowDownAZ,
   ArrowDownWideNarrow,
@@ -21,6 +21,7 @@ import {
   Package,
   Plus,
   Search,
+  Swords,
   Trash2,
   X,
 } from "lucide-react"
@@ -106,7 +107,9 @@ const SHIELD_MATS = ["Wood", "Bronze", "Iron", "Hagane", "Silver", "Damascus"]
 // ── Main component ──────────────────────────────────────────────────
 
 export function InventoryDetailPage() {
-  const { inventoryId } = useParams({ from: "/inventory/$inventoryId" })
+  const { inventoryId } = useParams({ strict: false }) as {
+    inventoryId: string
+  }
   const auth = useAuth()
 
   if (auth.isLoading) {
@@ -137,9 +140,13 @@ type BagSort = "equipped" | "added" | "name"
 
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<"equipment" | "crafting">(
-    "equipment"
-  )
+  const matchRoute = useMatchRoute()
+  const activeTab = matchRoute({
+    to: "/inventory/$inventoryId/optimizer",
+    params: { inventoryId: String(inventoryId) },
+  })
+    ? "optimizer"
+    : "equipment"
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
   const [bagSearch, setBagSearch] = useState("")
@@ -817,9 +824,9 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
 
       {/* Tabs */}
       <div className="border-border/50 flex gap-0 border-b">
-        <button
-          type="button"
-          onClick={() => setActiveTab("equipment")}
+        <Link
+          to="/inventory/$inventoryId/equipment"
+          params={{ inventoryId: String(inventoryId) }}
           className={cn(
             "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
             activeTab === "equipment"
@@ -839,13 +846,13 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           {activeTab === "equipment" && (
             <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
           )}
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("crafting")}
+        </Link>
+        <Link
+          to="/inventory/$inventoryId/optimizer"
+          params={{ inventoryId: String(inventoryId) }}
           className={cn(
             "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
-            activeTab === "crafting"
+            activeTab === "optimizer"
               ? "text-foreground"
               : "text-muted-foreground hover:text-foreground"
           )}
@@ -858,15 +865,15 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 "url(/images/icons/HammerPick.svg) center / contain no-repeat",
             }}
           />
-          Crafting
-          {activeTab === "crafting" && (
+          Optimizer
+          {activeTab === "optimizer" && (
             <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
           )}
-        </button>
+        </Link>
       </div>
 
-      {/* Crafting Tab */}
-      {activeTab === "crafting" && (
+      {/* Optimizer Tab */}
+      {activeTab === "optimizer" && (
         <CraftingTab items={allItems} blades={blades} armor={armor} />
       )}
 
@@ -879,85 +886,89 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             onDragEnd={handleDragEnd}
           >
             {/* Shared filter controls for bag + container */}
-            {allItems.length > 1 && (
-              <div className="flex items-center gap-2">
-                {itemCategories.length > 1 && (
-                  <Select value={bagCategory} onValueChange={setBagCategory}>
-                    <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        All ({allItems.length})
-                      </SelectItem>
-                      {itemCategories.map((c) => {
-                        const limitKey = ARMOR_POOL_TYPES.has(c.label)
-                          ? "Armor"
-                          : c.label
-                        const total =
-                          (BAG_LIMITS[limitKey] ?? 0) +
-                          (CONTAINER_LIMITS[limitKey] ?? 0)
-                        return (
-                          <SelectItem key={c.label} value={c.label}>
-                            {c.label} ({c.count}
-                            {total > 0 ? `/${total}` : ""})
-                          </SelectItem>
-                        )
-                      })}
-                    </SelectContent>
-                  </Select>
+            <div className="flex items-center gap-2">
+              {itemCategories.length > 1 && (
+                <Select value={bagCategory} onValueChange={setBagCategory}>
+                  <SelectTrigger className="h-9 w-auto min-w-[7rem] shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All ({allItems.length})</SelectItem>
+                    {itemCategories.map((c) => {
+                      const limitKey = ARMOR_POOL_TYPES.has(c.label)
+                        ? "Armor"
+                        : c.label
+                      const total =
+                        (BAG_LIMITS[limitKey] ?? 0) +
+                        (CONTAINER_LIMITS[limitKey] ?? 0)
+                      return (
+                        <SelectItem key={c.label} value={c.label}>
+                          {c.label} ({c.count}
+                          {total > 0 ? `/${total}` : ""})
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="relative flex-1">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  value={bagSearch}
+                  onChange={(e) => setBagSearch(e.target.value)}
+                  placeholder="Filter items..."
+                  className="pr-8 pl-9"
+                />
+                {bagSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setBagSearch("")}
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                  >
+                    <X className="size-4" />
+                  </button>
                 )}
-                <div className="relative flex-1">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                  <Input
-                    value={bagSearch}
-                    onChange={(e) => setBagSearch(e.target.value)}
-                    placeholder="Filter items..."
-                    className="pr-8 pl-9"
-                  />
-                  {bagSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setBagSearch("")}
-                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  )}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() =>
-                    setBagSort((s) =>
-                      s === "equipped"
-                        ? "added"
-                        : s === "added"
-                          ? "name"
-                          : "equipped"
-                    )
-                  }
-                >
-                  {bagSort === "name" ? (
-                    <ArrowDownAZ className="size-3.5" />
-                  ) : (
-                    <ArrowDownWideNarrow className="size-3.5" />
-                  )}
-                  {bagSort === "equipped"
-                    ? "Equipped"
-                    : bagSort === "added"
-                      ? "Added"
-                      : "Name"}
-                </Button>
               </div>
-            )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() =>
+                  setBagSort((s) =>
+                    s === "equipped"
+                      ? "added"
+                      : s === "added"
+                        ? "name"
+                        : "equipped"
+                  )
+                }
+              >
+                {bagSort === "name" ? (
+                  <ArrowDownAZ className="size-3.5" />
+                ) : (
+                  <ArrowDownWideNarrow className="size-3.5" />
+                )}
+                {bagSort === "equipped"
+                  ? "Equipped"
+                  : bagSort === "added"
+                    ? "Added"
+                    : "Name"}
+              </Button>
+              <Button size="sm" onClick={() => setEditingBagItem(true)}>
+                <Plus className="size-3.5" />
+                Add Item
+              </Button>
+            </div>
 
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
               {/* Left Column: Equipment + Stats */}
-              <div className="space-y-6">
+              <div className="space-y-6 pt-2">
                 {/* Equipment Grid */}
                 <div className="mx-auto max-w-sm lg:max-w-none">
+                  <h3 className="mb-3 text-base font-medium">
+                    <Swords className="mr-1.5 inline size-4" />
+                    Equipped
+                  </h3>
                   <EquipmentGridDropZone
                     isOver={
                       activeDragItem !== null &&
@@ -997,21 +1008,15 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 }
               >
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium">
-                      <Package className="mr-1.5 inline size-4" />
-                      Item Bag ({filteredBagItems.length})
-                      {sectionLimits?.bag && (
-                        <span className="text-muted-foreground ml-2 text-sm font-normal">
-                          {sectionLimits.bag}
-                        </span>
-                      )}
-                    </h3>
-                    <Button size="sm" onClick={() => setEditingBagItem(true)}>
-                      <Plus className="size-3.5" />
-                      Add Item
-                    </Button>
-                  </div>
+                  <h3 className="text-base font-medium">
+                    <Package className="mr-1.5 inline size-4" />
+                    Item Bag ({filteredBagItems.length})
+                    {sectionLimits?.bag && (
+                      <span className="text-muted-foreground ml-2 text-sm font-normal">
+                        {sectionLimits.bag}
+                      </span>
+                    )}
+                  </h3>
                   {bagItems.length === 0 ? (
                     <p className="text-muted-foreground py-4 text-center text-xs">
                       No items in the bag
@@ -1077,7 +1082,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 }
               >
                 <div className="space-y-3">
-                  <h3 className="font-medium">
+                  <h3 className="text-base font-medium">
                     <Package className="mr-1.5 inline size-4" />
                     Container ({filteredContainerItems.length})
                     {sectionLimits?.container && (
@@ -1371,7 +1376,7 @@ function DraggableEquipSlotCard({
       {...attributes}
     >
       <ItemIcon type={displayType} size="sm" />
-      <span className="max-w-full truncate text-xs leading-tight font-medium">
+      <span className="max-w-full truncate text-sm leading-tight font-medium">
         {displayName}
       </span>
       {item.material && <MaterialBadge mat={item.material} />}

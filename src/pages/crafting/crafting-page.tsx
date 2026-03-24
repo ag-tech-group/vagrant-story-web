@@ -479,10 +479,10 @@ export function CraftingPage() {
     <div className="flex flex-1 flex-col gap-8 p-6 lg:p-10">
       <div className="text-center">
         <h1 className="text-4xl tracking-wide sm:text-5xl lg:text-6xl">
-          Crafting Calculator
+          Recipes
         </h1>
         <p className="text-muted-foreground mt-3 text-base lg:text-lg">
-          Select two items to see what they combine into
+          Look up crafting recipes and material combinations
         </p>
       </div>
 
@@ -955,7 +955,7 @@ function ReverseTable({
   })
 
   return (
-    <Card>
+    <div>
       <div className="bg-card border-border/50 sticky top-14 z-10 space-y-3 border-b px-6 py-4">
         <p className="text-center text-base font-semibold">
           {table.getFilteredRowModel().rows.length} recipe
@@ -992,12 +992,12 @@ function ReverseTable({
           </div>
         )}
       </div>
-      <CardContent className="space-y-3 overflow-x-auto">
+      <div className="space-y-3 overflow-x-auto">
         {rows.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               {table.getHeaderGroups().map((hg) => (
-                <tr key={hg.id} className="border-border border-b">
+                <tr key={hg.id} className="border-border/50 border-b">
                   {hg.headers.map((header) => (
                     <th
                       key={header.id}
@@ -1052,7 +1052,7 @@ function ReverseTable({
                     title="Click to load into calculator"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="w-1/2 px-3 py-2 text-center">
+                      <td key={cell.id} className="w-1/2 px-3 py-3 text-center">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -1069,8 +1069,8 @@ function ReverseTable({
             No recipes produce this item
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

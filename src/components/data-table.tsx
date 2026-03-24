@@ -148,7 +148,7 @@ export function DataTable<T>({
           </Select>
         ))}
       </div>
-      <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
@@ -211,7 +211,7 @@ export function DataTable<T>({
                     <TableRow
                       key={row.id}
                       className={cn(
-                        "hover:bg-muted/50 cursor-pointer",
+                        "hover:bg-muted/30 cursor-pointer",
                         isActive && "border-l-primary bg-muted/30 border-l-2"
                       )}
                     >
