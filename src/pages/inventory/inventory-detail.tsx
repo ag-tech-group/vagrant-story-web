@@ -959,7 +959,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                   {bagSearch && ` "${bagSearch}"`}
                 </p>
               ) : (
-                <div className="space-y-1">
+                <div className="max-h-[60vh] space-y-1 overflow-y-auto">
                   {filteredBagItems.map((item) => {
                     const targetSlot = !item.equip_slot
                       ? getEquipSlotForItem(item)
@@ -1031,7 +1031,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                   No items match filter
                 </p>
               ) : (
-                <div className="space-y-1">
+                <div className="max-h-[60vh] space-y-1 overflow-y-auto">
                   {filteredContainerItems.map((item) => (
                     <DraggableBagItemRow
                       key={item.id}
