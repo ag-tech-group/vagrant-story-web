@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   ChevronRight,
   FlaskConical,
+  Loader2,
   Search,
   Settings2,
   Undo2,
@@ -23,14 +24,11 @@ import { MaterialSelect } from "@/components/material-select"
 import { gameApi, type Armor, type Blade } from "@/lib/game-api"
 import type { InventoryItem } from "@/lib/inventory-api"
 import {
-  buildRecipeIndex,
-  findCraftingPaths,
-  findReachableItems,
   inventoryToCraftables,
   type CraftingPath,
   type ReachableItem,
-  type RecipeIndex,
 } from "@/lib/crafting-optimizer"
+import type { WorkerRequest, WorkerResponse } from "@/lib/crafting-worker"
 import { cn } from "@/lib/utils"
 
 // ── Materials available per workshop ─────────────────────────────────
@@ -80,14 +78,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     queryFn: () => gameApi.materialRecipes("limit=10000"),
   })
 
-  // Build recipe index
-  const recipeIndex = useMemo<RecipeIndex | null>(
-    () =>
-      craftingRecipes.length > 0 && materialRecipes.length > 0
-        ? buildRecipeIndex(craftingRecipes, materialRecipes)
-        : null,
-    [craftingRecipes, materialRecipes]
-  )
+  const recipesReady = craftingRecipes.length > 0 && materialRecipes.length > 0
 
   // Convert inventory to craftable items
   const craftables = useMemo(() => {
@@ -95,6 +86,44 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     if (includeEquipped) return all
     return all.filter((c) => !c.sourceItem?.equip_slot)
   }, [items, blades, armor, includeEquipped])
+
+  // ── Search state (declared before worker so refs can access them) ──
+
+  const [forwardPaths, setForwardPaths] = useState<CraftingPath[]>([])
+  const [forwardSearched, setForwardSearched] = useState(false)
+  const [reverseResults, setReverseResults] = useState<ReachableItem[]>([])
+  const [reverseSearched, setReverseSearched] = useState(false)
+
+  // ── Web Worker ─────────────────────────────────────────────────────
+
+  const workerRef = useRef<Worker | null>(null)
+  const [searching, setSearching] = useState(false)
+
+  useEffect(() => {
+    const worker = new Worker(
+      new URL("@/lib/crafting-worker.ts", import.meta.url),
+      { type: "module" }
+    )
+    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      const res = e.data
+      setSearching(false)
+      if (res.type === "forward" && res.forwardPaths) {
+        setForwardPaths(res.forwardPaths)
+        setForwardSearched(true)
+      } else if (res.type === "reverse" && res.reverseResults) {
+        setReverseResults(res.reverseResults)
+        setReverseSearched(true)
+      }
+    }
+    workerRef.current = worker
+    return () => worker.terminate()
+  }, [])
+
+  const postWorker = useCallback((req: WorkerRequest) => {
+    if (!workerRef.current) return
+    setSearching(true)
+    workerRef.current.postMessage(req)
+  }, [])
 
   // ── Forward mode: picker items + search ────────────────────────────
 
@@ -137,21 +166,18 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     return ALL_MATERIALS
   }, [targetItem, blades, armor])
 
-  // Forward search — triggered by button click
-  const [forwardPaths, setForwardPaths] = useState<CraftingPath[]>([])
-  const [forwardSearched, setForwardSearched] = useState(false)
-
+  // Forward search — triggered by button click, runs in worker
   const runForwardSearch = () => {
-    if (!recipeIndex || !targetItem) return
-    setForwardSearched(true)
-    setForwardPaths(
-      findCraftingPaths(
-        { name: targetItem, material: targetMaterial },
-        craftables,
-        recipeIndex,
-        { maxDepth: 3, maxResults: 20, maxStates: 5000 }
-      )
-    )
+    if (!recipesReady || !targetItem) return
+    setForwardSearched(false)
+    postWorker({
+      type: "forward",
+      craftingRecipes,
+      materialRecipes,
+      craftables,
+      targetName: targetItem,
+      targetMaterial,
+    })
   }
 
   // ── Reverse mode: source selection + search ────────────────────────
@@ -161,19 +187,16 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     [craftables, reverseSourceId]
   )
 
-  const [reverseResults, setReverseResults] = useState<ReachableItem[]>([])
-  const [reverseSearched, setReverseSearched] = useState(false)
-
   const runReverseSearch = () => {
-    if (!recipeIndex || !reverseSource) return
-    setReverseSearched(true)
-    setReverseResults(
-      findReachableItems(reverseSource, craftables, recipeIndex, {
-        maxDepth: 2,
-        maxResults: 50,
-        maxStates: 5000,
-      })
-    )
+    if (!recipesReady || !reverseSource) return
+    setReverseSearched(false)
+    postWorker({
+      type: "reverse",
+      craftingRecipes,
+      materialRecipes,
+      craftables,
+      sourceItem: reverseSource,
+    })
   }
 
   // ── Render ─────────────────────────────────────────────────────────
@@ -272,10 +295,14 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 />
               </div>
             )}
-            {targetItem && recipeIndex && (
-              <Button onClick={runForwardSearch} size="sm">
-                <Search className="size-3.5" />
-                Find Paths
+            {targetItem && recipesReady && (
+              <Button onClick={runForwardSearch} size="sm" disabled={searching}>
+                {searching ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Search className="size-3.5" />
+                )}
+                {searching ? "Searching..." : "Find Paths"}
               </Button>
             )}
           </div>
@@ -322,10 +349,14 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
             </div>
           </div>
 
-          {reverseSource && recipeIndex && (
-            <Button onClick={runReverseSearch} size="sm">
-              <Search className="size-3.5" />
-              Find Craftable Items
+          {reverseSource && recipesReady && (
+            <Button onClick={runReverseSearch} size="sm" disabled={searching}>
+              {searching ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Search className="size-3.5" />
+              )}
+              {searching ? "Searching..." : "Find Craftable Items"}
             </Button>
           )}
 
@@ -339,7 +370,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
       )}
 
       {/* Empty state */}
-      {!recipeIndex && (
+      {!recipesReady && (
         <p className="text-muted-foreground py-8 text-center text-sm">
           Loading crafting recipes...
         </p>
