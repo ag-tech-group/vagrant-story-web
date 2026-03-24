@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronRight, FlaskConical, Settings2, Undo2 } from "lucide-react"
+import {
+  ChevronRight,
+  FlaskConical,
+  Search,
+  Settings2,
+  Undo2,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
@@ -130,16 +137,22 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     return ALL_MATERIALS
   }, [targetItem, blades, armor])
 
-  // Forward search results
-  const forwardPaths = useMemo<CraftingPath[]>(() => {
-    if (!recipeIndex || !targetItem || mode !== "forward") return []
-    return findCraftingPaths(
-      { name: targetItem, material: targetMaterial },
-      craftables,
-      recipeIndex,
-      { maxDepth: 4, maxResults: 20 }
+  // Forward search — triggered by button click
+  const [forwardPaths, setForwardPaths] = useState<CraftingPath[]>([])
+  const [forwardSearched, setForwardSearched] = useState(false)
+
+  const runForwardSearch = () => {
+    if (!recipeIndex || !targetItem) return
+    setForwardSearched(true)
+    setForwardPaths(
+      findCraftingPaths(
+        { name: targetItem, material: targetMaterial },
+        craftables,
+        recipeIndex,
+        { maxDepth: 3, maxResults: 20, maxStates: 5000 }
+      )
     )
-  }, [recipeIndex, targetItem, targetMaterial, craftables, mode])
+  }
 
   // ── Reverse mode: source selection + search ────────────────────────
 
@@ -148,13 +161,20 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     [craftables, reverseSourceId]
   )
 
-  const reverseResults = useMemo<ReachableItem[]>(() => {
-    if (!recipeIndex || !reverseSource || mode !== "reverse") return []
-    return findReachableItems(reverseSource, craftables, recipeIndex, {
-      maxDepth: 3,
-      maxResults: 50,
-    })
-  }, [recipeIndex, reverseSource, craftables, mode])
+  const [reverseResults, setReverseResults] = useState<ReachableItem[]>([])
+  const [reverseSearched, setReverseSearched] = useState(false)
+
+  const runReverseSearch = () => {
+    if (!recipeIndex || !reverseSource) return
+    setReverseSearched(true)
+    setReverseResults(
+      findReachableItems(reverseSource, craftables, recipeIndex, {
+        maxDepth: 2,
+        maxResults: 50,
+        maxStates: 5000,
+      })
+    )
+  }
 
   // ── Render ─────────────────────────────────────────────────────────
 
@@ -233,6 +253,7 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 onSelect={(name) => {
                   setTargetItem(name)
                   setTargetMaterial(null)
+                  setForwardSearched(false)
                 }}
                 placeholder="Select target item..."
                 label="Target"
@@ -243,18 +264,27 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 <MaterialSelect
                   materials={targetMaterials}
                   value={targetMaterial}
-                  onSelect={setTargetMaterial}
+                  onSelect={(m) => {
+                    setTargetMaterial(m)
+                    setForwardSearched(false)
+                  }}
                   label="Material (optional)"
                 />
               </div>
             )}
+            {targetItem && recipeIndex && (
+              <Button onClick={runForwardSearch} size="sm">
+                <Search className="size-3.5" />
+                Find Paths
+              </Button>
+            )}
           </div>
 
           {/* Results */}
-          {targetItem && recipeIndex && (
+          {forwardSearched && (
             <ForwardResults
               paths={forwardPaths}
-              targetName={targetItem}
+              targetName={targetItem ?? ""}
               targetMaterial={targetMaterial}
             />
           )}
@@ -273,7 +303,10 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setReverseSourceId(c.id)}
+                  onClick={() => {
+                    setReverseSourceId(c.id)
+                    setReverseSearched(false)
+                  }}
                   className={cn(
                     "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs transition-colors",
                     reverseSourceId === c.id
@@ -290,6 +323,13 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
           </div>
 
           {reverseSource && recipeIndex && (
+            <Button onClick={runReverseSearch} size="sm">
+              <Search className="size-3.5" />
+              Find Craftable Items
+            </Button>
+          )}
+
+          {reverseSearched && reverseSource && (
             <ReverseResults
               results={reverseResults}
               sourceName={reverseSource.name}

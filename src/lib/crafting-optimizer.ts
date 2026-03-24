@@ -56,12 +56,14 @@ export interface CraftingPath {
 export interface OptimizerConfig {
   maxDepth: number
   maxResults: number
+  maxStates: number
   excludeItemIds: Set<number>
 }
 
 const DEFAULT_CONFIG: OptimizerConfig = {
   maxDepth: 4,
   maxResults: 20,
+  maxStates: 5000,
   excludeItemIds: new Set(),
 }
 
@@ -249,7 +251,13 @@ export function findCraftingPaths(
 
   visited.add(stateKey(queue[0].items))
 
-  while (queue.length > 0 && paths.length < cfg.maxResults) {
+  let statesExplored = 0
+  while (
+    queue.length > 0 &&
+    paths.length < cfg.maxResults &&
+    statesExplored < cfg.maxStates
+  ) {
+    statesExplored++
     const state = queue.shift()!
     if (state.depth >= cfg.maxDepth) continue
 
@@ -440,7 +448,9 @@ export function findReachableItems(
     },
   ]
 
-  while (queue.length > 0) {
+  let statesExplored = 0
+  while (queue.length > 0 && statesExplored < cfg.maxStates) {
+    statesExplored++
     const state = queue.shift()!
     if (state.depth >= cfg.maxDepth) continue
 
