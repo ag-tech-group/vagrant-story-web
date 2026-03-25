@@ -267,14 +267,28 @@ export interface EnemyDrop {
   quantity: number
 }
 
+export interface EncounterDrop {
+  id: number
+  encounter_id: number
+  body_part: string
+  item: string
+  material: string
+  drop_chance: string
+  drop_value: number
+  grip: string
+  quantity: number
+}
+
 export interface EnemyEncounter {
   id: number
   enemy_id: number
   room_id: number
   room_name: string
+  area_id: number
   area_name: string
   condition: string
   attacks: string
+  drops: EncounterDrop[]
 }
 
 export interface EnemyDetail extends Enemy {
