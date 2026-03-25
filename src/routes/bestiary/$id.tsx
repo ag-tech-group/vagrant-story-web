@@ -19,7 +19,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { MaterialBadge } from "@/components/stat-display"
-import { gameApi, type EnemyBodyPart, type EnemyDrop } from "@/lib/game-api"
+import {
+  gameApi,
+  type EnemyBodyPart,
+  type EnemyDrop,
+  type EnemyEncounter,
+} from "@/lib/game-api"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/bestiary/$id")({
@@ -249,6 +254,11 @@ function EnemyDetail() {
                 </p>
               </div>
             )}
+
+            {/* Locations */}
+            {enemy.encounters && enemy.encounters.length > 0 && (
+              <LocationsSection encounters={enemy.encounters} />
+            )}
           </div>
         </div>
       </CardContent>
@@ -381,6 +391,56 @@ function StatBadge({ label, value }: { label: string; value: number }) {
       <span className="text-foreground text-sm leading-tight font-medium">
         {value}
       </span>
+    </div>
+  )
+}
+
+function LocationsSection({ encounters }: { encounters: EnemyEncounter[] }) {
+  // Group encounters by area
+  const grouped = useMemo(() => {
+    const map = new Map<
+      string,
+      { room_name: string; condition: string; attacks: string }[]
+    >()
+    for (const enc of encounters) {
+      const area = enc.area_name || "Unknown"
+      if (!map.has(area)) map.set(area, [])
+      map.get(area)!.push({
+        room_name: enc.room_name,
+        condition: enc.condition,
+        attacks: enc.attacks,
+      })
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
+  }, [encounters])
+
+  return (
+    <div>
+      <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
+        Locations
+      </p>
+      <div className="space-y-2">
+        {grouped.map(([area, rooms]) => (
+          <div key={area}>
+            <p className="text-xs font-medium">{area}</p>
+            <div className="mt-1 space-y-1">
+              {rooms.map((room, i) => (
+                <div
+                  key={`${room.room_name}-${i}`}
+                  className="bg-muted/30 rounded px-3 py-1.5 text-xs"
+                >
+                  <span className="font-medium">{room.room_name}</span>
+                  {room.condition && (
+                    <p className="text-muted-foreground mt-0.5">
+                      {room.condition}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

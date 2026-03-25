@@ -267,9 +267,20 @@ export interface EnemyDrop {
   quantity: number
 }
 
+export interface EnemyEncounter {
+  id: number
+  enemy_id: number
+  room_id: number
+  room_name: string
+  area_name: string
+  condition: string
+  attacks: string
+}
+
 export interface EnemyDetail extends Enemy {
   body_parts: EnemyBodyPart[]
   drops: EnemyDrop[]
+  encounters: EnemyEncounter[]
 }
 
 export interface BreakArt {
