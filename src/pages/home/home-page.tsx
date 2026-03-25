@@ -78,6 +78,10 @@ export function HomePage() {
     queryKey: ["rankings"],
     queryFn: gameApi.rankings,
   })
+  const { data: enemies = [] } = useQuery({
+    queryKey: ["enemies"],
+    queryFn: gameApi.enemies,
+  })
 
   const accessories = armor.filter((a) => a.armor_type === "Accessory")
   const armorOnly = armor.filter((a) => a.armor_type !== "Accessory")
@@ -156,6 +160,12 @@ export function HomePage() {
       label: "Workshops",
       icon: "Workshop",
       count: workshops.length,
+    },
+    {
+      to: "/bestiary" as const,
+      label: "Bestiary",
+      icon: "Bestiary",
+      count: enemies.length,
     },
     {
       to: "/chests" as const,

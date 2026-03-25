@@ -222,6 +222,56 @@ export interface Workshop {
   description: string
 }
 
+export interface Enemy {
+  id: number
+  name: string
+  enemy_class: string
+  hp: number
+  mp: number
+  str: number
+  int: number
+  agi: number
+  movement: number
+  is_boss: boolean
+  encyclopaedia_number: number | null
+  description: string
+}
+
+export interface EnemyBodyPart {
+  id: number
+  enemy_id: number
+  name: string
+  physical: number
+  air: number
+  fire: number
+  earth: number
+  water: number
+  light: number
+  dark: number
+  blunt: number
+  edged: number
+  piercing: number
+  evade: number
+  chain_evade: number
+}
+
+export interface EnemyDrop {
+  id: number
+  enemy_id: number
+  body_part: string
+  item: string
+  material: string
+  drop_chance: string
+  drop_value: number
+  grip: string
+  quantity: number
+}
+
+export interface EnemyDetail extends Enemy {
+  body_parts: EnemyBodyPart[]
+  drops: EnemyDrop[]
+}
+
 export interface BreakArt {
   id: number
   name: string
@@ -343,6 +393,8 @@ export const gameApi = {
   chests: () => fetchApi<Chest[]>("/chests?limit=500"),
   chest: (id: number) => fetchApi<ChestDetail>(`/chests/${id}`),
   workshops: () => fetchApi<Workshop[]>("/workshops?limit=200"),
+  enemies: () => fetchApi<Enemy[]>("/enemies?limit=200"),
+  enemy: (id: number) => fetchApi<EnemyDetail>(`/enemies/${id}`),
   characters: () => fetchApi<Character[]>("/characters?limit=200"),
   character: (id: number) => fetchApi<Character>(`/characters/${id}`),
   titles: () => fetchApi<Title[]>("/titles?limit=200"),

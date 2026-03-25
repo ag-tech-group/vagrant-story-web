@@ -48,6 +48,8 @@ const ICON_MAP: Record<string, string> = {
   Chest: "Chest",
   Area: "Area",
   Workshop: "Workshop",
+  Bestiary: "MonsterSkull",
+  Enemy: "MonsterSkull",
   Forge: "Forge",
   Crafting: "Crafting",
   Grid: "Grid",
