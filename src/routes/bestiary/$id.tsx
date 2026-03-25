@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
@@ -23,6 +23,7 @@ import {
   gameApi,
   type EnemyBodyPart,
   type EnemyDrop,
+  type EncounterDrop,
   type EnemyEncounter,
 } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
@@ -60,6 +61,10 @@ function averageAffinity(
 
 function EnemyDetail() {
   const { id } = Route.useParams()
+  const [dropFilter, setDropFilter] = useState<{
+    item: string
+    material: string
+  } | null>(null)
 
   const { data: enemy } = useQuery({
     queryKey: ["enemy", id],
@@ -227,9 +232,23 @@ function EnemyDetail() {
             {/* Drops */}
             {enemy.drops && enemy.drops.length > 0 && (
               <div>
-                <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
-                  Drops
-                </p>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                    Drops Summary
+                  </p>
+                  <p className="text-muted-foreground/60 text-[10px]">
+                    Click an item to filter drop locations
+                  </p>
+                  {dropFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setDropFilter(null)}
+                      className="text-primary hover:text-primary/80 text-[10px] underline"
+                    >
+                      Clear filter
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-1">
                   {/* Header */}
                   <div className="text-muted-foreground flex items-center gap-2 px-3 py-1 text-[11px] font-medium">
@@ -243,21 +262,35 @@ function EnemyDetail() {
                         {group.label}
                       </p>
                       {group.items.map((drop) => (
-                        <DropRow key={drop.id} drop={drop} />
+                        <DropRow
+                          key={drop.id}
+                          drop={drop}
+                          isActive={
+                            dropFilter?.item === drop.item &&
+                            dropFilter?.material === drop.material
+                          }
+                          onSelect={() =>
+                            setDropFilter(
+                              dropFilter?.item === drop.item &&
+                                dropFilter?.material === drop.material
+                                ? null
+                                : { item: drop.item, material: drop.material }
+                            )
+                          }
+                        />
                       ))}
                     </div>
                   ))}
                 </div>
-                <p className="text-muted-foreground/60 text-[10px]">
-                  Drops vary by location. Showing best known chance across all
-                  encounters.
-                </p>
               </div>
             )}
 
             {/* Locations */}
             {enemy.encounters && enemy.encounters.length > 0 && (
-              <LocationsSection encounters={enemy.encounters} />
+              <LocationsSection
+                encounters={enemy.encounters}
+                dropFilter={dropFilter}
+              />
             )}
           </div>
         </div>
@@ -294,12 +327,27 @@ const CHANCE_COLORS: Record<string, string> = {
   abysmal: "text-muted-foreground/50",
 }
 
-function DropRow({ drop }: { drop: EnemyDrop }) {
+function DropRow({
+  drop,
+  isActive,
+  onSelect,
+}: {
+  drop: EnemyDrop
+  isActive?: boolean
+  onSelect?: () => void
+}) {
   const chanceColor = CHANCE_COLORS[drop.drop_chance] ?? "text-muted-foreground"
   const displayPart = drop.body_part === "Misc" ? "Consumable" : drop.body_part
 
   return (
-    <div className="bg-muted/30 flex items-center gap-2 rounded px-3 py-1.5 text-xs">
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded px-3 py-1.5 text-xs transition-colors",
+        isActive ? "bg-primary/15 ring-primary/30 ring-1" : "bg-muted/30",
+        onSelect && "hover:bg-muted/50 cursor-pointer"
+      )}
+      onClick={onSelect}
+    >
       <span className="text-muted-foreground w-20 shrink-0">{displayPart}</span>
       <span className="font-medium">
         {drop.quantity > 1 && `${drop.quantity}x `}
@@ -395,34 +443,106 @@ function StatBadge({ label, value }: { label: string; value: number }) {
   )
 }
 
-function LocationsSection({ encounters }: { encounters: EnemyEncounter[] }) {
-  // Group encounters by area
+function EncounterDropRow({ drop }: { drop: EncounterDrop }) {
+  const chanceColor = CHANCE_COLORS[drop.drop_chance] ?? "text-muted-foreground"
+
+  return (
+    <div className="flex items-center gap-2 text-[11px]">
+      <span className="text-muted-foreground w-16 shrink-0">
+        {drop.body_part}
+      </span>
+      <span className="font-medium">
+        {drop.quantity > 1 && `${drop.quantity}x `}
+        {drop.item}
+      </span>
+      {drop.material && <MaterialBadge mat={drop.material} />}
+      {drop.grip && (
+        <span className="text-muted-foreground">+ {drop.grip}</span>
+      )}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={cn("ml-auto shrink-0 cursor-help", chanceColor)}>
+            {drop.drop_chance}
+            {drop.drop_value > 0 &&
+              drop.drop_chance !== "always" &&
+              ` (${Math.round((drop.drop_value / 255) * 100)}%)`}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Raw drop value: {drop.drop_value}/255</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  )
+}
+
+function LocationsSection({
+  encounters,
+  dropFilter,
+}: {
+  encounters: EnemyEncounter[]
+  dropFilter: { item: string; material: string } | null
+}) {
+  // Group encounters by area, filtering by drop item+material if active
   const grouped = useMemo(() => {
+    const filtered = dropFilter
+      ? encounters.filter((enc) =>
+          enc.drops?.some(
+            (d) =>
+              d.item === dropFilter.item && d.material === dropFilter.material
+          )
+        )
+      : encounters
+
     const map = new Map<
       string,
-      { room_name: string; condition: string; attacks: string }[]
+      {
+        area_id: number
+        rooms: {
+          room_name: string
+          condition: string
+          attacks: string
+          drops: EncounterDrop[]
+        }[]
+      }
     >()
-    for (const enc of encounters) {
+    for (const enc of filtered) {
       const area = enc.area_name || "Unknown"
-      if (!map.has(area)) map.set(area, [])
-      map.get(area)!.push({
+      if (!map.has(area)) map.set(area, { area_id: enc.area_id, rooms: [] })
+      map.get(area)!.rooms.push({
         room_name: enc.room_name,
         condition: enc.condition,
         attacks: enc.attacks,
+        drops: enc.drops ?? [],
       })
     }
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
-  }, [encounters])
+  }, [encounters, dropFilter])
 
   return (
     <div>
-      <p className="text-muted-foreground mb-1.5 text-xs font-medium tracking-wider uppercase">
-        Locations
-      </p>
+      <div className="mb-1.5 flex items-center gap-2">
+        <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+          Locations
+        </p>
+        {dropFilter && (
+          <span className="text-primary text-[10px] font-medium">
+            showing rooms with "
+            {dropFilter.material ? `${dropFilter.material} ` : ""}
+            {dropFilter.item}"
+          </span>
+        )}
+      </div>
       <div className="space-y-2">
-        {grouped.map(([area, rooms]) => (
+        {grouped.map(([area, { area_id, rooms }]) => (
           <div key={area}>
-            <p className="text-xs font-medium">{area}</p>
+            <Link
+              to="/areas/$id"
+              params={{ id: String(area_id) }}
+              className="text-primary hover:text-primary/80 text-xs font-medium underline decoration-dotted underline-offset-2"
+            >
+              {area}
+            </Link>
             <div className="mt-1 space-y-1">
               {rooms.map((room, i) => (
                 <div
@@ -435,6 +555,17 @@ function LocationsSection({ encounters }: { encounters: EnemyEncounter[] }) {
                       {room.condition}
                     </p>
                   )}
+                  <div className="border-border/30 mt-1.5 space-y-0.5 border-t pt-1.5">
+                    {room.drops.length > 0 ? (
+                      room.drops.map((drop) => (
+                        <EncounterDropRow key={drop.id} drop={drop} />
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground/50 text-right text-[10px]">
+                        No drops
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
