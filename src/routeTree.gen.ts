@@ -27,6 +27,7 @@ import { Route as ChestsRouteRouteImport } from './routes/chests/route'
 import { Route as CharactersRouteRouteImport } from './routes/characters/route'
 import { Route as BreakArtsRouteRouteImport } from './routes/break-arts/route'
 import { Route as BladesRouteRouteImport } from './routes/blades/route'
+import { Route as BestiaryRouteRouteImport } from './routes/bestiary/route'
 import { Route as BattleAbilitiesRouteRouteImport } from './routes/battle-abilities/route'
 import { Route as ArmorRouteRouteImport } from './routes/armor/route'
 import { Route as AreasRouteRouteImport } from './routes/areas/route'
@@ -49,6 +50,7 @@ import { Route as ChestsIndexRouteImport } from './routes/chests/index'
 import { Route as CharactersIndexRouteImport } from './routes/characters/index'
 import { Route as BreakArtsIndexRouteImport } from './routes/break-arts/index'
 import { Route as BladesIndexRouteImport } from './routes/blades/index'
+import { Route as BestiaryIndexRouteImport } from './routes/bestiary/index'
 import { Route as BattleAbilitiesIndexRouteImport } from './routes/battle-abilities/index'
 import { Route as ArmorIndexRouteImport } from './routes/armor/index'
 import { Route as AreasIndexRouteImport } from './routes/areas/index'
@@ -68,6 +70,7 @@ import { Route as ChestsIdRouteImport } from './routes/chests/$id'
 import { Route as CharactersIdRouteImport } from './routes/characters/$id'
 import { Route as BreakArtsIdRouteImport } from './routes/break-arts/$id'
 import { Route as BladesIdRouteImport } from './routes/blades/$id'
+import { Route as BestiaryIdRouteImport } from './routes/bestiary/$id'
 import { Route as BattleAbilitiesIdRouteImport } from './routes/battle-abilities/$id'
 import { Route as ArmorIdRouteImport } from './routes/armor/$id'
 import { Route as AreasIdRouteImport } from './routes/areas/$id'
@@ -165,6 +168,11 @@ const BreakArtsRouteRoute = BreakArtsRouteRouteImport.update({
 const BladesRouteRoute = BladesRouteRouteImport.update({
   id: '/blades',
   path: '/blades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BestiaryRouteRoute = BestiaryRouteRouteImport.update({
+  id: '/bestiary',
+  path: '/bestiary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BattleAbilitiesRouteRoute = BattleAbilitiesRouteRouteImport.update({
@@ -277,6 +285,11 @@ const BladesIndexRoute = BladesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => BladesRouteRoute,
 } as any)
+const BestiaryIndexRoute = BestiaryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BestiaryRouteRoute,
+} as any)
 const BattleAbilitiesIndexRoute = BattleAbilitiesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -372,6 +385,11 @@ const BladesIdRoute = BladesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => BladesRouteRoute,
 } as any)
+const BestiaryIdRoute = BestiaryIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BestiaryRouteRoute,
+} as any)
 const BattleAbilitiesIdRoute = BattleAbilitiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -423,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/areas': typeof AreasRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
   '/battle-abilities': typeof BattleAbilitiesRouteRouteWithChildren
+  '/bestiary': typeof BestiaryRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
   '/break-arts': typeof BreakArtsRouteRouteWithChildren
   '/characters': typeof CharactersRouteRouteWithChildren
@@ -446,6 +465,7 @@ export interface FileRoutesByFullPath {
   '/areas/$id': typeof AreasIdRoute
   '/armor/$id': typeof ArmorIdRoute
   '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
+  '/bestiary/$id': typeof BestiaryIdRoute
   '/blades/$id': typeof BladesIdRoute
   '/break-arts/$id': typeof BreakArtsIdRoute
   '/characters/$id': typeof CharactersIdRoute
@@ -465,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/areas/': typeof AreasIndexRoute
   '/armor/': typeof ArmorIndexRoute
   '/battle-abilities/': typeof BattleAbilitiesIndexRoute
+  '/bestiary/': typeof BestiaryIndexRoute
   '/blades/': typeof BladesIndexRoute
   '/break-arts/': typeof BreakArtsIndexRoute
   '/characters/': typeof CharactersIndexRoute
@@ -494,6 +515,7 @@ export interface FileRoutesByTo {
   '/areas/$id': typeof AreasIdRoute
   '/armor/$id': typeof ArmorIdRoute
   '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
+  '/bestiary/$id': typeof BestiaryIdRoute
   '/blades/$id': typeof BladesIdRoute
   '/break-arts/$id': typeof BreakArtsIdRoute
   '/characters/$id': typeof CharactersIdRoute
@@ -513,6 +535,7 @@ export interface FileRoutesByTo {
   '/areas': typeof AreasIndexRoute
   '/armor': typeof ArmorIndexRoute
   '/battle-abilities': typeof BattleAbilitiesIndexRoute
+  '/bestiary': typeof BestiaryIndexRoute
   '/blades': typeof BladesIndexRoute
   '/break-arts': typeof BreakArtsIndexRoute
   '/characters': typeof CharactersIndexRoute
@@ -541,6 +564,7 @@ export interface FileRoutesById {
   '/areas': typeof AreasRouteRouteWithChildren
   '/armor': typeof ArmorRouteRouteWithChildren
   '/battle-abilities': typeof BattleAbilitiesRouteRouteWithChildren
+  '/bestiary': typeof BestiaryRouteRouteWithChildren
   '/blades': typeof BladesRouteRouteWithChildren
   '/break-arts': typeof BreakArtsRouteRouteWithChildren
   '/characters': typeof CharactersRouteRouteWithChildren
@@ -564,6 +588,7 @@ export interface FileRoutesById {
   '/areas/$id': typeof AreasIdRoute
   '/armor/$id': typeof ArmorIdRoute
   '/battle-abilities/$id': typeof BattleAbilitiesIdRoute
+  '/bestiary/$id': typeof BestiaryIdRoute
   '/blades/$id': typeof BladesIdRoute
   '/break-arts/$id': typeof BreakArtsIdRoute
   '/characters/$id': typeof CharactersIdRoute
@@ -583,6 +608,7 @@ export interface FileRoutesById {
   '/areas/': typeof AreasIndexRoute
   '/armor/': typeof ArmorIndexRoute
   '/battle-abilities/': typeof BattleAbilitiesIndexRoute
+  '/bestiary/': typeof BestiaryIndexRoute
   '/blades/': typeof BladesIndexRoute
   '/break-arts/': typeof BreakArtsIndexRoute
   '/characters/': typeof CharactersIndexRoute
@@ -612,6 +638,7 @@ export interface FileRouteTypes {
     | '/areas'
     | '/armor'
     | '/battle-abilities'
+    | '/bestiary'
     | '/blades'
     | '/break-arts'
     | '/characters'
@@ -635,6 +662,7 @@ export interface FileRouteTypes {
     | '/areas/$id'
     | '/armor/$id'
     | '/battle-abilities/$id'
+    | '/bestiary/$id'
     | '/blades/$id'
     | '/break-arts/$id'
     | '/characters/$id'
@@ -654,6 +682,7 @@ export interface FileRouteTypes {
     | '/areas/'
     | '/armor/'
     | '/battle-abilities/'
+    | '/bestiary/'
     | '/blades/'
     | '/break-arts/'
     | '/characters/'
@@ -683,6 +712,7 @@ export interface FileRouteTypes {
     | '/areas/$id'
     | '/armor/$id'
     | '/battle-abilities/$id'
+    | '/bestiary/$id'
     | '/blades/$id'
     | '/break-arts/$id'
     | '/characters/$id'
@@ -702,6 +732,7 @@ export interface FileRouteTypes {
     | '/areas'
     | '/armor'
     | '/battle-abilities'
+    | '/bestiary'
     | '/blades'
     | '/break-arts'
     | '/characters'
@@ -729,6 +760,7 @@ export interface FileRouteTypes {
     | '/areas'
     | '/armor'
     | '/battle-abilities'
+    | '/bestiary'
     | '/blades'
     | '/break-arts'
     | '/characters'
@@ -752,6 +784,7 @@ export interface FileRouteTypes {
     | '/areas/$id'
     | '/armor/$id'
     | '/battle-abilities/$id'
+    | '/bestiary/$id'
     | '/blades/$id'
     | '/break-arts/$id'
     | '/characters/$id'
@@ -771,6 +804,7 @@ export interface FileRouteTypes {
     | '/areas/'
     | '/armor/'
     | '/battle-abilities/'
+    | '/bestiary/'
     | '/blades/'
     | '/break-arts/'
     | '/characters/'
@@ -799,6 +833,7 @@ export interface RootRouteChildren {
   AreasRouteRoute: typeof AreasRouteRouteWithChildren
   ArmorRouteRoute: typeof ArmorRouteRouteWithChildren
   BattleAbilitiesRouteRoute: typeof BattleAbilitiesRouteRouteWithChildren
+  BestiaryRouteRoute: typeof BestiaryRouteRouteWithChildren
   BladesRouteRoute: typeof BladesRouteRouteWithChildren
   BreakArtsRouteRoute: typeof BreakArtsRouteRouteWithChildren
   CharactersRouteRoute: typeof CharactersRouteRouteWithChildren
@@ -946,6 +981,13 @@ declare module '@tanstack/react-router' {
       path: '/blades'
       fullPath: '/blades'
       preLoaderRoute: typeof BladesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bestiary': {
+      id: '/bestiary'
+      path: '/bestiary'
+      fullPath: '/bestiary'
+      preLoaderRoute: typeof BestiaryRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/battle-abilities': {
@@ -1102,6 +1144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BladesIndexRouteImport
       parentRoute: typeof BladesRouteRoute
     }
+    '/bestiary/': {
+      id: '/bestiary/'
+      path: '/'
+      fullPath: '/bestiary/'
+      preLoaderRoute: typeof BestiaryIndexRouteImport
+      parentRoute: typeof BestiaryRouteRoute
+    }
     '/battle-abilities/': {
       id: '/battle-abilities/'
       path: '/'
@@ -1235,6 +1284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BladesIdRouteImport
       parentRoute: typeof BladesRouteRoute
     }
+    '/bestiary/$id': {
+      id: '/bestiary/$id'
+      path: '/$id'
+      fullPath: '/bestiary/$id'
+      preLoaderRoute: typeof BestiaryIdRouteImport
+      parentRoute: typeof BestiaryRouteRoute
+    }
     '/battle-abilities/$id': {
       id: '/battle-abilities/$id'
       path: '/$id'
@@ -1347,6 +1403,20 @@ const BattleAbilitiesRouteRouteChildren: BattleAbilitiesRouteRouteChildren = {
 
 const BattleAbilitiesRouteRouteWithChildren =
   BattleAbilitiesRouteRoute._addFileChildren(BattleAbilitiesRouteRouteChildren)
+
+interface BestiaryRouteRouteChildren {
+  BestiaryIdRoute: typeof BestiaryIdRoute
+  BestiaryIndexRoute: typeof BestiaryIndexRoute
+}
+
+const BestiaryRouteRouteChildren: BestiaryRouteRouteChildren = {
+  BestiaryIdRoute: BestiaryIdRoute,
+  BestiaryIndexRoute: BestiaryIndexRoute,
+}
+
+const BestiaryRouteRouteWithChildren = BestiaryRouteRoute._addFileChildren(
+  BestiaryRouteRouteChildren,
+)
 
 interface BladesRouteRouteChildren {
   BladesIdRoute: typeof BladesIdRoute
@@ -1595,6 +1665,7 @@ const rootRouteChildren: RootRouteChildren = {
   AreasRouteRoute: AreasRouteRouteWithChildren,
   ArmorRouteRoute: ArmorRouteRouteWithChildren,
   BattleAbilitiesRouteRoute: BattleAbilitiesRouteRouteWithChildren,
+  BestiaryRouteRoute: BestiaryRouteRouteWithChildren,
   BladesRouteRoute: BladesRouteRouteWithChildren,
   BreakArtsRouteRoute: BreakArtsRouteRouteWithChildren,
   CharactersRouteRoute: CharactersRouteRouteWithChildren,

@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router"
 import { ChevronDown, ExternalLink, LogOut } from "lucide-react"
 import { Toaster } from "sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -82,6 +83,7 @@ const DATABASE_ROUTES = [
   "/sigils",
   "/workshops",
   "/areas",
+  "/bestiary",
 ]
 
 const NAV_TABS = [
@@ -109,7 +111,7 @@ function RootComponent() {
       )
 
   return (
-    <>
+    <TooltipProvider delayDuration={300}>
       <nav className="border-border/50 bg-background/80 fixed top-0 z-50 w-full border-b backdrop-blur-sm">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-6">
@@ -267,6 +269,6 @@ function RootComponent() {
         <TanStackRouterDevtools />
         <ReactQueryDevtools />
       </Suspense>
-    </>
+    </TooltipProvider>
   )
 }
