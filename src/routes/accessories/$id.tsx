@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
+import { ItemDropLocations } from "@/components/item-drop-locations"
 import { gameApi, fmt } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
 
@@ -75,6 +76,7 @@ function AccessoryDetail() {
             </div>
           </div>
         </div>
+        <ItemDropLocations itemName={fmt(item.field_name)} />
       </CardContent>
     </Card>
   )
