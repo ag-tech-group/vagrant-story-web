@@ -5,7 +5,6 @@ import {
   Link,
   Outlet,
   useMatches,
-  useNavigate,
 } from "@tanstack/react-router"
 import { ChevronDown, ExternalLink, LogOut } from "lucide-react"
 import { Toaster } from "sonner"
@@ -18,19 +17,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ItemIcon } from "@/components/item-icon"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { SidebarNav } from "@/components/sidebar-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
 import { loginUrl, profileUrl } from "@/lib/config"
-import { cn } from "@/lib/utils"
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null
@@ -67,54 +58,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
 })
 
-const DATABASE_ROUTES = [
-  "/blades",
-  "/grips",
-  "/armor",
-  "/materials",
-  "/accessories",
-  "/gems",
-  "/consumables",
-  "/break-arts",
-  "/battle-abilities",
-  "/spells",
-  "/grimoires",
-  "/keys",
-  "/sigils",
-  "/workshops",
-  "/areas",
-  "/bestiary",
-]
-
-const NAV_TABS = [
-  { to: "/blades" as const, label: "Game Database", icon: "Sword" },
-  { to: "/forge" as const, label: "Forge", icon: "Forge" },
-  { to: "/crafting" as const, label: "Recipes", icon: "Crafting" },
-  { to: "/material-grid" as const, label: "Material Grid", icon: "Grid" },
-  { to: "/inventory" as const, label: "Inventory", icon: "Inventory" },
-]
-
 function RootComponent() {
   const auth = useAuth()
 
   const matches = useMatches()
-  const navigate = useNavigate()
   const currentPath = matches[matches.length - 1]?.fullPath ?? "/"
-  const showTabs = currentPath !== "/"
-  const isOnDatabaseRoute = DATABASE_ROUTES.some(
-    (r) => currentPath === r || currentPath.startsWith(r + "/")
-  )
-  const activeTab = isOnDatabaseRoute
-    ? NAV_TABS[0]
-    : NAV_TABS.find(
-        (t) => currentPath === t.to || currentPath.startsWith(t.to + "/")
-      )
+  const isHome = currentPath === "/"
 
   return (
     <TooltipProvider delayDuration={300}>
       <nav className="border-border/50 bg-background/80 fixed top-0 z-50 w-full border-b backdrop-blur-sm">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-6">
+            {/* Leave space for sidebar toggle on non-home pages */}
+            {!isHome && <div className="w-8" />}
             <Link
               to="/"
               className="hover:text-primary font-sans text-lg tracking-wide transition-colors"
@@ -161,70 +118,9 @@ function RootComponent() {
             )}
           </div>
         </div>
-        {showTabs && (
-          <>
-            {/* Desktop: tab row with icons */}
-            <div className="border-border/50 hidden gap-0 overflow-x-auto border-t px-4 lg:flex">
-              {NAV_TABS.map((tab) => {
-                const isActive =
-                  tab.to === "/blades"
-                    ? isOnDatabaseRoute
-                    : currentPath === tab.to ||
-                      currentPath.startsWith(tab.to + "/")
-                return (
-                  <Link
-                    key={tab.to}
-                    to={tab.to}
-                    className={cn(
-                      "text-muted-foreground hover:text-foreground relative flex shrink-0 items-center gap-1.5 px-3 py-2 text-sm transition-colors",
-                      isActive && "text-foreground"
-                    )}
-                  >
-                    <span
-                      className="bg-primary block size-3.5"
-                      style={{
-                        mask: `url(/images/icons/${tab.icon}.svg) center/contain no-repeat`,
-                        WebkitMask: `url(/images/icons/${tab.icon}.svg) center/contain no-repeat`,
-                      }}
-                    />
-                    {tab.label}
-                    {isActive && (
-                      <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
-                    )}
-                  </Link>
-                )
-              })}
-            </div>
-            {/* Mobile: select dropdown */}
-            <div className="border-border/50 border-t px-4 py-2 lg:hidden">
-              <Select
-                value={activeTab?.to ?? NAV_TABS[0].to}
-                onValueChange={(v) => navigate({ to: v })}
-              >
-                <SelectTrigger className="h-9 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {NAV_TABS.map((tab) => (
-                    <SelectItem key={tab.to} value={tab.to}>
-                      <div className="flex items-center gap-2">
-                        <ItemIcon type={tab.icon} size="sm" />
-                        {tab.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </>
-        )}
       </nav>
-      <div
-        className={cn(
-          "relative flex min-h-screen flex-col",
-          showTabs ? "pt-[6.75rem] lg:pt-[6.25rem]" : "pt-14"
-        )}
-      >
+      <div className="relative flex min-h-screen pt-14">
+        {!isHome && <SidebarNav />}
         <div
           className="pointer-events-none fixed inset-0 z-0 bg-center bg-no-repeat opacity-[0.04] brightness-0 dark:invert"
           style={{
@@ -232,37 +128,37 @@ function RootComponent() {
             backgroundSize: "auto 80vh",
           }}
         />
-        <div className="relative z-10 flex flex-1 flex-col">
+        <div className="relative z-10 flex min-w-0 flex-1 flex-col">
           <Outlet />
-        </div>
-        <footer className="border-border/50 border-t px-4 py-3">
-          <div className="text-muted-foreground flex items-center justify-between text-xs">
-            <p>
-              &copy; {new Date().getFullYear()} AG Technology Group LLC. All
-              rights reserved.
-            </p>
-            <div className="flex gap-4">
-              <a
-                href="https://criticalbit.gg"
-                className="hover:text-foreground transition-colors"
-              >
-                criticalbit.gg
-              </a>
-              <a
-                href="https://criticalbit.gg/privacy"
-                className="hover:text-foreground transition-colors"
-              >
-                Privacy
-              </a>
-              <a
-                href="https://criticalbit.gg/terms"
-                className="hover:text-foreground transition-colors"
-              >
-                Terms
-              </a>
+          <footer className="border-border/50 mt-auto border-t px-4 py-3">
+            <div className="text-muted-foreground flex items-center justify-between text-xs">
+              <p>
+                &copy; {new Date().getFullYear()} AG Technology Group LLC. All
+                rights reserved.
+              </p>
+              <div className="flex gap-4">
+                <a
+                  href="https://criticalbit.gg"
+                  className="hover:text-foreground transition-colors"
+                >
+                  criticalbit.gg
+                </a>
+                <a
+                  href="https://criticalbit.gg/privacy"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Privacy
+                </a>
+                <a
+                  href="https://criticalbit.gg/terms"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Terms
+                </a>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </div>
       <Toaster position="bottom-right" richColors closeButton />
       <Suspense fallback={null}>
