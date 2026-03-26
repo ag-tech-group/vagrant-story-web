@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MaterialSelect } from "@/components/material-select"
 import { StatDisplay } from "@/components/stat-display"
 import { ItemIcon } from "@/components/item-icon"
+import { ItemDropLocations } from "@/components/item-drop-locations"
 import { gameApi, fmt } from "@/lib/game-api"
 import { computeEffectiveStats, type ItemStats } from "@/lib/item-stats"
 
@@ -85,6 +86,7 @@ function ArmorDetail() {
             />
           </div>
         </div>
+        <ItemDropLocations itemName={fmt(item.field_name)} />
       </CardContent>
     </Card>
   )

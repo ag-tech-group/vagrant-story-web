@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
+import { ItemDropLocations } from "@/components/item-drop-locations"
 import { gameApi } from "@/lib/game-api"
 
 export const Route = createFileRoute("/consumables/$id")({
@@ -72,6 +73,7 @@ function ConsumableDetail() {
             )}
           </div>
         </div>
+        <ItemDropLocations itemName={item.name} />
       </CardContent>
     </Card>
   )

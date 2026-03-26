@@ -384,6 +384,23 @@ export interface MaterialRecipe {
   tier_change: number
 }
 
+export interface ItemDropLocation {
+  enemy_name: string
+  enemy_id: number
+  enemy_class: string
+  area_name: string
+  area_id: number
+  room_name: string
+  body_part: string
+  item: string
+  material: string
+  drop_chance: string
+  drop_value: number
+  grip: string
+  quantity: number
+  condition: string
+}
+
 async function fetchApi<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`)
   if (!res.ok) throw new Error(`API error: ${res.status}`)
@@ -434,6 +451,8 @@ export const gameApi = {
     fetchApi<MaterialRecipe[]>(
       `/crafting-recipes/materials${params ? `?${params}` : "?limit=200"}`
     ),
+  itemDrops: (item: string) =>
+    fetchApi<ItemDropLocation[]>(`/drops?item=${encodeURIComponent(item)}`),
 }
 
 export function fmt(s: string) {

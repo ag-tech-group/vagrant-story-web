@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ItemIcon } from "@/components/item-icon"
 import { StatDisplay } from "@/components/stat-display"
+import { ItemDropLocations } from "@/components/item-drop-locations"
 import { gameApi, fmt } from "@/lib/game-api"
 import type { ItemStats } from "@/lib/item-stats"
 
@@ -75,6 +76,7 @@ function GemDetail() {
             )}
           </div>
         </div>
+        <ItemDropLocations itemName={fmt(gem.field_name)} />
       </CardContent>
     </Card>
   )
