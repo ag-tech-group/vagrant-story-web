@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
-import { X } from "lucide-react"
+import { ChevronRight, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ItemIcon } from "@/components/item-icon"
@@ -65,6 +65,8 @@ function EnemyDetail() {
     item: string
     material: string
   } | null>(null)
+  const [dropsOpen, setDropsOpen] = useState(false)
+  const [locationsOpen, setLocationsOpen] = useState(false)
 
   const { data: enemy } = useQuery({
     queryKey: ["enemy", id],
@@ -232,65 +234,120 @@ function EnemyDetail() {
             {/* Drops */}
             {enemy.drops && enemy.drops.length > 0 && (
               <div>
-                <div className="mb-1.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDropsOpen(!dropsOpen)}
+                  className="mb-1.5 flex w-full items-center gap-2"
+                >
+                  <ChevronRight
+                    className={cn(
+                      "text-muted-foreground size-3.5 transition-transform",
+                      dropsOpen && "rotate-90"
+                    )}
+                  />
                   <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                     Drops Summary
                   </p>
-                  <p className="text-muted-foreground/60 text-[10px]">
-                    Click an item to filter drop locations
-                  </p>
+                  {!dropsOpen && (
+                    <span className="text-muted-foreground/60 text-[10px]">
+                      {enemy.drops.length} items
+                    </span>
+                  )}
+                  {dropsOpen && (
+                    <p className="text-muted-foreground/60 text-[10px]">
+                      Click an item to filter drop locations
+                    </p>
+                  )}
                   {dropFilter && (
-                    <button
-                      type="button"
-                      onClick={() => setDropFilter(null)}
+                    <span
                       className="text-primary hover:text-primary/80 text-[10px] underline"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDropFilter(null)
+                      }}
                     >
                       Clear filter
-                    </button>
+                    </span>
                   )}
-                </div>
-                <div className="space-y-1">
-                  {/* Header */}
-                  <div className="text-muted-foreground flex items-center gap-2 px-3 py-1 text-[11px] font-medium">
-                    <span className="w-20 shrink-0">Slot</span>
-                    <span className="flex-1">Item</span>
-                    <span className="shrink-0">Chance</span>
-                  </div>
-                  {groupDrops(enemy.drops).map((group) => (
-                    <div key={group.label} className="space-y-1">
-                      <p className="text-muted-foreground text-[11px] font-medium">
-                        {group.label}
-                      </p>
-                      {group.items.map((drop) => (
-                        <DropRow
-                          key={drop.id}
-                          drop={drop}
-                          isActive={
-                            dropFilter?.item === drop.item &&
-                            dropFilter?.material === drop.material
-                          }
-                          onSelect={() =>
-                            setDropFilter(
-                              dropFilter?.item === drop.item &&
-                                dropFilter?.material === drop.material
-                                ? null
-                                : { item: drop.item, material: drop.material }
-                            )
-                          }
-                        />
-                      ))}
+                </button>
+                {dropsOpen && (
+                  <div className="space-y-1">
+                    {/* Header */}
+                    <div className="text-muted-foreground flex items-center gap-2 px-3 py-1 text-[11px] font-medium">
+                      <span className="w-20 shrink-0">Slot</span>
+                      <span className="flex-1">Item</span>
+                      <span className="shrink-0">Chance</span>
                     </div>
-                  ))}
-                </div>
+                    {groupDrops(enemy.drops).map((group) => (
+                      <div key={group.label} className="space-y-1">
+                        <p className="text-muted-foreground text-[11px] font-medium">
+                          {group.label}
+                        </p>
+                        {group.items.map((drop) => (
+                          <DropRow
+                            key={drop.id}
+                            drop={drop}
+                            isActive={
+                              dropFilter?.item === drop.item &&
+                              dropFilter?.material === drop.material
+                            }
+                            onSelect={() => {
+                              const isClearing =
+                                dropFilter?.item === drop.item &&
+                                dropFilter?.material === drop.material
+                              setDropFilter(
+                                isClearing
+                                  ? null
+                                  : { item: drop.item, material: drop.material }
+                              )
+                              if (!isClearing) setLocationsOpen(true)
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Locations */}
             {enemy.encounters && enemy.encounters.length > 0 && (
-              <LocationsSection
-                encounters={enemy.encounters}
-                dropFilter={dropFilter}
-              />
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setLocationsOpen(!locationsOpen)}
+                  className="mb-1.5 flex w-full items-center gap-2"
+                >
+                  <ChevronRight
+                    className={cn(
+                      "text-muted-foreground size-3.5 transition-transform",
+                      locationsOpen && "rotate-90"
+                    )}
+                  />
+                  <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                    Locations
+                  </p>
+                  {!locationsOpen && (
+                    <span className="text-muted-foreground/60 text-[10px]">
+                      {enemy.encounters.length} encounters
+                    </span>
+                  )}
+                  {locationsOpen && dropFilter && (
+                    <span className="text-primary text-[10px] font-medium">
+                      showing rooms with "
+                      {dropFilter.material ? `${dropFilter.material} ` : ""}
+                      {dropFilter.item}"
+                    </span>
+                  )}
+                </button>
+                {locationsOpen && (
+                  <LocationsSection
+                    encounters={enemy.encounters}
+                    dropFilter={dropFilter}
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -520,58 +577,44 @@ function LocationsSection({
   }, [encounters, dropFilter])
 
   return (
-    <div>
-      <div className="mb-1.5 flex items-center gap-2">
-        <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-          Locations
-        </p>
-        {dropFilter && (
-          <span className="text-primary text-[10px] font-medium">
-            showing rooms with "
-            {dropFilter.material ? `${dropFilter.material} ` : ""}
-            {dropFilter.item}"
-          </span>
-        )}
-      </div>
-      <div className="space-y-2">
-        {grouped.map(([area, { area_id, rooms }]) => (
-          <div key={area}>
-            <Link
-              to="/areas/$id"
-              params={{ id: String(area_id) }}
-              className="text-primary hover:text-primary/80 text-xs font-medium underline decoration-dotted underline-offset-2"
-            >
-              {area}
-            </Link>
-            <div className="mt-1 space-y-1">
-              {rooms.map((room, i) => (
-                <div
-                  key={`${room.room_name}-${i}`}
-                  className="bg-muted/30 rounded px-3 py-1.5 text-xs"
-                >
-                  <span className="font-medium">{room.room_name}</span>
-                  {room.condition && (
-                    <p className="text-muted-foreground mt-0.5">
-                      {room.condition}
+    <div className="space-y-2">
+      {grouped.map(([area, { area_id, rooms }]) => (
+        <div key={area}>
+          <Link
+            to="/areas/$id"
+            params={{ id: String(area_id) }}
+            className="text-primary hover:text-primary/80 text-xs font-medium underline decoration-dotted underline-offset-2"
+          >
+            {area}
+          </Link>
+          <div className="mt-1 space-y-1">
+            {rooms.map((room, i) => (
+              <div
+                key={`${room.room_name}-${i}`}
+                className="bg-muted/30 rounded px-3 py-1.5 text-xs"
+              >
+                <span className="font-medium">{room.room_name}</span>
+                {room.condition && (
+                  <p className="text-muted-foreground mt-0.5">
+                    {room.condition}
+                  </p>
+                )}
+                <div className="border-border/30 mt-1.5 space-y-0.5 border-t pt-1.5">
+                  {room.drops.length > 0 ? (
+                    room.drops.map((drop) => (
+                      <EncounterDropRow key={drop.id} drop={drop} />
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground/50 text-right text-[10px]">
+                      No drops
                     </p>
                   )}
-                  <div className="border-border/30 mt-1.5 space-y-0.5 border-t pt-1.5">
-                    {room.drops.length > 0 ? (
-                      room.drops.map((drop) => (
-                        <EncounterDropRow key={drop.id} drop={drop} />
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground/50 text-right text-[10px]">
-                        No drops
-                      </p>
-                    )}
-                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   )
 }
