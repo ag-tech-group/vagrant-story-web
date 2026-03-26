@@ -95,6 +95,13 @@ export function StatDisplay({
   showAffinities = false,
   compact = false,
 }: StatDisplayProps) {
+  const statCount =
+    3 +
+    (stats.range != null ? 1 : 0) +
+    (stats.damage != null ? 1 : 0) +
+    (stats.risk != null ? 1 : 0) +
+    (stats.gem_slots != null ? 1 : 0)
+
   return (
     <div className="flex flex-col items-center gap-1.5">
       {/* Damage type badge */}
@@ -105,7 +112,12 @@ export function StatDisplay({
       )}
 
       {/* Core stats */}
-      <div className="flex flex-wrap gap-1.5">
+      <div
+        className={cn(
+          "gap-1.5 sm:flex sm:flex-wrap",
+          statCount >= 6 ? "grid grid-cols-3" : "flex flex-wrap"
+        )}
+      >
         <Stat
           label="STR"
           value={stats.str}
