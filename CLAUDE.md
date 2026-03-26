@@ -23,47 +23,29 @@ Routes live in `src/routes/`. The route tree is auto-generated (`src/routeTree.g
 
 **Pattern for item pages:**
 
-- `src/routes/weapons/route.tsx` — layout (wraps Outlet)
-- `src/routes/weapons/index.tsx` — list page header
-- `src/routes/weapons/$id.tsx` — detail hero page
+- `src/routes/blades/route.tsx` — layout (wraps Outlet)
+- `src/routes/blades/index.tsx` — list page header
+- `src/routes/blades/$id.tsx` — detail hero page
 
 **Route components import page components from `src/pages/`** — routes are thin wrappers.
 
-### Pages (`src/pages/[feature]/[feature]-page.tsx`)
+**Inventory uses subroutes** for tab persistence: `$inventoryId/equipment.tsx` and `$inventoryId/optimizer.tsx`. Tab selection is URL-driven, not React state.
 
-Each page fetches data with `useQuery` and renders via `DataTable` or custom layout:
+### Navigation
 
-```tsx
-const { data = [], isLoading } = useQuery({
-  queryKey: ["weapons"],
-  queryFn: gameApi.weapons,
-})
-```
-
-React Query config: 10-min staleTime, refetchOnWindowFocus disabled, retry 1.
+Global sidebar nav in `src/components/sidebar-nav.tsx`. Appears on all pages except homepage. When adding a new page, add it to `NAV_SECTIONS` in that file.
 
 ### API Client (`src/lib/game-api.ts`)
 
-All game data types and fetch functions live here. Simple `fetch` wrapper:
+All game data types and fetch functions. Dev proxy forwards `/api` → production API.
 
-```tsx
-export const gameApi = {
-  weapons: () => fetchApi<Weapon[]>("/weapons?limit=200"),
-  weapon: (id: number) => fetchApi<Weapon>(`/weapons/${id}`),
-  // ...
-}
-```
-
-Dev proxy forwards `/api` → `https://vagrant-story-api.criticalbit.gg`.
-
-When adding a new data type: add the interface, add the fetch function, add the query key.
-
-### Shared Components (`src/components/`)
+### Key Components (`src/components/`)
 
 - **`data-table.tsx`** — Reusable table with sorting, filtering, pagination, clickable rows
-- **`item-icon.tsx`** — Maps item type strings → SVG icons in `/public/images/icons/`
-- **`stat-display.tsx`** — Stat badges with color coding and comparisons, `DamageTypeBadge`
-- **`ui/`** — shadcn/ui primitives (Button, Card, Badge, Select, etc.)
+- **`sidebar-nav.tsx`** — Global sidebar navigation with sections and toggle
+- **`item-drop-locations.tsx`** — Reusable "Where to Find" section for item detail pages
+- **`stat-display.tsx`** — Stat badges with color coding and comparisons
+- **`ui/`** — shadcn/ui primitives (Button, Card, Badge, Select, Tooltip, etc.)
 
 ### Styling
 
@@ -86,6 +68,7 @@ When adding a new data type: add the interface, add the fetch function, add the 
 1. **API types**: Add interface + fetch function in `src/lib/game-api.ts`
 2. **Page**: Create `src/pages/[type]/[type]-page.tsx` with DataTable
 3. **Routes**: Create `src/routes/[type]/route.tsx`, `index.tsx`, `$id.tsx`
-4. **Nav**: Add to `ITEM_LINKS` and `NAV_TABS` in `src/routes/__root.tsx`
+4. **Sidebar**: Add to `NAV_SECTIONS` in `src/components/sidebar-nav.tsx`
 5. **Homepage**: Add to `DB_CARDS` in `src/pages/home/home-page.tsx`
 6. **Icon**: Add SVG to `/public/images/icons/` and map in `item-icon.tsx`
+7. **Drop locations** (optional): Add `<ItemDropLocations itemName={name} />` to detail page
