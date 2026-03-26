@@ -41,23 +41,28 @@ export function DatabaseSelect() {
   )
 
   return (
-    <Select
-      value={currentPage?.to ?? DATABASE_PAGES[0].to}
-      onValueChange={(v) => navigate({ to: v })}
-    >
-      <SelectTrigger className="h-9 w-fit">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {DATABASE_PAGES.map((page) => (
-          <SelectItem key={page.to} value={page.to}>
-            <div className="flex items-center gap-2">
-              <ItemIcon type={page.icon} size="sm" />
-              {page.label}
-            </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <label className="text-muted-foreground text-xs font-medium">
+        Browse:
+      </label>
+      <Select
+        value={currentPage?.to ?? DATABASE_PAGES[0].to}
+        onValueChange={(v) => navigate({ to: v })}
+      >
+        <SelectTrigger className="border-primary/30 bg-primary/5 h-9 w-fit">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {DATABASE_PAGES.map((page) => (
+            <SelectItem key={page.to} value={page.to}>
+              <div className="flex items-center gap-2">
+                <ItemIcon type={page.icon} size="sm" />
+                {page.label}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
