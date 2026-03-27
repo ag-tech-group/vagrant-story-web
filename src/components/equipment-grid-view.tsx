@@ -18,6 +18,7 @@ export interface GridSlotData {
 export interface EquipmentGridViewProps {
   slots: Partial<Record<string, GridSlotData>>
   combinedStats?: { str: number; int: number; agi: number }
+  highlightSlots?: Set<string>
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export interface EquipmentGridViewProps {
 export function EquipmentGridView({
   slots,
   combinedStats,
+  highlightSlots,
 }: EquipmentGridViewProps) {
   const is2H = slots.right_hand?.hands === "2H"
 
@@ -50,7 +52,12 @@ export function EquipmentGridView({
               <div
                 key={slot.key}
                 style={{ gridArea: slot.gridArea }}
-                className="border-border bg-card/50 flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-lg border p-2"
+                className={cn(
+                  "bg-card/50 flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-lg border p-2",
+                  highlightSlots?.has(slot.key)
+                    ? "border-primary"
+                    : "border-border"
+                )}
               >
                 <ItemIcon type={item.type} size="sm" />
                 <span className="max-w-full truncate text-center text-sm leading-tight font-medium">

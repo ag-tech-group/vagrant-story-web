@@ -10,10 +10,12 @@ import {
   type GridSlotData,
 } from "@/components/equipment-grid-view"
 import { ItemIcon } from "@/components/item-icon"
+import { DamageTypeBadge } from "@/components/stat-display"
 import { gameApi, type Enemy } from "@/lib/game-api"
 import type { InventoryItem } from "@/lib/inventory-api"
 import {
   loadoutApi,
+  type LoadoutRequest,
   type LoadoutResponse,
   type LoadoutResult,
 } from "@/lib/inventory-api"
@@ -38,6 +40,7 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
   const [includeEquipped, setIncludeEquipped] = useState(true)
   const [includeBag, setIncludeBag] = useState(true)
   const [includeContainer, setIncludeContainer] = useState(true)
+  const [include2H, setInclude2H] = useState(true)
   const [result, setResult] = useState<LoadoutResponse | null>(null)
 
   const { data: enemies = [] } = useQuery({
@@ -63,17 +66,7 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
   )
 
   const analyzeMutation = useMutation({
-    mutationFn: () => {
-      if (!selectedEnemyObj) throw new Error("No enemy selected")
-      return loadoutApi.optimize({
-        inventory_id: inventoryId,
-        enemy_id: selectedEnemyObj.id,
-        mode,
-        include_equipped: includeEquipped,
-        include_bag: includeBag,
-        include_container: includeContainer,
-      })
-    },
+    mutationFn: (req: LoadoutRequest) => loadoutApi.optimize(req),
     onSuccess: (data) => setResult(data),
   })
 
@@ -161,6 +154,15 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
               />
               <span className="text-muted-foreground">Container</span>
             </label>
+            <label className="flex items-center gap-1.5 text-xs">
+              <input
+                type="checkbox"
+                checked={include2H}
+                onChange={(e) => setInclude2H(e.target.checked)}
+                className="accent-primary size-3.5"
+              />
+              <span className="text-muted-foreground">2H Weapons</span>
+            </label>
           </div>
         </div>
 
@@ -182,7 +184,18 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
       {canAnalyze && (
         <div className="flex justify-center py-2">
           <Button
-            onClick={() => analyzeMutation.mutate()}
+            onClick={() => {
+              if (!selectedEnemyObj) return
+              analyzeMutation.mutate({
+                inventory_id: inventoryId,
+                enemy_id: selectedEnemyObj.id,
+                mode,
+                include_equipped: includeEquipped,
+                include_bag: includeBag,
+                include_container: includeContainer,
+                include_2h: include2H,
+              })
+            }}
             size="lg"
             disabled={analyzeMutation.isPending}
             className="min-w-[16rem] text-base"
@@ -213,10 +226,11 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
               inventory items.
             </div>
           ) : (
-            result.loadouts.map((loadout) => (
+            result.loadouts.map((loadout, i) => (
               <LoadoutCard
                 key={loadout.rank}
                 loadout={loadout}
+                previousLoadout={i > 0 ? result.loadouts[i - 1] : undefined}
                 enemy={result.enemy}
                 mode={mode}
                 enemies={enemies}
@@ -233,16 +247,56 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
 
 function LoadoutCard({
   loadout,
+  previousLoadout,
   enemy,
   mode,
   enemies,
 }: {
   loadout: LoadoutResult
+  previousLoadout?: LoadoutResult
   enemy: LoadoutResponse["enemy"]
   mode: Mode
   enemies: Enemy[]
 }) {
   const fullEnemy = enemies.find((e) => e.id === enemy.id)
+
+  // Compute which slots differ from the previous loadout
+  const diffSlots = useMemo(() => {
+    if (!previousLoadout) return new Set<string>()
+    const diffs = new Set<string>()
+
+    // Compare weapon
+    if (
+      loadout.weapon?.blade_name !== previousLoadout.weapon?.blade_name ||
+      loadout.weapon?.material !== previousLoadout.weapon?.material ||
+      loadout.weapon?.grip_name !== previousLoadout.weapon?.grip_name
+    ) {
+      diffs.add("right_hand")
+    }
+
+    // Compare armor pieces
+    const prevArmorMap = new Map(
+      (previousLoadout.armor ?? []).map((a) => [a.slot, a])
+    )
+    for (const piece of loadout.armor ?? []) {
+      const prev = prevArmorMap.get(piece.slot)
+      if (
+        !prev ||
+        prev.item_name !== piece.item_name ||
+        prev.material !== piece.material
+      ) {
+        const slotKey =
+          piece.slot === "helm"
+            ? "head"
+            : piece.slot === "shield"
+              ? "left_hand"
+              : piece.slot
+        diffs.add(slotKey)
+      }
+    }
+
+    return diffs
+  }, [loadout, previousLoadout])
 
   return (
     <Card className="border-border/50">
@@ -273,21 +327,23 @@ function LoadoutCard({
           </div>
         </div>
 
-        {/* Two-column layout */}
-        <div className="grid gap-4 lg:grid-cols-2">
+        {/* Three-column layout */}
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
           {/* Left: Enemy info + stats panel */}
           <div className="space-y-3">
             <EnemyCard enemy={enemy} fullEnemy={fullEnemy} />
             <StatsPanel stats={loadout.stats} mode={mode} />
           </div>
 
-          {/* Right: Recommended equipment + player stats */}
-          <div className="space-y-3">
-            <LoadoutEquipmentGridAdapter
-              weapon={loadout.weapon}
-              armorPieces={loadout.armor}
-            />
-          </div>
+          {/* Center: Recommended equipment */}
+          <LoadoutEquipmentGridAdapter
+            weapon={loadout.weapon}
+            armorPieces={loadout.armor}
+            highlightSlots={diffSlots}
+          />
+
+          {/* Right: Player combined stats */}
+          <CombinedStatsPanel stats={loadout.combined_stats} />
         </div>
       </CardContent>
     </Card>
@@ -424,9 +480,11 @@ function EnemyCard({
 function LoadoutEquipmentGridAdapter({
   weapon,
   armorPieces,
+  highlightSlots,
 }: {
   weapon: LoadoutResult["weapon"]
   armorPieces: LoadoutResult["armor"]
+  highlightSlots?: Set<string>
 }) {
   const slots = useMemo(() => {
     const map: Record<string, GridSlotData> = {}
@@ -466,7 +524,7 @@ function LoadoutEquipmentGridAdapter({
     return map
   }, [weapon, armorPieces])
 
-  return <EquipmentGridView slots={slots} />
+  return <EquipmentGridView slots={slots} highlightSlots={highlightSlots} />
 }
 
 // ── Stats Panel ─────────────────────────────────────────────────────
@@ -534,6 +592,89 @@ function StatsPanel({
   )
 }
 
+// ── Combined Stats Panel ─────────────────────────────────────────────
+
+const EMPTY_COMBINED_STATS: import("@/lib/inventory-api").LoadoutCombinedStats =
+  {
+    str: 0,
+    int: 0,
+    agi: 0,
+    range: 0,
+    risk: 0,
+    damage_type: "",
+    blunt: 0,
+    edged: 0,
+    piercing: 0,
+    human: 0,
+    beast: 0,
+    undead: 0,
+    phantom: 0,
+    dragon: 0,
+    evil: 0,
+    physical: 0,
+    fire: 0,
+    water: 0,
+    wind: 0,
+    earth: 0,
+    light: 0,
+    dark: 0,
+  }
+
+function CombinedStatsPanel({
+  stats: rawStats,
+}: {
+  stats: import("@/lib/inventory-api").LoadoutCombinedStats | null
+}) {
+  const stats = rawStats ?? EMPTY_COMBINED_STATS
+  return (
+    <div className="space-y-2">
+      <p className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+        Loadout Stats
+      </p>
+      <p className="text-muted-foreground/60 text-[9px]">
+        Equipment contribution only
+      </p>
+      {stats.damage_type && (
+        <div className="flex justify-center">
+          <DamageTypeBadge type={stats.damage_type} />
+        </div>
+      )}
+      <div className="grid grid-cols-3 gap-1">
+        <StatBadge label="STR" value={stats.str} />
+        <StatBadge label="INT" value={stats.int} />
+        <StatBadge label="AGI" value={stats.agi} />
+        {stats.range > 0 && <StatBadge label="RNG" value={stats.range} />}
+        {stats.risk > 0 && <StatBadge label="RSK" value={stats.risk} />}
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        <StatBadge label="Blt" value={stats.blunt} />
+        <StatBadge label="Edg" value={stats.edged} />
+        <StatBadge label="Prc" value={stats.piercing} />
+      </div>
+      <p className="text-muted-foreground text-[9px] font-medium tracking-wider uppercase">
+        Affinities
+      </p>
+      <div className="grid grid-cols-3 gap-1">
+        <StatBadge label="Hum" value={stats.human} />
+        <StatBadge label="Bst" value={stats.beast} />
+        <StatBadge label="Und" value={stats.undead} />
+        <StatBadge label="Phm" value={stats.phantom} />
+        <StatBadge label="Drg" value={stats.dragon} />
+        <StatBadge label="Evl" value={stats.evil} />
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        <StatBadge label="Phy" value={stats.physical} />
+        <StatBadge label="Fir" value={stats.fire} />
+        <StatBadge label="Wat" value={stats.water} />
+        <StatBadge label="Wnd" value={stats.wind} />
+        <StatBadge label="Ear" value={stats.earth} />
+        <StatBadge label="Lit" value={stats.light} />
+        <StatBadge label="Drk" value={stats.dark} />
+      </div>
+    </div>
+  )
+}
+
 // ── Utility ─────────────────────────────────────────────────────────
 
 function StatBadge({ label, value }: { label: string; value: number }) {
@@ -542,7 +683,14 @@ function StatBadge({ label, value }: { label: string; value: number }) {
       <span className="text-muted-foreground text-[10px] leading-none">
         {label}
       </span>
-      <span className="text-foreground text-xs leading-tight font-medium">
+      <span
+        className={cn(
+          "text-xs leading-tight font-medium",
+          value > 0 && "text-green-400",
+          value < 0 && "text-red-400",
+          value === 0 && "text-muted-foreground"
+        )}
+      >
         {value}
       </span>
     </div>
