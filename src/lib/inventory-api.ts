@@ -85,6 +85,7 @@ export interface LoadoutRequest {
   include_equipped: boolean
   include_bag: boolean
   include_container: boolean
+  include_2h: boolean
 }
 
 export interface LoadoutWeapon {
@@ -109,6 +110,31 @@ export interface LoadoutStats {
   target_reason: string
 }
 
+export interface LoadoutCombinedStats {
+  str: number
+  int: number
+  agi: number
+  range: number
+  risk: number
+  damage_type: string
+  blunt: number
+  edged: number
+  piercing: number
+  human: number
+  beast: number
+  undead: number
+  phantom: number
+  dragon: number
+  evil: number
+  physical: number
+  fire: number
+  water: number
+  wind: number
+  earth: number
+  light: number
+  dark: number
+}
+
 export interface LoadoutResult {
   rank: number
   score: number
@@ -117,6 +143,7 @@ export interface LoadoutResult {
   weapon: LoadoutWeapon | null
   armor: LoadoutArmor[] | null
   stats: LoadoutStats
+  combined_stats: LoadoutCombinedStats | null
 }
 
 export interface LoadoutEnemyInfo {
