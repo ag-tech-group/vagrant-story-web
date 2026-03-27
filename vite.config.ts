@@ -5,6 +5,11 @@ import basicSsl from "@vitejs/plugin-basic-ssl"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
+const API_TARGET =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:8000"
+    : "https://vagrant-story-api.criticalbit.gg"
+
 export default defineConfig({
   plugins: [
     TanStackRouterVite({
@@ -25,7 +30,7 @@ export default defineConfig({
     allowedHosts: ["local.criticalbit.gg"],
     proxy: {
       "/api": {
-        target: "https://vagrant-story-api.criticalbit.gg",
+        target: API_TARGET,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },

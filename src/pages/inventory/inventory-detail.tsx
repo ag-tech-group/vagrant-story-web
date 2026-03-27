@@ -47,7 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MaterialBadge } from "@/components/stat-display"
+import { DamageTypeBadge, MaterialBadge } from "@/components/stat-display"
 import { useAuth } from "@/lib/auth"
 import { loginUrl } from "@/lib/config"
 import {
@@ -74,6 +74,7 @@ import {
   type SlotConfig,
 } from "@/lib/inventory-constants"
 import { CraftingTab } from "@/pages/inventory/crafting-tab"
+import { LoadoutTab } from "@/pages/inventory/loadout-tab"
 import { cn } from "@/lib/utils"
 
 // ── Slot configuration ──────────────────────────────────────────────
@@ -142,11 +143,16 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
   const matchRoute = useMatchRoute()
   const activeTab = matchRoute({
-    to: "/inventory/$inventoryId/optimizer",
+    to: "/inventory/$inventoryId/loadout",
     params: { inventoryId: String(inventoryId) },
   })
-    ? "optimizer"
-    : "equipment"
+    ? "loadout"
+    : matchRoute({
+          to: "/inventory/$inventoryId/optimizer",
+          params: { inventoryId: String(inventoryId) },
+        })
+      ? "optimizer"
+      : "equipment"
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
   const [bagSearch, setBagSearch] = useState("")
@@ -358,6 +364,24 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
       return armorItem?.armor_type ?? "Armor"
     },
     [bladeIdMap, armorIdMap, gripIdMap]
+  )
+
+  // Get blade-specific info (damage type, hands, grip name)
+  const getBladeInfo = useCallback(
+    (
+      item: InventoryItem
+    ): { damageType?: string; hands?: string; gripName?: string } => {
+      if (item.item_type !== "blade") return {}
+      const blade = bladeIdMap.get(item.item_id)
+      if (!blade) return {}
+      const grip = item.grip_id ? gripIdMap.get(item.grip_id) : null
+      return {
+        damageType: blade.damage_type,
+        hands: blade.hands,
+        gripName: grip ? fmt(grip.field_name) : undefined,
+      }
+    },
+    [bladeIdMap, gripIdMap]
   )
 
   // Determine the equip slot for an item (null = not equippable)
@@ -870,11 +894,39 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
             <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
           )}
         </Link>
+        <Link
+          to="/inventory/$inventoryId/loadout"
+          params={{ inventoryId: String(inventoryId) }}
+          className={cn(
+            "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "loadout"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <span
+            className="size-4 shrink-0 bg-current"
+            style={{
+              mask: "url(/images/icons/Loadout.svg) center / contain no-repeat",
+              WebkitMask:
+                "url(/images/icons/Loadout.svg) center / contain no-repeat",
+            }}
+          />
+          Loadout
+          {activeTab === "loadout" && (
+            <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
+          )}
+        </Link>
       </div>
 
       {/* Optimizer Tab */}
       {activeTab === "optimizer" && (
         <CraftingTab items={allItems} blades={blades} armor={armor} />
+      )}
+
+      {/* Loadout Tab */}
+      {activeTab === "loadout" && (
+        <LoadoutTab items={allItems} inventoryId={inventoryId} />
       )}
 
       {/* Equipment Tab */}
@@ -980,6 +1032,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                       getSlotItem={getSlotItem}
                       getItemDisplayName={getItemDisplayName}
                       getItemDisplayType={getItemDisplayType}
+                      getBladeInfo={getBladeInfo}
                       onSlotClick={setEditingSlot}
                       onUnequip={(slotItem) =>
                         updateItemMutation.mutate({
@@ -1039,6 +1092,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                             item={item}
                             name={getItemDisplayName(item)}
                             type={getItemDisplayType(item)}
+                            {...getBladeInfo(item)}
                             isDraggable
                             isDragging={activeDragItem?.id === item.id}
                             onDelete={() => deleteItemMutation.mutate(item.id)}
@@ -1107,6 +1161,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                           item={item}
                           name={getItemDisplayName(item)}
                           type={getItemDisplayType(item)}
+                          {...getBladeInfo(item)}
                           isDraggable
                           isDragging={activeDragItem?.id === item.id}
                           onDelete={() => deleteItemMutation.mutate(item.id)}
@@ -1292,6 +1347,7 @@ function EquipmentGrid({
   getSlotItem,
   getItemDisplayName,
   getItemDisplayType,
+  getBladeInfo,
   onSlotClick,
   onUnequip,
   equippedBladeIs2H,
@@ -1299,6 +1355,11 @@ function EquipmentGrid({
   getSlotItem: (slot: EquipSlot) => InventoryItem | undefined
   getItemDisplayName: (item: InventoryItem) => string
   getItemDisplayType: (item: InventoryItem) => string
+  getBladeInfo: (item: InventoryItem) => {
+    damageType?: string
+    hands?: string
+    gripName?: string
+  }
   onSlotClick: (slot: SlotConfig) => void
   onUnequip: (item: InventoryItem) => void
   equippedBladeIs2H: boolean
@@ -1318,6 +1379,7 @@ function EquipmentGrid({
       {EQUIP_SLOTS.map((slot) => {
         const item = getSlotItem(slot.key)
         const disabled = slot.key === "left_hand" && equippedBladeIs2H
+        const bladeInfo = item ? getBladeInfo(item) : {}
         return (
           <div key={slot.key} style={{ gridArea: slot.gridArea }}>
             {item ? (
@@ -1325,6 +1387,9 @@ function EquipmentGrid({
                 item={item}
                 displayName={getItemDisplayName(item)}
                 displayType={getItemDisplayType(item)}
+                damageType={bladeInfo.damageType}
+                hands={bladeInfo.hands}
+                gripName={bladeInfo.gripName}
                 onClick={() => !disabled && onSlotClick(slot)}
                 onClear={() => onUnequip(item)}
                 disabled={disabled}
@@ -1347,6 +1412,9 @@ function DraggableEquipSlotCard({
   item,
   displayName,
   displayType,
+  damageType,
+  hands,
+  gripName,
   onClick,
   onClear,
   disabled,
@@ -1354,6 +1422,9 @@ function DraggableEquipSlotCard({
   item: InventoryItem
   displayName: string
   displayType: string
+  damageType?: string
+  hands?: string
+  gripName?: string
   onClick: () => void
   onClear: () => void
   disabled?: boolean
@@ -1380,6 +1451,17 @@ function DraggableEquipSlotCard({
         {displayName}
       </span>
       {item.material && <MaterialBadge mat={item.material} />}
+      {(damageType || hands) && (
+        <div className="flex items-center gap-1 text-[10px]">
+          {damageType && <DamageTypeBadge type={damageType} />}
+          {hands && <span className="text-muted-foreground">{hands}</span>}
+        </div>
+      )}
+      {gripName && (
+        <span className="text-muted-foreground text-[10px]">
+          Grip: {gripName}
+        </span>
+      )}
       {onClear && !disabled && (
         <span
           role="button"
@@ -1449,6 +1531,9 @@ function DraggableBagItemRow({
   item,
   name,
   type,
+  damageType,
+  hands,
+  gripName,
   isDraggable,
   isDragging,
   onDelete,
@@ -1460,6 +1545,9 @@ function DraggableBagItemRow({
   item: InventoryItem
   name: string
   type: string
+  damageType?: string
+  hands?: string
+  gripName?: string
   isDraggable: boolean
   isDragging: boolean
   onDelete: () => void
@@ -1500,7 +1588,18 @@ function DraggableBagItemRow({
             </span>
           )}
         </div>
-        {item.material && <MaterialBadge mat={item.material} />}
+        <div className="flex items-center gap-1.5">
+          {item.material && <MaterialBadge mat={item.material} />}
+          {damageType && <DamageTypeBadge type={damageType} />}
+          {hands && (
+            <span className="text-muted-foreground text-[10px]">{hands}</span>
+          )}
+          {gripName && (
+            <span className="text-muted-foreground text-[10px]">
+              Grip: {gripName}
+            </span>
+          )}
+        </div>
       </div>
       {(item.quantity > 1 || item.item_type === "consumable") && (
         <span className="text-muted-foreground text-xs">x{item.quantity}</span>

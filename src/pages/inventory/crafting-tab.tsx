@@ -517,19 +517,6 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
     <div className="space-y-4">
       {/* Controls row */}
       <div className="flex flex-wrap items-end gap-3 lg:flex-nowrap">
-        <div className="shrink-0">
-          <div className="mb-1 text-[11px]">&nbsp;</div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            className="h-9 gap-1.5"
-          >
-            <RotateCcw className="size-3.5" />
-            Reset
-          </Button>
-        </div>
-
         <div className="w-full min-w-[10rem] flex-1">
           <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
             Select a Category
@@ -650,6 +637,19 @@ export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
               <span className="text-muted-foreground">Container</span>
             </label>
           </div>
+        </div>
+
+        <div className="shrink-0">
+          <div className="mb-1 text-[11px]">&nbsp;</div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            className="h-9 gap-1.5"
+          >
+            <RotateCcw className="size-3.5" />
+            Reset
+          </Button>
         </div>
       </div>
 
