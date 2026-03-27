@@ -78,6 +78,7 @@ import { Route as AccessoriesIdRouteImport } from './routes/accessories/$id'
 import { Route as InventoryInventoryIdRouteRouteImport } from './routes/inventory/$inventoryId/route'
 import { Route as InventoryInventoryIdIndexRouteImport } from './routes/inventory/$inventoryId/index'
 import { Route as InventoryInventoryIdOptimizerRouteImport } from './routes/inventory/$inventoryId/optimizer'
+import { Route as InventoryInventoryIdLoadoutRouteImport } from './routes/inventory/$inventoryId/loadout'
 import { Route as InventoryInventoryIdEquipmentRouteImport } from './routes/inventory/$inventoryId/equipment'
 
 const MaterialsRoute = MaterialsRouteImport.update({
@@ -428,6 +429,12 @@ const InventoryInventoryIdOptimizerRoute =
     path: '/optimizer',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
+const InventoryInventoryIdLoadoutRoute =
+  InventoryInventoryIdLoadoutRouteImport.update({
+    id: '/loadout',
+    path: '/loadout',
+    getParentRoute: () => InventoryInventoryIdRouteRoute,
+  } as any)
 const InventoryInventoryIdEquipmentRoute =
   InventoryInventoryIdEquipmentRouteImport.update({
     id: '/equipment',
@@ -504,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/titles/': typeof TitlesIndexRoute
   '/workshops/': typeof WorkshopsIndexRoute
   '/inventory/$inventoryId/equipment': typeof InventoryInventoryIdEquipmentRoute
+  '/inventory/$inventoryId/loadout': typeof InventoryInventoryIdLoadoutRoute
   '/inventory/$inventoryId/optimizer': typeof InventoryInventoryIdOptimizerRoute
   '/inventory/$inventoryId/': typeof InventoryInventoryIdIndexRoute
 }
@@ -554,6 +562,7 @@ export interface FileRoutesByTo {
   '/titles': typeof TitlesIndexRoute
   '/workshops': typeof WorkshopsIndexRoute
   '/inventory/$inventoryId/equipment': typeof InventoryInventoryIdEquipmentRoute
+  '/inventory/$inventoryId/loadout': typeof InventoryInventoryIdLoadoutRoute
   '/inventory/$inventoryId/optimizer': typeof InventoryInventoryIdOptimizerRoute
   '/inventory/$inventoryId': typeof InventoryInventoryIdIndexRoute
 }
@@ -627,6 +636,7 @@ export interface FileRoutesById {
   '/titles/': typeof TitlesIndexRoute
   '/workshops/': typeof WorkshopsIndexRoute
   '/inventory/$inventoryId/equipment': typeof InventoryInventoryIdEquipmentRoute
+  '/inventory/$inventoryId/loadout': typeof InventoryInventoryIdLoadoutRoute
   '/inventory/$inventoryId/optimizer': typeof InventoryInventoryIdOptimizerRoute
   '/inventory/$inventoryId/': typeof InventoryInventoryIdIndexRoute
 }
@@ -701,6 +711,7 @@ export interface FileRouteTypes {
     | '/titles/'
     | '/workshops/'
     | '/inventory/$inventoryId/equipment'
+    | '/inventory/$inventoryId/loadout'
     | '/inventory/$inventoryId/optimizer'
     | '/inventory/$inventoryId/'
   fileRoutesByTo: FileRoutesByTo
@@ -751,6 +762,7 @@ export interface FileRouteTypes {
     | '/titles'
     | '/workshops'
     | '/inventory/$inventoryId/equipment'
+    | '/inventory/$inventoryId/loadout'
     | '/inventory/$inventoryId/optimizer'
     | '/inventory/$inventoryId'
   id:
@@ -823,6 +835,7 @@ export interface FileRouteTypes {
     | '/titles/'
     | '/workshops/'
     | '/inventory/$inventoryId/equipment'
+    | '/inventory/$inventoryId/loadout'
     | '/inventory/$inventoryId/optimizer'
     | '/inventory/$inventoryId/'
   fileRoutesById: FileRoutesById
@@ -1340,6 +1353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InventoryInventoryIdOptimizerRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
+    '/inventory/$inventoryId/loadout': {
+      id: '/inventory/$inventoryId/loadout'
+      path: '/loadout'
+      fullPath: '/inventory/$inventoryId/loadout'
+      preLoaderRoute: typeof InventoryInventoryIdLoadoutRouteImport
+      parentRoute: typeof InventoryInventoryIdRouteRoute
+    }
     '/inventory/$inventoryId/equipment': {
       id: '/inventory/$inventoryId/equipment'
       path: '/equipment'
@@ -1543,6 +1563,7 @@ const GripsRouteRouteWithChildren = GripsRouteRoute._addFileChildren(
 
 interface InventoryInventoryIdRouteRouteChildren {
   InventoryInventoryIdEquipmentRoute: typeof InventoryInventoryIdEquipmentRoute
+  InventoryInventoryIdLoadoutRoute: typeof InventoryInventoryIdLoadoutRoute
   InventoryInventoryIdOptimizerRoute: typeof InventoryInventoryIdOptimizerRoute
   InventoryInventoryIdIndexRoute: typeof InventoryInventoryIdIndexRoute
 }
@@ -1550,6 +1571,7 @@ interface InventoryInventoryIdRouteRouteChildren {
 const InventoryInventoryIdRouteRouteChildren: InventoryInventoryIdRouteRouteChildren =
   {
     InventoryInventoryIdEquipmentRoute: InventoryInventoryIdEquipmentRoute,
+    InventoryInventoryIdLoadoutRoute: InventoryInventoryIdLoadoutRoute,
     InventoryInventoryIdOptimizerRoute: InventoryInventoryIdOptimizerRoute,
     InventoryInventoryIdIndexRoute: InventoryInventoryIdIndexRoute,
   }

@@ -80,9 +80,14 @@ interface GameData {
   consumables: Consumable[]
 }
 
-function buildIdMap<T extends { id: number }>(items: T[]): Map<number, T> {
+function buildIdMap<T extends { id: number; game_id?: number }>(
+  items: T[]
+): Map<number, T> {
   const map = new Map<number, T>()
-  for (const item of items) map.set(item.id, item)
+  for (const item of items) {
+    const key = item.game_id && item.game_id > 0 ? item.game_id : item.id
+    map.set(key, item)
+  }
   return map
 }
 

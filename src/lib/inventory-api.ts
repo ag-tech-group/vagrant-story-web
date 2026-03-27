@@ -76,6 +76,71 @@ async function fetchAuth<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json()
 }
 
+// ── Loadout types ──────────────────────────────────────────────────
+
+export interface LoadoutRequest {
+  inventory_id: number
+  enemy_id: number
+  mode: "full" | "offense" | "defense"
+  include_equipped: boolean
+  include_bag: boolean
+  include_container: boolean
+}
+
+export interface LoadoutWeapon {
+  blade_name: string
+  blade_type: string
+  grip_name: string | null
+  material: string
+  damage_type: string
+  hands: string
+}
+
+export interface LoadoutArmor {
+  slot: string
+  item_name: string
+  armor_type: string
+  material: string
+}
+
+export interface LoadoutStats {
+  estimated_damage: number
+  target_body_part: string
+  target_reason: string
+}
+
+export interface LoadoutResult {
+  rank: number
+  score: number
+  offense_score: number | null
+  defense_score: number | null
+  weapon: LoadoutWeapon | null
+  armor: LoadoutArmor[] | null
+  stats: LoadoutStats
+}
+
+export interface LoadoutEnemyInfo {
+  id: number
+  name: string
+  enemy_class: string
+  hp: number
+  mp: number
+}
+
+export interface LoadoutResponse {
+  enemy: LoadoutEnemyInfo
+  loadouts: LoadoutResult[]
+}
+
+export const loadoutApi = {
+  optimize: (req: LoadoutRequest) =>
+    fetchAuth<LoadoutResponse>("/loadout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+    }),
+}
+
 export const inventoryApi = {
   list: () => fetchAuth<InventoryListItem[]>("/user/inventories"),
 

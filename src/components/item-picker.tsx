@@ -118,15 +118,21 @@ function ItemCommandList({
   value,
   onSelect,
   maxHeight,
+  searchPlaceholder = "Search items...",
 }: {
   groups: Record<string, PickerItem[]>
   value: string | null
   onSelect: (name: string) => void
   maxHeight?: string
+  searchPlaceholder?: string
 }) {
   return (
-    <Command>
-      <CommandInput placeholder="Search items..." />
+    <Command
+      filter={(value, search) =>
+        value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+      }
+    >
+      <CommandInput placeholder={searchPlaceholder} autoFocus />
       <CommandList className={maxHeight}>
         <CommandEmpty>No items found.</CommandEmpty>
         {Object.entries(groups).map(([type, groupItems]) => (
@@ -223,6 +229,7 @@ export function ItemPicker({
               value={value}
               onSelect={handleSelect}
               maxHeight="max-h-[70vh]"
+              searchPlaceholder={placeholder}
             />
           </DialogContent>
         </Dialog>
@@ -258,6 +265,7 @@ export function ItemPicker({
             value={value}
             onSelect={handleSelect}
             maxHeight="max-h-[min(300px,60vh)]"
+            searchPlaceholder={placeholder}
           />
         </PopoverContent>
       </Popover>
