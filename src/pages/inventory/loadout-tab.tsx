@@ -27,14 +27,23 @@ import { cn } from "@/lib/utils"
 
 type Mode = "full" | "offense" | "defense"
 
+interface BaseStats {
+  hp: number
+  mp: number
+  str: number
+  int: number
+  agi: number
+}
+
 interface LoadoutTabProps {
   items: InventoryItem[]
   inventoryId: number
+  baseStats?: BaseStats
 }
 
 // ── Main component ──────────────────────────────────────────────────
 
-export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
+export function LoadoutTab({ items, inventoryId, baseStats }: LoadoutTabProps) {
   const [selectedEnemy, setSelectedEnemy] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode>("full")
   const [includeEquipped, setIncludeEquipped] = useState(true)
@@ -234,6 +243,7 @@ export function LoadoutTab({ items, inventoryId }: LoadoutTabProps) {
                 enemy={result.enemy}
                 mode={mode}
                 enemies={enemies}
+                baseStats={baseStats}
               />
             ))
           )}
@@ -251,12 +261,14 @@ function LoadoutCard({
   enemy,
   mode,
   enemies,
+  baseStats,
 }: {
   loadout: LoadoutResult
   previousLoadout?: LoadoutResult
   enemy: LoadoutResponse["enemy"]
   mode: Mode
   enemies: Enemy[]
+  baseStats?: BaseStats
 }) {
   const fullEnemy = enemies.find((e) => e.id === enemy.id)
 
@@ -343,7 +355,10 @@ function LoadoutCard({
           />
 
           {/* Right: Player combined stats */}
-          <CombinedStatsPanel stats={loadout.combined_stats} />
+          <CombinedStatsPanel
+            stats={loadout.combined_stats}
+            baseStats={baseStats}
+          />
         </div>
       </CardContent>
     </Card>
@@ -622,30 +637,61 @@ const EMPTY_COMBINED_STATS: import("@/lib/inventory-api").LoadoutCombinedStats =
 
 function CombinedStatsPanel({
   stats: rawStats,
+  baseStats,
 }: {
   stats: import("@/lib/inventory-api").LoadoutCombinedStats | null
+  baseStats?: BaseStats
 }) {
   const stats = rawStats ?? EMPTY_COMBINED_STATS
   return (
     <div className="space-y-2">
       <p className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-        Loadout Stats
+        {baseStats ? "Combined Stats" : "Loadout Stats"}
       </p>
-      <p className="text-muted-foreground/60 text-[9px]">
-        Equipment contribution only
-      </p>
+      {!baseStats && (
+        <p className="text-muted-foreground/60 text-[9px]">
+          Equipment contribution only
+        </p>
+      )}
       {stats.damage_type && (
         <div className="flex justify-center">
           <DamageTypeBadge type={stats.damage_type} />
         </div>
       )}
       <div className="grid grid-cols-3 gap-1">
-        <StatBadge label="STR" value={stats.str} />
-        <StatBadge label="INT" value={stats.int} />
-        <StatBadge label="AGI" value={stats.agi} />
+        {baseStats ? (
+          <>
+            <StatBadge
+              label="STR"
+              value={baseStats.str + stats.str}
+              diff={stats.str}
+            />
+            <StatBadge
+              label="INT"
+              value={baseStats.int + stats.int}
+              diff={stats.int}
+            />
+            <StatBadge
+              label="AGI"
+              value={baseStats.agi + stats.agi}
+              diff={stats.agi}
+            />
+          </>
+        ) : (
+          <>
+            <StatBadge label="STR" value={stats.str} />
+            <StatBadge label="INT" value={stats.int} />
+            <StatBadge label="AGI" value={stats.agi} />
+          </>
+        )}
         {stats.range > 0 && <StatBadge label="RNG" value={stats.range} />}
         {stats.risk > 0 && <StatBadge label="RSK" value={stats.risk} />}
       </div>
+      {baseStats && (
+        <p className="text-muted-foreground/60 text-[9px]">
+          Base + equipment modifier
+        </p>
+      )}
       <div className="grid grid-cols-3 gap-1">
         <StatBadge label="Blt" value={stats.blunt} />
         <StatBadge label="Edg" value={stats.edged} />
@@ -677,7 +723,15 @@ function CombinedStatsPanel({
 
 // ── Utility ─────────────────────────────────────────────────────────
 
-function StatBadge({ label, value }: { label: string; value: number }) {
+function StatBadge({
+  label,
+  value,
+  diff,
+}: {
+  label: string
+  value: number
+  diff?: number
+}) {
   return (
     <div className="bg-muted/50 flex min-w-10 flex-col items-center rounded px-1.5 py-1">
       <span className="text-muted-foreground text-[10px] leading-none">
@@ -693,6 +747,16 @@ function StatBadge({ label, value }: { label: string; value: number }) {
       >
         {value}
       </span>
+      {diff != null && diff !== 0 && (
+        <span
+          className={cn(
+            "text-[10px] leading-none font-medium",
+            diff > 0 ? "text-green-400/70" : "text-red-400/70"
+          )}
+        >
+          ({diff > 0 ? `+${diff}` : diff})
+        </span>
+      )}
     </div>
   )
 }

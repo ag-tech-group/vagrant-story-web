@@ -926,7 +926,21 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
 
       {/* Loadout Tab */}
       {activeTab === "loadout" && (
-        <LoadoutTab items={allItems} inventoryId={inventoryId} />
+        <LoadoutTab
+          items={allItems}
+          inventoryId={inventoryId}
+          baseStats={
+            inventory.base_str != null
+              ? {
+                  hp: inventory.base_hp ?? 0,
+                  mp: inventory.base_mp ?? 0,
+                  str: inventory.base_str,
+                  int: inventory.base_int ?? 0,
+                  agi: inventory.base_agi ?? 0,
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* Equipment Tab */}
@@ -1048,7 +1062,20 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 {/* Combined Stats */}
                 {combinedStats &&
                   inventory.items.some((i) => i.equip_slot != null) && (
-                    <CombinedStatsCard stats={combinedStats} />
+                    <CombinedStatsCard
+                      stats={combinedStats}
+                      baseStats={
+                        inventory.base_str != null
+                          ? {
+                              hp: inventory.base_hp ?? 0,
+                              mp: inventory.base_mp ?? 0,
+                              str: inventory.base_str,
+                              int: inventory.base_int ?? 0,
+                              agi: inventory.base_agi ?? 0,
+                            }
+                          : undefined
+                      }
+                    />
                   )}
               </div>
 
@@ -1679,6 +1706,7 @@ function DraggableBagItemRow({
 
 function CombinedStatsCard({
   stats,
+  baseStats,
 }: {
   stats: {
     str: number
@@ -1705,6 +1733,7 @@ function CombinedStatsCard({
     dark: number
     hasBlade: boolean
   }
+  baseStats?: { hp: number; mp: number; str: number; int: number; agi: number }
 }) {
   return (
     <Card className="mx-auto max-w-sm lg:max-w-none">
@@ -1713,27 +1742,58 @@ function CombinedStatsCard({
           Combined Stats
         </p>
 
-        {/* Core stats */}
-        <div className="flex flex-wrap justify-center gap-1.5">
-          <StatBox label="STR" value={stats.str} />
-          <StatBox label="INT" value={stats.int} />
-          <StatBox label="AGI" value={stats.agi} />
-          {stats.hasBlade && (
-            <>
-              <StatBox label="RNG" value={stats.range} />
-              <StatBox label="RSK" value={stats.risk} />
-            </>
-          )}
-        </div>
+        {/* Base + equipment core stats */}
+        {baseStats ? (
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <StatBox
+                label="STR"
+                value={baseStats.str + stats.str}
+                diff={stats.str}
+              />
+              <StatBox
+                label="INT"
+                value={baseStats.int + stats.int}
+                diff={stats.int}
+              />
+              <StatBox
+                label="AGI"
+                value={baseStats.agi + stats.agi}
+                diff={stats.agi}
+              />
+              {stats.hasBlade && (
+                <>
+                  <StatBox label="RNG" value={stats.range} />
+                  <StatBox label="RSK" value={stats.risk} />
+                </>
+              )}
+            </div>
+            <p className="text-muted-foreground/60 text-center text-[9px]">
+              Base + equipment modifier
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-1.5">
+            <StatBox label="STR" value={stats.str} />
+            <StatBox label="INT" value={stats.int} />
+            <StatBox label="AGI" value={stats.agi} />
+            {stats.hasBlade && (
+              <>
+                <StatBox label="RNG" value={stats.range} />
+                <StatBox label="RSK" value={stats.risk} />
+              </>
+            )}
+          </div>
+        )}
 
         {/* Damage type stats */}
-        {stats.hasBlade && (stats.blunt || stats.edged || stats.piercing) ? (
+        {stats.hasBlade && (
           <div className="flex flex-wrap justify-center gap-1.5">
             <StatBox label="Blt" value={stats.blunt} />
             <StatBox label="Edg" value={stats.edged} />
             <StatBox label="Prc" value={stats.piercing} />
           </div>
-        ) : null}
+        )}
 
         {/* Class affinities */}
         <div className="flex flex-wrap justify-center gap-1.5">

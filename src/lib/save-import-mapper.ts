@@ -52,7 +52,7 @@ function bladeApiId(saveId: number): number {
 }
 
 function gripApiId(saveId: number): number {
-  return saveId - 95 // 96→1, 126→31
+  return saveId - 2 // ITEMNAME 96→94, 102→100 (matches grips.id in DB)
 }
 
 function armorApiId(saveId: number): number {
@@ -81,11 +81,17 @@ interface GameData {
 }
 
 function buildIdMap<T extends { id: number; game_id?: number }>(
-  items: T[]
+  items: T[],
+  keyBy: "game_id" | "id" = "game_id"
 ): Map<number, T> {
   const map = new Map<number, T>()
   for (const item of items) {
-    const key = item.game_id && item.game_id > 0 ? item.game_id : item.id
+    const key =
+      keyBy === "id"
+        ? item.id
+        : item.game_id && item.game_id > 0
+          ? item.game_id
+          : item.id
     map.set(key, item)
   }
   return map
@@ -107,7 +113,7 @@ export function mapSaveSlotToItems(
 ): MapperResult {
   const bladeById = buildIdMap(gameData.blades)
   const armorById = buildIdMap(gameData.armor)
-  const gripById = buildIdMap(gameData.grips)
+  const gripById = buildIdMap(gameData.grips, "id")
   const gemById = buildIdMap(gameData.gems)
   // Track assigned equip slots to avoid duplicates (e.g. R.Arm + L.Arm → one "arms" slot)
   const usedEquipSlots = new Set<EquipSlot>()
