@@ -33,6 +33,11 @@ export interface InventoryItem {
 }
 
 export interface InventoryDetail extends InventoryListItem {
+  base_hp: number | null
+  base_mp: number | null
+  base_str: number | null
+  base_int: number | null
+  base_agi: number | null
   items: InventoryItem[]
 }
 
@@ -219,11 +224,22 @@ export const inventoryApi = {
   importItems: (
     inventoryId: number,
     items: CreateInventoryItem[],
-    clearExisting: boolean = false
+    clearExisting: boolean = false,
+    characterStats?: {
+      base_hp: number
+      base_mp: number
+      base_str: number
+      base_int: number
+      base_agi: number
+    }
   ) =>
     fetchAuth<InventoryDetail>(`/user/inventories/${inventoryId}/import`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, clear_existing: clearExisting }),
+      body: JSON.stringify({
+        items,
+        clear_existing: clearExisting,
+        ...characterStats,
+      }),
     }),
 }

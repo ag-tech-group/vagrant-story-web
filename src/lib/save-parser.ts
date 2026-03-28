@@ -36,6 +36,19 @@ const MATERIALS = [
 
 // ── Types ────────────────────────────────────────────────────────────
 
+export interface ParsedCharacterStats {
+  hp: number
+  maxHp: number
+  mp: number
+  maxMp: number
+  /** Base STR (before equipment modifiers) */
+  str: number
+  /** Base INT (before equipment modifiers) */
+  int: number
+  /** Base AGI (before equipment modifiers) */
+  agi: number
+}
+
 export interface ParsedSaveSlot {
   slotNumber: number
   zoneId: number
@@ -48,6 +61,8 @@ export interface ParsedSaveSlot {
   saveCount: number
   clearCount: number // NG+ counter
   mapCompletion: number
+  /** Ashley's base character stats (before equipment modifiers) */
+  characterStats: ParsedCharacterStats
   checksumValid: boolean
   checksumErrors: string[]
   inventory: ParsedInventory
@@ -427,6 +442,25 @@ function parseSaveSummary(view: DataView): SaveSummary {
     saveCount: view.getUint16(0x194, true),
     clearCount: view.getUint8(0x19d),
     mapCompletion: view.getUint8(0x19e),
+  }
+}
+
+/**
+ * Parse Ashley's base character stats from offset 0x06CC.
+ *
+ * The character block stores HP/MP/STR/INT/AGI as uint16 LE pairs
+ * (current, max). The game saves base stats only — equipment modifiers
+ * are recalculated at load time.
+ */
+function parseCharacterStats(view: DataView): ParsedCharacterStats {
+  return {
+    hp: view.getUint16(0x06cc, true),
+    maxHp: view.getUint16(0x06ce, true),
+    mp: view.getUint16(0x06d0, true),
+    maxMp: view.getUint16(0x06d2, true),
+    str: view.getUint16(0x06d4, true),
+    int: view.getUint16(0x06d8, true),
+    agi: view.getUint16(0x06dc, true),
   }
 }
 
@@ -930,8 +964,9 @@ function parseSaveSlot(
   const zoneId = decrypted[0x1778]
   const roomId = decrypted[0x1779]
 
-  // Parse save summary
+  // Parse save summary and character stats
   const summary = parseSaveSummary(decView)
+  const characterStats = parseCharacterStats(decView)
 
   // Parse active inventory and workshop container
   const inventory = parseInventory(decrypted, decView, ACTIVE_LAYOUT)
@@ -949,6 +984,7 @@ function parseSaveSlot(
     saveCount: summary.saveCount,
     clearCount: summary.clearCount,
     mapCompletion: summary.mapCompletion,
+    characterStats,
     checksumValid,
     checksumErrors,
     inventory,

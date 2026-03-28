@@ -111,7 +111,16 @@ export function ReadOnlyBagItemRow({
   )
 }
 
-export function StatBox({ label, value }: { label: string; value: number }) {
+export function StatBox({
+  label,
+  value,
+  diff,
+}: {
+  label: string
+  value: number
+  /** Optional equipment modifier shown as (+N) or (-N) */
+  diff?: number
+}) {
   return (
     <div className="bg-muted/50 flex min-w-11 flex-col items-center rounded px-2 py-1.5">
       <span className="text-muted-foreground text-xs leading-none">
@@ -127,6 +136,16 @@ export function StatBox({ label, value }: { label: string; value: number }) {
       >
         {value}
       </span>
+      {diff != null && diff !== 0 && (
+        <span
+          className={cn(
+            "text-[10px] leading-none font-medium",
+            diff > 0 ? "text-green-400/70" : "text-red-400/70"
+          )}
+        >
+          ({diff > 0 ? `+${diff}` : diff})
+        </span>
+      )}
     </div>
   )
 }

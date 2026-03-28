@@ -310,9 +310,16 @@ function ImportFlow() {
           console.warn(`Import warnings for "${name}":`, warnings)
         }
 
-        // Batch import
+        // Batch import with character stats
         if (items.length > 0) {
-          await inventoryApi.importItems(inventory.id, items, true)
+          const cs = slot.characterStats
+          await inventoryApi.importItems(inventory.id, items, true, {
+            base_hp: cs.maxHp,
+            base_mp: cs.maxMp,
+            base_str: cs.str,
+            base_int: cs.int,
+            base_agi: cs.agi,
+          })
         }
 
         createdIds.push(inventory.id)
@@ -848,6 +855,18 @@ function SlotCard({
                   {slot.mp}
                   <span className="text-muted-foreground">·</span>
                   {slot.maxMp}
+                </span>
+              </div>
+              {/* Base stats */}
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <span className="text-green-400">
+                  STR {slot.characterStats.str}
+                </span>
+                <span className="text-blue-400">
+                  INT {slot.characterStats.int}
+                </span>
+                <span className="text-yellow-400">
+                  AGI {slot.characterStats.agi}
                 </span>
               </div>
               {/* TIME */}
