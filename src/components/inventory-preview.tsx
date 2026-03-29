@@ -1,8 +1,20 @@
 import { ItemIcon } from "@/components/item-icon"
 import { MaterialBadge } from "@/components/stat-display"
 import { EQUIP_SLOTS, SLOT_LABELS } from "@/lib/inventory-constants"
-import type { EquipSlot, InventoryItem } from "@/lib/inventory-api"
+import type { EquipSlot } from "@/lib/inventory-api"
 import { cn } from "@/lib/utils"
+
+// ── Preview item type ───────────────────────────────────────────────
+// Minimal interface for rendering item previews. Works with both
+// InventoryItem (from the API) and GameSaveImportItem (from the mapper).
+
+export interface PreviewItem {
+  item_type: string
+  equip_slot?: EquipSlot | string | null
+  material?: string | null
+  storage?: string
+  quantity?: number
+}
 
 // ── Read-only components ─────────────────────────────────────────────
 
@@ -11,9 +23,9 @@ export function ReadOnlyEquipmentGrid({
   getDisplayName,
   getDisplayType,
 }: {
-  items: InventoryItem[]
-  getDisplayName: (item: InventoryItem) => string
-  getDisplayType: (item: InventoryItem) => string
+  items: PreviewItem[]
+  getDisplayName: (item: PreviewItem) => string
+  getDisplayType: (item: PreviewItem) => string
 }) {
   const getSlotItem = (slot: EquipSlot) =>
     items.find((i) => i.equip_slot === slot)
@@ -59,7 +71,7 @@ export function ReadOnlySlotCard({
   displayName,
   displayType,
 }: {
-  item: InventoryItem
+  item: PreviewItem
   displayName: string
   displayType: string
 }) {
@@ -79,7 +91,7 @@ export function ReadOnlyBagItemRow({
   name,
   type,
 }: {
-  item: InventoryItem
+  item: PreviewItem
   name: string
   type: string
 }) {
@@ -91,7 +103,7 @@ export function ReadOnlyBagItemRow({
           <p className="truncate text-xs font-medium">{name}</p>
           {item.equip_slot && (
             <span className="bg-primary/15 text-primary shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold">
-              {SLOT_LABELS[item.equip_slot] ?? "Equipped"}
+              {SLOT_LABELS[item.equip_slot as EquipSlot] ?? "Equipped"}
             </span>
           )}
           {item.storage === "container" && (
@@ -102,9 +114,9 @@ export function ReadOnlyBagItemRow({
         </div>
         {item.material && <MaterialBadge mat={item.material} />}
       </div>
-      {(item.quantity > 1 || item.item_type === "consumable") && (
+      {((item.quantity ?? 1) > 1 || item.item_type === "consumable") && (
         <span className="text-muted-foreground text-[10px]">
-          x{item.quantity}
+          x{item.quantity ?? 1}
         </span>
       )}
     </div>

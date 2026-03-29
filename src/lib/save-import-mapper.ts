@@ -1,25 +1,14 @@
 /**
- * Maps parsed save slot data to CreateInventoryItem[] ready for the batch import API.
+ * Maps parsed save slot data to GameSaveImportItem[] for the server-side import endpoint.
  *
- * The save parser returns ITEMNAME.BIN indices (absolute game IDs). This module
- * maps them to API items using stable identifiers (game_id for blades/gems/consumables,
- * positional index for grips, game_id for armor).
- *
- * ITEMNAME.BIN ranges:
- *   Blades:      1-90    (game_id matches directly)
- *   Grips:       96-126  (position-based: sorted by id, index 0 = ITEMNAME 96)
- *   Shields:     128-143 (game_id = ITEMNAME - 127)
- *   Helms:       144-159 (game_id = ITEMNAME - 127)
- *   Body:        160-175 (game_id = ITEMNAME - 127)
- *   Legs:        176-191 (game_id = ITEMNAME - 127)
- *   Arms:        192-207 (game_id = ITEMNAME - 127)
- *   Accessories: 223-253 (game_id = ITEMNAME - 142)
- *   Gems:        261-310 (game_id matches directly after offset)
- *   Consumables: 323-356 (game_id matches directly after offset)
+ * The save parser returns ITEMNAME.BIN indices (absolute game-internal IDs).
+ * This module converts them to field_name strings using the static ITEMNAME_MAP
+ * game constant. The API endpoint resolves field_names to database records
+ * server-side — no database IDs or game data API calls are needed here.
  */
 
-import type { Armor, Blade, Consumable, Gem, Grip } from "@/lib/game-api"
-import type { CreateInventoryItem, EquipSlot } from "@/lib/inventory-api"
+import type { EquipSlot } from "@/lib/inventory-api"
+import { ITEMNAME_MAP } from "@/lib/itemname-map"
 import type {
   ParsedArmor,
   ParsedBlade,
@@ -34,7 +23,6 @@ import type {
 
 // ── Material mapping (must match save-parser.ts MATERIALS array) ─────
 
-// Material IDs in the save file are 1-based (0 = no material)
 const MATERIAL_BY_ID: Record<number, string> = {
   1: "Wood",
   2: "Leather",
@@ -45,86 +33,52 @@ const MATERIAL_BY_ID: Record<number, string> = {
   7: "Damascus",
 }
 
-// ── ITEMNAME.BIN → game_id conversion ────────────────────────────────
-// These convert ITEMNAME.BIN absolute indices to the game_id values
-// stored in the API database. Grips use a separate positional lookup.
+// ── Types ────────────────────────────────────────────────────────────
 
-function bladeGameId(saveId: number): number {
-  return saveId // 1-90 direct
+export interface GameSaveImportItem {
+  item_type: string
+  field_name: string
+  material?: string | null
+  grip_field_name?: string | null
+  gem_field_names?: string[]
+  equip_slot?: EquipSlot | null
+  storage?: "bag" | "container"
+  quantity?: number
 }
 
-function armorGameId(saveId: number): number {
-  // Shields/Helms/Body/Legs/Arms: 128-207
-  if (saveId <= 207) return saveId - 127
-  // Accessories: 223-253 (gap at 208-222)
-  return saveId - 142
-}
-
-function gemGameId(saveId: number): number {
-  return saveId - 260 // 261→1, 310→50
-}
-
-function consumableGameId(saveId: number): number {
-  return saveId - 322 // 323→1, 356→34
-}
-
-// ── Game data lookup maps ────────────────────────────────────────────
-
-interface GameData {
-  blades: Blade[]
-  armor: Armor[]
-  grips: Grip[]
-  gems: Gem[]
-  consumables: Consumable[]
-}
-
-/** Build a map keyed by game_id (falls back to id if game_id is 0/missing). */
-function buildGameIdMap<T extends { id: number; game_id?: number }>(
-  items: T[]
-): Map<number, T> {
-  const map = new Map<number, T>()
-  for (const item of items) {
-    const key = item.game_id && item.game_id > 0 ? item.game_id : item.id
-    map.set(key, item)
-  }
-  return map
-}
-
-/**
- * Build a map from ITEMNAME.BIN index → Grip.
- * Grips don't have unique game_ids, so we use positional mapping:
- * grips sorted by id correspond to ITEMNAME indices 96, 97, 98, ...
- */
-function buildGripItemnameMap(grips: Grip[]): Map<number, Grip> {
-  const sorted = [...grips].sort((a, b) => a.id - b.id)
-  const map = new Map<number, Grip>()
-  sorted.forEach((grip, i) => map.set(96 + i, grip))
-  return map
-}
-
-// ── Main mapper ──────────────────────────────────────────────────────
-
-export interface MapperResult {
-  items: CreateInventoryItem[]
+export interface GameSaveMapperResult {
+  items: GameSaveImportItem[]
   warnings: string[]
 }
 
+// ── Mapper ───────────────────────────────────────────────────────────
+
 /**
- * Map a parsed save slot's inventory to CreateInventoryItem[] for the batch API.
+ * Map a parsed save slot to GameSaveImportItem[] identified by field_name.
+ *
+ * No game data API calls or database IDs are needed — only the static
+ * ITEMNAME_MAP game constant is used for resolution.
  */
-export function mapSaveSlotToItems(
-  slot: ParsedSaveSlot,
-  gameData: GameData
-): MapperResult {
-  const bladeByGameId = buildGameIdMap(gameData.blades)
-  const armorByGameId = buildGameIdMap(gameData.armor)
-  const gripByItemname = buildGripItemnameMap(gameData.grips)
-  const gemByGameId = buildGameIdMap(gameData.gems)
-  // Track assigned equip slots to avoid duplicates (e.g. R.Arm + L.Arm → one "arms" slot)
+export function mapSaveSlotToGameSaveImportItems(
+  slot: ParsedSaveSlot
+): GameSaveMapperResult {
   const usedEquipSlots = new Set<EquipSlot>()
-  const consumableByGameId = buildGameIdMap(gameData.consumables)
   const warnings: string[] = []
-  const items: CreateInventoryItem[] = []
+  const items: GameSaveImportItem[] = []
+
+  function resolveFieldName(itemnameIndex: number): string | undefined {
+    return ITEMNAME_MAP.get(itemnameIndex)?.fieldName
+  }
+
+  function resolveGemFieldName(
+    gemRef: number,
+    inv: ParsedInventory
+  ): string | null {
+    if (gemRef === 0) return null
+    const parsedGem = inv.gems.find((g) => g.index === gemRef)
+    if (!parsedGem) return null
+    return resolveFieldName(parsedGem.id) ?? null
+  }
 
   function mapInventory(inv: ParsedInventory, storage: "bag" | "container") {
     for (const weapon of inv.weapons) {
@@ -135,11 +89,11 @@ export function mapSaveSlotToItems(
     }
     for (const blade of inv.blades) {
       if (blade.weaponRef !== 0) continue
-      mapBlade(blade, storage)
+      mapLooseBlade(blade, storage)
     }
     for (const grip of inv.grips) {
       if (grip.weaponRef !== 0) continue
-      mapGrip(grip, storage)
+      mapLooseGrip(grip, storage)
     }
     for (const armor of inv.armor) {
       mapArmor(armor, storage)
@@ -153,14 +107,6 @@ export function mapSaveSlotToItems(
     }
   }
 
-  function resolveGemId(gemRef: number, inv: ParsedInventory): number | null {
-    if (gemRef === 0) return null
-    const parsedGem = inv.gems.find((g) => g.index === gemRef)
-    if (!parsedGem) return null
-    const apiGem = gemByGameId.get(gemGameId(parsedGem.id))
-    return apiGem?.id ?? null
-  }
-
   function mapWeapon(
     weapon: ParsedWeapon,
     inv: ParsedInventory,
@@ -169,37 +115,37 @@ export function mapSaveSlotToItems(
     const parsedBlade = inv.blades.find((b) => b.index === weapon.bladeRef)
     if (!parsedBlade) {
       warnings.push(
-        `Weapon "${weapon.name}": blade ref ${weapon.bladeRef} not found`
+        `Weapon "${weapon.name}": blade ref ${weapon.bladeRef} not found in parsed data`
       )
       return
     }
 
-    const apiBlade = bladeByGameId.get(bladeGameId(parsedBlade.id))
-    if (!apiBlade) {
+    const bladeFieldName = resolveFieldName(parsedBlade.id)
+    if (!bladeFieldName) {
       warnings.push(
-        `Weapon "${weapon.name}": blade ITEMNAME ${parsedBlade.id} not found`
+        `Weapon "${weapon.name}": blade ITEMNAME ${parsedBlade.id} unmapped`
       )
       return
     }
 
-    // Resolve grip
+    // Resolve grip field_name
+    let gripFieldName: string | null = null
     const parsedGrip = inv.grips.find((g) => g.index === weapon.gripRef)
-    let apiGripId: number | null = null
     if (parsedGrip) {
-      const apiGrip = gripByItemname.get(parsedGrip.id)
-      if (apiGrip) {
-        apiGripId = apiGrip.id
-      } else {
+      gripFieldName = resolveFieldName(parsedGrip.id) ?? null
+      if (!gripFieldName) {
         warnings.push(
-          `Weapon "${weapon.name}": grip ITEMNAME ${parsedGrip.id} not found`
+          `Weapon "${weapon.name}": grip ITEMNAME ${parsedGrip.id} unmapped`
         )
       }
     }
 
-    // Resolve gems
-    const gem1 = resolveGemId(weapon.gemRefs[0] ?? 0, inv)
-    const gem2 = resolveGemId(weapon.gemRefs[1] ?? 0, inv)
-    const gem3 = resolveGemId(weapon.gemRefs[2] ?? 0, inv)
+    // Resolve gem field_names
+    const gemFieldNames: string[] = []
+    for (const gemRef of weapon.gemRefs) {
+      const fn = resolveGemFieldName(gemRef, inv)
+      if (fn) gemFieldNames.push(fn)
+    }
 
     let equipSlot: EquipSlot | null = null
     if (
@@ -213,29 +159,28 @@ export function mapSaveSlotToItems(
 
     items.push({
       item_type: "blade",
-      item_id: apiBlade.id,
+      field_name: bladeFieldName,
       material: MATERIAL_BY_ID[parsedBlade.materialId] ?? null,
-      grip_id: apiGripId,
-      gem_1_id: gem1,
-      gem_2_id: gem2,
-      gem_3_id: gem3,
+      grip_field_name: gripFieldName,
+      gem_field_names: gemFieldNames.length > 0 ? gemFieldNames : undefined,
       equip_slot: equipSlot,
       storage,
     })
   }
 
   function mapShield(shield: ParsedShield, storage: "bag" | "container") {
-    const apiArmor = armorByGameId.get(armorGameId(shield.id))
-    if (!apiArmor) {
-      warnings.push(`Shield ITEMNAME ${shield.id} not found`)
+    const fieldName = resolveFieldName(shield.id)
+    if (!fieldName) {
+      warnings.push(`Shield ITEMNAME ${shield.id} unmapped`)
       return
     }
 
-    // Shield gems reference the parent inventory's gem array
     const inv = storage === "bag" ? slot.inventory : slot.container
-    const gem1 = resolveGemId(shield.gemRefs[0] ?? 0, inv)
-    const gem2 = resolveGemId(shield.gemRefs[1] ?? 0, inv)
-    const gem3 = resolveGemId(shield.gemRefs[2] ?? 0, inv)
+    const gemFieldNames: string[] = []
+    for (const gemRef of shield.gemRefs) {
+      const fn = resolveGemFieldName(gemRef, inv)
+      if (fn) gemFieldNames.push(fn)
+    }
 
     let equipSlot: EquipSlot | null = null
     if (
@@ -249,56 +194,51 @@ export function mapSaveSlotToItems(
 
     items.push({
       item_type: "armor",
-      item_id: apiArmor.id,
+      field_name: fieldName,
       material: MATERIAL_BY_ID[shield.materialId] ?? null,
-      grip_id: null,
-      gem_1_id: gem1,
-      gem_2_id: gem2,
-      gem_3_id: gem3,
+      gem_field_names: gemFieldNames.length > 0 ? gemFieldNames : undefined,
       equip_slot: equipSlot,
       storage,
     })
   }
 
-  function mapBlade(blade: ParsedBlade, storage: "bag" | "container") {
-    const apiBlade = bladeByGameId.get(bladeGameId(blade.id))
-    if (!apiBlade) {
-      warnings.push(`Blade ITEMNAME ${blade.id} not found`)
+  function mapLooseBlade(blade: ParsedBlade, storage: "bag" | "container") {
+    const fieldName = resolveFieldName(blade.id)
+    if (!fieldName) {
+      warnings.push(`Blade ITEMNAME ${blade.id} unmapped`)
       return
     }
 
     items.push({
       item_type: "blade",
-      item_id: apiBlade.id,
+      field_name: fieldName,
       material: MATERIAL_BY_ID[blade.materialId] ?? null,
       storage,
     })
   }
 
-  function mapGrip(grip: ParsedGrip, storage: "bag" | "container") {
-    const apiGrip = gripByItemname.get(grip.id)
-    if (!apiGrip) {
-      warnings.push(`Grip ITEMNAME ${grip.id} not found`)
+  function mapLooseGrip(grip: ParsedGrip, storage: "bag" | "container") {
+    const fieldName = resolveFieldName(grip.id)
+    if (!fieldName) {
+      warnings.push(`Grip ITEMNAME ${grip.id} unmapped`)
       return
     }
 
     items.push({
       item_type: "grip",
-      item_id: apiGrip.id,
+      field_name: fieldName,
       storage,
     })
   }
 
   function mapArmor(armor: ParsedArmor, storage: "bag" | "container") {
-    const apiArmor = armorByGameId.get(armorGameId(armor.id))
-    if (!apiArmor) {
-      warnings.push(`Armor ITEMNAME ${armor.id} not found`)
+    const fieldName = resolveFieldName(armor.id)
+    if (!fieldName) {
+      warnings.push(`Armor ITEMNAME ${armor.id} unmapped`)
       return
     }
 
-    // bodyPart == 0 means unequipped; non-zero = equipped in that slot.
-    // RAM order (from Data Crystal): Accessory, R.Arm, L.Arm, Helm, Body, Legs
-    // Save file uses 1-based: 1/2=Arms (R/L), 3=Head, 4=Body, 5=Legs, 6+=Accessory
+    // Equip slot from body part
     let equipSlot: EquipSlot | null = null
     if (storage === "bag" && armor.bodyPart !== 0) {
       const slotMap: Record<number, EquipSlot> = {
@@ -317,65 +257,47 @@ export function mapSaveSlotToItems(
       }
     }
 
-    // Accessories don't have materials (materialId 0 = "Wood" is meaningless for them)
-    const isAccessory = armor.id >= 223
+    // Material — accessories have materialId but it's meaningless.
+    // The server handles nullifying material for accessories after resolving the armor_type.
     items.push({
       item_type: "armor",
-      item_id: apiArmor.id,
-      material: isAccessory ? null : (MATERIAL_BY_ID[armor.materialId] ?? null),
+      field_name: fieldName,
+      material: MATERIAL_BY_ID[armor.materialId] ?? null,
       equip_slot: equipSlot,
       storage,
     })
   }
 
   function mapGem(gem: ParsedGem, storage: "bag" | "container") {
-    const apiGem = gemByGameId.get(gemGameId(gem.id))
-    if (!apiGem) {
-      warnings.push(`Gem ITEMNAME ${gem.id} not found`)
+    const fieldName = resolveFieldName(gem.id)
+    if (!fieldName) {
+      warnings.push(`Gem ITEMNAME ${gem.id} unmapped`)
       return
     }
 
     items.push({
       item_type: "gem",
-      item_id: apiGem.id,
+      field_name: fieldName,
       storage,
     })
   }
 
   function mapMisc(misc: ParsedMisc, storage: "bag" | "container") {
-    // Try consumable range first (323-356)
-    if (misc.id >= 323 && misc.id <= 356) {
-      const apiConsumable = consumableByGameId.get(consumableGameId(misc.id))
-      if (apiConsumable) {
-        items.push({
-          item_type: "consumable",
-          item_id: apiConsumable.id,
-          quantity: misc.quantity || 1,
-          storage,
-        })
-        return
-      }
+    const entry = ITEMNAME_MAP.get(misc.id)
+    if (!entry) {
+      // Materials (254-260), grimoires (386+), and other special items
+      warnings.push(
+        `Misc ITEMNAME ${misc.id}: unmapped (quantity: ${misc.quantity})`
+      )
+      return
     }
 
-    // Gems can appear in misc slots (261-310)
-    if (misc.id >= 261 && misc.id <= 310) {
-      const apiGem = gemByGameId.get(gemGameId(misc.id))
-      if (apiGem) {
-        items.push({
-          item_type: "gem",
-          item_id: apiGem.id,
-          quantity: misc.quantity || 1,
-          storage,
-        })
-        return
-      }
-    }
-
-    // Materials appear as misc items (254-260)
-    // Grimoires and special items (386+) — skip with warning
-    warnings.push(
-      `Misc ITEMNAME ${misc.id}: unmapped (quantity: ${misc.quantity})`
-    )
+    items.push({
+      item_type: entry.type,
+      field_name: entry.fieldName,
+      quantity: misc.quantity || 1,
+      storage,
+    })
   }
 
   mapInventory(slot.inventory, "bag")
