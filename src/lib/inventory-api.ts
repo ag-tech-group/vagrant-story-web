@@ -109,8 +109,18 @@ export interface LoadoutArmor {
   material: string
 }
 
+export interface LoadoutBodyPartScore {
+  name: string
+  estimated_damage: number
+  hit_chance: number
+  expected_damage: number
+  is_recommended: boolean
+}
+
 export interface LoadoutStats {
   estimated_damage: number
+  hit_chance: number
+  expected_damage: number
   target_body_part: string
   target_reason: string
 }
@@ -149,6 +159,7 @@ export interface LoadoutResult {
   armor: LoadoutArmor[] | null
   stats: LoadoutStats
   combined_stats: LoadoutCombinedStats | null
+  body_parts: LoadoutBodyPartScore[]
 }
 
 export interface LoadoutEnemyInfo {

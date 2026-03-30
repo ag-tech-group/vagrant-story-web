@@ -349,19 +349,25 @@ function LoadoutCard({
               <TooltipContent className="max-w-72 text-xs leading-relaxed">
                 <p className="font-semibold">How scores are calculated</p>
                 <p className="mt-1">
-                  <span className="text-muted-foreground">Score</span> is the
-                  weighted combination of ATK and DEF used to rank loadouts.
+                  Uses the actual Vagrant Story damage formula where class,
+                  affinity, and damage type bonuses are percentage modifiers on
+                  base STR, not flat values.
                 </p>
                 <p className="mt-1">
-                  <span className="text-orange-300">ATK</span> rates weapon
-                  effectiveness: base damage + damage type vs body part defenses
-                  + class/elemental affinity matchups − evade difficulty.
-                  Negative values mean the enemy strongly resists this weapon.
+                  <span className="text-orange-300">ATK</span> = expected damage
+                  (damage × hit chance). Loadouts are ranked by this value — a
+                  weapon with lower raw damage but higher accuracy can outrank a
+                  stronger but less accurate one.
                 </p>
                 <p className="mt-1">
                   <span className="text-blue-300">DEF</span> rates armor
-                  coverage: damage type resistances + class/elemental affinities
-                  from armor and materials vs the enemy's attacks.
+                  effectiveness: physical/type resistances + class/elemental
+                  affinities weighted by the enemy's offensive stats.
+                </p>
+                <p className="mt-1 text-[10px] opacity-70">
+                  Numbers are approximations based on the VS combat formula.
+                  Actual in-game damage may vary due to RISK, chaining,
+                  buffs/debuffs, and random variance (±5).
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -373,7 +379,11 @@ function LoadoutCard({
           {/* Left: Enemy info + stats panel */}
           <div className="space-y-3">
             <EnemyCard enemy={enemy} fullEnemy={fullEnemy} />
-            <StatsPanel stats={loadout.stats} mode={mode} />
+            <StatsPanel
+              stats={loadout.stats}
+              bodyParts={loadout.body_parts}
+              mode={mode}
+            />
           </div>
 
           {/* Center: Recommended equipment */}
@@ -590,53 +600,138 @@ const MODE_LABELS: Record<Mode, { label: string; color: string }> = {
 
 function StatsPanel({
   stats,
+  bodyParts,
   mode,
 }: {
   stats: LoadoutResult["stats"]
+  bodyParts: LoadoutResult["body_parts"]
   mode: Mode
 }) {
   const modeInfo = MODE_LABELS[mode]
+  const [showBodyParts, setShowBodyParts] = useState(false)
 
   return (
-    <div className="bg-muted/30 rounded-lg px-4 py-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">Est. Damage:</span>
+    <div className="space-y-2">
+      <div className="bg-muted/30 rounded-lg px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Est. Damage:</span>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                stats.estimated_damage > 0
+                  ? "text-green-400"
+                  : "text-muted-foreground"
+              )}
+            >
+              {stats.estimated_damage}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Hit:</span>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                stats.hit_chance >= 80
+                  ? "text-green-400"
+                  : stats.hit_chance >= 50
+                    ? "text-yellow-400"
+                    : "text-red-400"
+              )}
+            >
+              {stats.hit_chance}%
+            </span>
+          </div>
+
+          {stats.target_body_part && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs">Target:</span>
+              <span className="text-sm font-medium">
+                {stats.target_body_part}
+              </span>
+              {stats.target_reason && (
+                <span className="text-muted-foreground text-xs">
+                  — {stats.target_reason}
+                </span>
+              )}
+            </div>
+          )}
+
           <span
             className={cn(
-              "text-sm font-medium",
-              stats.estimated_damage > 0
-                ? "text-green-400"
-                : "text-muted-foreground"
+              "ml-auto rounded border px-2 py-0.5 text-[10px] font-medium",
+              modeInfo.color
             )}
           >
-            {stats.estimated_damage}
+            {modeInfo.label}
           </span>
         </div>
-
-        {stats.target_body_part && (
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs">Target:</span>
-            <span className="text-sm font-medium">
-              {stats.target_body_part}
-            </span>
-            {stats.target_reason && (
-              <span className="text-muted-foreground text-xs">
-                — {stats.target_reason}
-              </span>
-            )}
-          </div>
-        )}
-
-        <span
-          className={cn(
-            "ml-auto rounded border px-2 py-0.5 text-[10px] font-medium",
-            modeInfo.color
-          )}
-        >
-          {modeInfo.label}
-        </span>
       </div>
+
+      {/* Body part breakdown toggle */}
+      {bodyParts.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowBodyParts(!showBodyParts)}
+            className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 hover:underline"
+          >
+            {showBodyParts ? "Hide" : "Show"} body part breakdown
+          </button>
+
+          {showBodyParts && (
+            <div className="bg-muted/20 mt-1.5 rounded-lg border px-3 py-2">
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="text-muted-foreground">
+                    <th className="py-1 text-left font-medium">Body Part</th>
+                    <th className="py-1 text-right font-medium">Damage</th>
+                    <th className="py-1 text-right font-medium">Hit %</th>
+                    <th className="py-1 text-right font-medium">Expected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bodyParts.map((bp) => (
+                    <tr
+                      key={bp.name}
+                      className={
+                        bp.is_recommended ? "text-primary font-medium" : ""
+                      }
+                    >
+                      <td className="py-0.5">
+                        {bp.name}
+                        {bp.is_recommended && (
+                          <span className="text-primary ml-1 text-[9px]">
+                            recommended
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-0.5 text-right">
+                        {bp.estimated_damage}
+                      </td>
+                      <td
+                        className={cn(
+                          "py-0.5 text-right",
+                          bp.hit_chance >= 80
+                            ? "text-green-400"
+                            : bp.hit_chance >= 50
+                              ? "text-yellow-400"
+                              : "text-red-400"
+                        )}
+                      >
+                        {bp.hit_chance}%
+                      </td>
+                      <td className="py-0.5 text-right">
+                        {bp.expected_damage}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
