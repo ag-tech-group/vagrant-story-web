@@ -44,6 +44,10 @@ export interface GameSaveImportItem {
   equip_slot?: EquipSlot | null
   storage?: "bag" | "container"
   quantity?: number
+  dp_current?: number
+  dp_max?: number
+  pp_current?: number
+  pp_max?: number
 }
 
 export interface GameSaveMapperResult {
@@ -165,6 +169,10 @@ export function mapSaveSlotToGameSaveImportItems(
       gem_field_names: gemFieldNames.length > 0 ? gemFieldNames : undefined,
       equip_slot: equipSlot,
       storage,
+      dp_current: parsedBlade.currentDp,
+      dp_max: parsedBlade.maxDp,
+      pp_current: parsedBlade.currentPp,
+      pp_max: parsedBlade.maxPp,
     })
   }
 
@@ -199,6 +207,10 @@ export function mapSaveSlotToGameSaveImportItems(
       gem_field_names: gemFieldNames.length > 0 ? gemFieldNames : undefined,
       equip_slot: equipSlot,
       storage,
+      dp_current: shield.currentDp,
+      dp_max: shield.maxDp,
+      pp_current: shield.currentPp,
+      pp_max: shield.maxPp,
     })
   }
 
@@ -214,6 +226,10 @@ export function mapSaveSlotToGameSaveImportItems(
       field_name: fieldName,
       material: MATERIAL_BY_ID[blade.materialId] ?? null,
       storage,
+      dp_current: blade.currentDp,
+      dp_max: blade.maxDp,
+      pp_current: blade.currentPp,
+      pp_max: blade.maxPp,
     })
   }
 
@@ -265,6 +281,10 @@ export function mapSaveSlotToGameSaveImportItems(
       material: MATERIAL_BY_ID[armor.materialId] ?? null,
       equip_slot: equipSlot,
       storage,
+      dp_current: armor.currentDp,
+      dp_max: armor.maxDp,
+      pp_current: armor.currentPp,
+      pp_max: armor.maxPp,
     })
   }
 
