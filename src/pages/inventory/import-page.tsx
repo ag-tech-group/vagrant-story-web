@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import {
   AlertTriangle,
@@ -26,27 +26,23 @@ import {
 import {
   ReadOnlyEquipmentGrid,
   ReadOnlyBagItemRow,
+  type PreviewItem,
 } from "@/components/inventory-preview"
 import { DISPLAY_TYPE_TO_CATEGORY } from "@/lib/inventory-constants"
 import { useAuth } from "@/lib/auth"
 import { loginUrl } from "@/lib/config"
-import {
-  gameApi,
-  fmt,
-  type Armor,
-  type Blade,
-  type Consumable,
-  type Gem,
-  type Grip,
-} from "@/lib/game-api"
-import { inventoryApi, type InventoryItem } from "@/lib/inventory-api"
+import { gameSaveApi } from "@/lib/inventory-api"
+import { ITEMNAME_MAP } from "@/lib/itemname-map"
 import {
   parseMemoryCard,
   isPsvFile,
   PSV_ERROR_MESSAGE,
   type ParsedSaveSlot,
 } from "@/lib/save-parser"
-import { mapSaveSlotToItems } from "@/lib/save-import-mapper"
+import {
+  mapSaveSlotToGameSaveImportItems,
+  type GameSaveImportItem,
+} from "@/lib/save-import-mapper"
 import { getRoomName } from "@/lib/vs-rooms"
 import { cn } from "@/lib/utils"
 
@@ -76,6 +72,34 @@ function generateSlotName(slot: ParsedSaveSlot): string {
   parts.push(time, `${slot.mapCompletion}%`)
   if (slot.clearCount > 0) parts.push(`NG+${slot.clearCount}`)
   return parts.join(" — ")
+}
+
+// ── Display helpers using ITEMNAME_MAP ───────────────────────────────
+
+/** Item type category for display grouping. Maps item_type to a UI category. */
+const ITEM_TYPE_CATEGORY: Record<string, string> = {
+  blade: "Blade",
+  grip: "Grip",
+  armor: "Armor",
+  gem: "Gem",
+  consumable: "Consumable",
+}
+
+/** Reverse lookup: field_name → display name, built once from ITEMNAME_MAP. */
+const FIELD_NAME_TO_DISPLAY = new Map<string, string>()
+for (const entry of ITEMNAME_MAP.values()) {
+  FIELD_NAME_TO_DISPLAY.set(entry.fieldName, entry.name)
+}
+
+function getDisplayName(item: GameSaveImportItem): string {
+  return (
+    FIELD_NAME_TO_DISPLAY.get(item.field_name) ??
+    item.field_name.replace(/_/g, " ")
+  )
+}
+
+function getDisplayType(item: GameSaveImportItem): string {
+  return ITEM_TYPE_CATEGORY[item.item_type] ?? item.item_type
 }
 
 // ── Main export ──────────────────────────────────────────────────────
@@ -115,59 +139,6 @@ function ImportFlow() {
   const [error, setError] = useState<string | null>(null)
   const [importProgress, setImportProgress] = useState(0)
   const [importTotal, setImportTotal] = useState(0)
-
-  // Game data for mapping + preview
-  const { data: blades = [] } = useQuery({
-    queryKey: ["blades"],
-    queryFn: gameApi.blades,
-  })
-  const { data: armor = [] } = useQuery({
-    queryKey: ["armor"],
-    queryFn: gameApi.armor,
-  })
-  const { data: grips = [] } = useQuery({
-    queryKey: ["grips"],
-    queryFn: gameApi.grips,
-  })
-  const { data: gems = [] } = useQuery({
-    queryKey: ["gems"],
-    queryFn: gameApi.gems,
-  })
-  const { data: consumables = [] } = useQuery({
-    queryKey: ["consumables"],
-    queryFn: gameApi.consumables,
-  })
-
-  // ── ID lookup maps for display ──────────────────────────────────────
-  const bladeIdMap = useMemo(() => {
-    const m = new Map<number, Blade>()
-    for (const b of blades) m.set(b.id, b)
-    return m
-  }, [blades])
-
-  const armorIdMap = useMemo(() => {
-    const m = new Map<number, Armor>()
-    for (const a of armor) m.set(a.id, a)
-    return m
-  }, [armor])
-
-  const gripIdMap = useMemo(() => {
-    const m = new Map<number, Grip>()
-    for (const g of grips) m.set(g.id, g)
-    return m
-  }, [grips])
-
-  const gemIdMap = useMemo(() => {
-    const m = new Map<number, Gem>()
-    for (const g of gems) m.set(g.id, g)
-    return m
-  }, [gems])
-
-  const consumableIdMap = useMemo(() => {
-    const m = new Map<number, Consumable>()
-    for (const c of consumables) m.set(c.id, c)
-    return m
-  }, [consumables])
 
   // ── File handling ───────────────────────────────────────────────────
 
@@ -232,50 +203,6 @@ function ImportFlow() {
     setSlots((prev) => prev.map((s, i) => (i === index ? { ...s, name } : s)))
   }, [])
 
-  // ── Display helpers ─────────────────────────────────────────────────
-
-  const getDisplayName = useCallback(
-    (item: InventoryItem): string => {
-      if (item.item_type === "blade") {
-        const b = bladeIdMap.get(item.item_id)
-        return b ? fmt(b.field_name) : `Blade #${item.item_id}`
-      }
-      if (item.item_type === "grip") {
-        const g = gripIdMap.get(item.item_id)
-        return g ? fmt(g.field_name) : `Grip #${item.item_id}`
-      }
-      if (item.item_type === "gem") {
-        const g = gemIdMap.get(item.item_id)
-        return g ? fmt(g.field_name) : `Gem #${item.item_id}`
-      }
-      if (item.item_type === "consumable") {
-        const c = consumableIdMap.get(item.item_id)
-        return c ? fmt(c.field_name) : `Consumable #${item.item_id}`
-      }
-      const a = armorIdMap.get(item.item_id)
-      return a ? fmt(a.field_name) : `Item #${item.item_id}`
-    },
-    [bladeIdMap, armorIdMap, gripIdMap, gemIdMap, consumableIdMap]
-  )
-
-  const getDisplayType = useCallback(
-    (item: InventoryItem): string => {
-      if (item.item_type === "blade") {
-        const b = bladeIdMap.get(item.item_id)
-        return b?.blade_type ?? "Blade"
-      }
-      if (item.item_type === "grip") {
-        const g = gripIdMap.get(item.item_id)
-        return g?.grip_type ?? "Grip"
-      }
-      if (item.item_type === "gem") return "Gem"
-      if (item.item_type === "consumable") return "Consumable"
-      const a = armorIdMap.get(item.item_id)
-      return a?.armor_type ?? "Armor"
-    },
-    [bladeIdMap, armorIdMap, gripIdMap]
-  )
-
   // ── Import handler ──────────────────────────────────────────────────
 
   const selectedSlots = slots.filter((s) => s.selected)
@@ -294,35 +221,30 @@ function ImportFlow() {
       for (let i = 0; i < toImport.length; i++) {
         const { slot, name } = toImport[i]
 
-        // Create inventory
-        const inventory = await inventoryApi.create(name)
-
-        // Map save items to API items
-        const { items, warnings } = mapSaveSlotToItems(slot, {
-          blades,
-          armor,
-          grips,
-          gems,
-          consumables,
-        })
+        // Map save items to field_name-based items (no DB PKs, no game data needed)
+        const { items, warnings } = mapSaveSlotToGameSaveImportItems(slot)
 
         if (warnings.length > 0) {
-          console.warn(`Import warnings for "${name}":`, warnings)
+          console.warn(`Mapper warnings for "${name}":`, warnings)
         }
 
-        // Batch import with character stats
-        if (items.length > 0) {
-          const cs = slot.characterStats
-          await inventoryApi.importItems(inventory.id, items, true, {
-            base_hp: cs.maxHp,
-            base_mp: cs.maxMp,
-            base_str: cs.str,
-            base_int: cs.int,
-            base_agi: cs.agi,
-          })
+        // Single API call: server resolves field_names → DB PKs and creates everything
+        const cs = slot.characterStats
+        const result = await gameSaveApi.importSave({
+          name,
+          items,
+          base_hp: cs.maxHp,
+          base_mp: cs.maxMp,
+          base_str: cs.str,
+          base_int: cs.int,
+          base_agi: cs.agi,
+        })
+
+        if (result.warnings.length > 0) {
+          console.warn(`Server warnings for "${name}":`, result.warnings)
         }
 
-        createdIds.push(inventory.id)
+        createdIds.push(result.inventory.id)
         setImportProgress(i + 1)
       }
 
@@ -348,38 +270,16 @@ function ImportFlow() {
       )
       setPhase("preview")
     }
-  }, [slots, blades, armor, grips, gems, consumables, navigate, queryClient])
+  }, [slots, navigate, queryClient])
 
   // ── Build preview items for expanded slots ──────────────────────────
 
   const buildPreviewItems = useCallback(
-    (slot: ParsedSaveSlot): InventoryItem[] => {
-      const { items } = mapSaveSlotToItems(slot, {
-        blades,
-        armor,
-        grips,
-        gems,
-        consumables,
-      })
-      // Convert CreateInventoryItem to InventoryItem with fake IDs for display
-      return items.map(
-        (item, i): InventoryItem => ({
-          id: i,
-          inventory_id: 0,
-          item_type: item.item_type,
-          item_id: item.item_id,
-          material: item.material ?? null,
-          grip_id: item.grip_id ?? null,
-          gem_1_id: item.gem_1_id ?? null,
-          gem_2_id: item.gem_2_id ?? null,
-          gem_3_id: item.gem_3_id ?? null,
-          equip_slot: (item.equip_slot as InventoryItem["equip_slot"]) ?? null,
-          storage: item.storage ?? "bag",
-          quantity: item.quantity ?? 1,
-        })
-      )
+    (slot: ParsedSaveSlot): GameSaveImportItem[] => {
+      const { items } = mapSaveSlotToGameSaveImportItems(slot)
+      return items
     },
-    [blades, armor, grips, gems, consumables]
+    []
   )
 
   // ── Render ──────────────────────────────────────────────────────────
@@ -413,8 +313,6 @@ function ImportFlow() {
           }}
           selectedCount={selectedSlots.length}
           buildPreviewItems={buildPreviewItems}
-          getDisplayName={getDisplayName}
-          getDisplayType={getDisplayType}
         />
       )}
 
@@ -519,8 +417,6 @@ function PreviewPhase({
   onBack,
   selectedCount,
   buildPreviewItems,
-  getDisplayName,
-  getDisplayType,
 }: {
   slots: SlotState[]
   onToggleSelected: (index: number) => void
@@ -529,9 +425,7 @@ function PreviewPhase({
   onImport: () => void
   onBack: () => void
   selectedCount: number
-  buildPreviewItems: (slot: ParsedSaveSlot) => InventoryItem[]
-  getDisplayName: (item: InventoryItem) => string
-  getDisplayType: (item: InventoryItem) => string
+  buildPreviewItems: (slot: ParsedSaveSlot) => GameSaveImportItem[]
 }) {
   return (
     <div className="space-y-4">
@@ -549,8 +443,6 @@ function PreviewPhase({
           onToggleExpanded={onToggleExpanded}
           onUpdateName={onUpdateName}
           buildPreviewItems={buildPreviewItems}
-          getDisplayName={getDisplayName}
-          getDisplayType={getDisplayType}
         />
       ))}
 
@@ -684,17 +576,13 @@ function SlotCard({
   onToggleExpanded,
   onUpdateName,
   buildPreviewItems,
-  getDisplayName,
-  getDisplayType,
 }: {
   state: SlotState
   index: number
   onToggleSelected: (index: number) => void
   onToggleExpanded: (index: number) => void
   onUpdateName: (index: number, name: string) => void
-  buildPreviewItems: (slot: ParsedSaveSlot) => InventoryItem[]
-  getDisplayName: (item: InventoryItem) => string
-  getDisplayType: (item: InventoryItem) => string
+  buildPreviewItems: (slot: ParsedSaveSlot) => GameSaveImportItem[]
 }) {
   const { slot, name, selected, expanded } = state
   const disabled = !slot.checksumValid
@@ -702,43 +590,40 @@ function SlotCard({
   const [bagCategory, setBagCategory] = useState("all")
   const [containerCategory, setContainerCategory] = useState("all")
 
-  // Build preview items only when expanded (avoid computing for collapsed)
+  // Build preview items only when expanded
   const previewItems = useMemo(
     () => (expanded ? buildPreviewItems(slot) : []),
     [expanded, slot, buildPreviewItems]
   )
 
-  const bagItems = previewItems.filter((i) => i.storage === "bag")
+  const bagItems = previewItems.filter((i) => (i.storage ?? "bag") === "bag")
   const containerItems = previewItems.filter((i) => i.storage === "container")
   const equippedItems = bagItems.filter((i) => i.equip_slot)
 
-  // Build category counts for bag and container
-  const getCategoryCounts = useCallback(
-    (items: InventoryItem[]) => {
-      const counts = new Map<string, number>()
-      for (const item of items) {
-        const displayType = getDisplayType(item)
-        const category = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
-        counts.set(category, (counts.get(category) ?? 0) + 1)
-      }
-      const order = [
-        "Blade",
-        "Grip",
-        "Shield",
-        "Helm",
-        "Body",
-        "Leg",
-        "Arm",
-        "Accessory",
-        "Gem",
-        "Consumable",
-      ]
-      return order
-        .filter((c) => counts.has(c))
-        .map((c) => ({ label: c, count: counts.get(c)! }))
-    },
-    [getDisplayType]
-  )
+  // Build category counts
+  const getCategoryCounts = useCallback((items: GameSaveImportItem[]) => {
+    const counts = new Map<string, number>()
+    for (const item of items) {
+      const category =
+        DISPLAY_TYPE_TO_CATEGORY[getDisplayType(item)] ?? getDisplayType(item)
+      counts.set(category, (counts.get(category) ?? 0) + 1)
+    }
+    const order = [
+      "Blade",
+      "Grip",
+      "Shield",
+      "Helm",
+      "Body",
+      "Leg",
+      "Arm",
+      "Accessory",
+      "Gem",
+      "Consumable",
+    ]
+    return order
+      .filter((c) => counts.has(c))
+      .map((c) => ({ label: c, count: counts.get(c)! }))
+  }, [])
 
   const bagCategories = useMemo(
     () => getCategoryCounts(bagItems),
@@ -750,55 +635,45 @@ function SlotCard({
   )
 
   const filterByCategory = useCallback(
-    (items: InventoryItem[], category: string) => {
+    (items: GameSaveImportItem[], category: string) => {
       if (category === "all") return items
       return items.filter((item) => {
-        const displayType = getDisplayType(item)
-        const cat = DISPLAY_TYPE_TO_CATEGORY[displayType] ?? displayType
+        const cat =
+          DISPLAY_TYPE_TO_CATEGORY[getDisplayType(item)] ?? getDisplayType(item)
         return cat === category
       })
     },
-    [getDisplayType]
+    []
   )
 
   const hpPct = slot.maxHp > 0 ? (slot.hp / slot.maxHp) * 100 : 0
   const mpPct = slot.maxMp > 0 ? (slot.mp / slot.maxMp) * 100 : 0
 
+  // Adapt GameSaveImportItem to PreviewItem for the read-only components
+  const toPreview = (item: GameSaveImportItem): PreviewItem => item
+
   return (
     <Card
       className={cn(
-        "transition-colors",
+        "overflow-hidden transition-all",
         disabled && "opacity-60",
-        selected && !disabled && "border-primary/30",
-        expanded && "flex max-h-[80vh] flex-col"
+        selected && !disabled && "border-primary"
       )}
     >
-      <CardContent
-        className={cn(
-          "space-y-3 p-4",
-          expanded && "flex flex-col overflow-hidden"
-        )}
-      >
-        {/* Top row: checkbox + clickable save info */}
-        <div className={cn("flex shrink-0 items-start gap-3")}>
-          {/* Checkbox — stops propagation so it doesn't toggle expand */}
+      <CardContent className="flex max-h-[80vh] flex-col gap-2 pt-4 pb-4">
+        <div className="flex items-start gap-3">
+          {/* Selection checkbox */}
           <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleSelected(index)
-            }}
+            onClick={() => onToggleSelected(index)}
             disabled={disabled}
             className={cn(
               "mt-1 flex size-5 shrink-0 items-center justify-center rounded border transition-colors",
-              disabled
-                ? "border-border/50 cursor-not-allowed"
-                : selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border hover:border-foreground/40"
+              selected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border hover:border-foreground/40"
             )}
           >
-            {selected && !disabled && <Check className="size-3" />}
+            {selected && <Check className="size-3" />}
           </button>
 
           {/* Clickable area — toggles expand/collapse */}
@@ -831,7 +706,7 @@ function SlotCard({
               </div>
             </div>
 
-            {/* Row 2: HP bar + MP bar + TIME */}
+            {/* Row 2: HP bar + MP bar + stats + TIME */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
               {/* HP */}
               <div className="flex items-center gap-2">
@@ -914,9 +789,13 @@ function SlotCard({
                 </p>
                 <div className="mx-auto max-w-xs">
                   <ReadOnlyEquipmentGrid
-                    items={bagItems}
-                    getDisplayName={getDisplayName}
-                    getDisplayType={getDisplayType}
+                    items={bagItems.map(toPreview)}
+                    getDisplayName={(item) =>
+                      getDisplayName(item as GameSaveImportItem)
+                    }
+                    getDisplayType={(item) =>
+                      getDisplayType(item as GameSaveImportItem)
+                    }
                   />
                 </div>
               </div>
@@ -946,10 +825,10 @@ function SlotCard({
                   )}
                 </div>
                 <div className="space-y-1">
-                  {filterByCategory(bagItems, bagCategory).map((item) => (
+                  {filterByCategory(bagItems, bagCategory).map((item, i) => (
                     <ReadOnlyBagItemRow
-                      key={`bag-${item.id}`}
-                      item={item}
+                      key={`bag-${i}`}
+                      item={toPreview(item)}
                       name={getDisplayName(item)}
                       type={getDisplayType(item)}
                     />
@@ -986,10 +865,10 @@ function SlotCard({
                 </div>
                 <div className="space-y-1">
                   {filterByCategory(containerItems, containerCategory).map(
-                    (item) => (
+                    (item, i) => (
                       <ReadOnlyBagItemRow
-                        key={`container-${item.id}`}
-                        item={item}
+                        key={`container-${i}`}
+                        item={toPreview(item)}
                         name={getDisplayName(item)}
                         type={getDisplayType(item)}
                       />

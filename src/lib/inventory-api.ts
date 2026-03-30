@@ -243,3 +243,40 @@ export const inventoryApi = {
       }),
     }),
 }
+
+// ── Game save import types ──────────────────────────────────────────
+
+export interface GameSaveImportItem {
+  item_type: string
+  field_name: string
+  material?: string | null
+  grip_field_name?: string | null
+  gem_field_names?: string[]
+  equip_slot?: EquipSlot | null
+  storage?: "bag" | "container"
+  quantity?: number
+}
+
+export interface GameSaveImportRequest {
+  name: string
+  items: GameSaveImportItem[]
+  base_hp?: number | null
+  base_mp?: number | null
+  base_str?: number | null
+  base_int?: number | null
+  base_agi?: number | null
+}
+
+export interface GameSaveImportResponse {
+  inventory: InventoryDetail
+  warnings: string[]
+}
+
+export const gameSaveApi = {
+  importSave: (request: GameSaveImportRequest) =>
+    fetchAuth<GameSaveImportResponse>("/user/inventories/import-save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    }),
+}

@@ -1,16 +1,20 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { Loader2, RotateCcw, Zap } from "lucide-react"
+import { Info, Loader2, RotateCcw, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { ItemPicker, type PickerItem } from "@/components/item-picker"
 import {
   EquipmentGridView,
   type GridSlotData,
 } from "@/components/equipment-grid-view"
 import { ItemIcon } from "@/components/item-icon"
-import { DamageTypeBadge } from "@/components/stat-display"
 import { gameApi, type Enemy } from "@/lib/game-api"
 import type { InventoryItem } from "@/lib/inventory-api"
 import {
@@ -336,6 +340,31 @@ function LoadoutCard({
                 DEF: {loadout.defense_score}
               </Badge>
             )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="text-muted-foreground hover:text-foreground cursor-help">
+                  <Info className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-72 text-xs leading-relaxed">
+                <p className="font-semibold">How scores are calculated</p>
+                <p className="mt-1">
+                  <span className="text-muted-foreground">Score</span> is the
+                  weighted combination of ATK and DEF used to rank loadouts.
+                </p>
+                <p className="mt-1">
+                  <span className="text-orange-300">ATK</span> rates weapon
+                  effectiveness: base damage + damage type vs body part defenses
+                  + class/elemental affinity matchups − evade difficulty.
+                  Negative values mean the enemy strongly resists this weapon.
+                </p>
+                <p className="mt-1">
+                  <span className="text-blue-300">DEF</span> rates armor
+                  coverage: damage type resistances + class/elemental affinities
+                  from armor and materials vs the enemy's attacks.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -571,14 +600,19 @@ function StatsPanel({
   return (
     <div className="bg-muted/30 rounded-lg px-4 py-3">
       <div className="flex flex-wrap items-center gap-3">
-        {stats.estimated_damage > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs">Est. Damage:</span>
-            <span className="text-sm font-medium text-green-400">
-              {stats.estimated_damage}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-xs">Est. Damage:</span>
+          <span
+            className={cn(
+              "text-sm font-medium",
+              stats.estimated_damage > 0
+                ? "text-green-400"
+                : "text-muted-foreground"
+            )}
+          >
+            {stats.estimated_damage}
+          </span>
+        </div>
 
         {stats.target_body_part && (
           <div className="flex items-center gap-2">
@@ -652,11 +686,6 @@ function CombinedStatsPanel({
         <p className="text-muted-foreground/60 text-[9px]">
           Equipment contribution only
         </p>
-      )}
-      {stats.damage_type && (
-        <div className="flex justify-center">
-          <DamageTypeBadge type={stats.damage_type} />
-        </div>
       )}
       <div className="grid grid-cols-3 gap-1">
         {baseStats ? (
