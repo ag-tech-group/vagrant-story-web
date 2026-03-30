@@ -30,6 +30,10 @@ export interface InventoryItem {
   equip_slot: EquipSlot | null
   storage: "bag" | "container"
   quantity: number
+  dp_current: number | null
+  dp_max: number | null
+  pp_current: number | null
+  pp_max: number | null
 }
 
 export interface InventoryDetail extends InventoryListItem {
@@ -266,6 +270,10 @@ export interface GameSaveImportItem {
   equip_slot?: EquipSlot | null
   storage?: "bag" | "container"
   quantity?: number
+  dp_current?: number
+  dp_max?: number
+  pp_current?: number
+  pp_max?: number
 }
 
 export interface GameSaveImportRequest {

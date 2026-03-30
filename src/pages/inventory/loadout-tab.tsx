@@ -379,9 +379,9 @@ function LoadoutCard({
           {/* Left: Enemy info + stats panel */}
           <div className="space-y-3">
             <EnemyCard enemy={enemy} fullEnemy={fullEnemy} />
-            <StatsPanel
-              stats={loadout.stats}
+            <BodyPartTable
               bodyParts={loadout.body_parts}
+              targetReason={loadout.stats.target_reason}
               mode={mode}
             />
           </div>
@@ -598,139 +598,79 @@ const MODE_LABELS: Record<Mode, { label: string; color: string }> = {
   },
 }
 
-function StatsPanel({
-  stats,
+function BodyPartTable({
   bodyParts,
+  targetReason,
   mode,
 }: {
-  stats: LoadoutResult["stats"]
   bodyParts: LoadoutResult["body_parts"]
+  targetReason: string
   mode: Mode
 }) {
   const modeInfo = MODE_LABELS[mode]
-  const [showBodyParts, setShowBodyParts] = useState(false)
+
+  if (bodyParts.length === 0) return null
+
+  const recommended = bodyParts.find((bp) => bp.is_recommended)
 
   return (
-    <div className="space-y-2">
-      <div className="bg-muted/30 rounded-lg px-4 py-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs">Est. Damage:</span>
-            <span
-              className={cn(
-                "text-sm font-medium",
-                stats.estimated_damage > 0
-                  ? "text-green-400"
-                  : "text-muted-foreground"
-              )}
-            >
-              {stats.estimated_damage}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs">Hit:</span>
-            <span
-              className={cn(
-                "text-sm font-medium",
-                stats.hit_chance >= 80
-                  ? "text-green-400"
-                  : stats.hit_chance >= 50
-                    ? "text-yellow-400"
-                    : "text-red-400"
-              )}
-            >
-              {stats.hit_chance}%
-            </span>
-          </div>
-
-          {stats.target_body_part && (
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs">Target:</span>
-              <span className="text-sm font-medium">
-                {stats.target_body_part}
-              </span>
-              {stats.target_reason && (
-                <span className="text-muted-foreground text-xs">
-                  — {stats.target_reason}
-                </span>
-              )}
-            </div>
+    <div className="bg-muted/20 rounded-lg border px-3 py-2">
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+          Body Part Targets
+        </p>
+        <span
+          className={cn(
+            "rounded border px-2 py-0.5 text-[10px] font-medium",
+            modeInfo.color
           )}
-
-          <span
-            className={cn(
-              "ml-auto rounded border px-2 py-0.5 text-[10px] font-medium",
-              modeInfo.color
-            )}
-          >
-            {modeInfo.label}
-          </span>
-        </div>
+        >
+          {modeInfo.label}
+        </span>
       </div>
-
-      {/* Body part breakdown toggle */}
-      {bodyParts.length > 0 && (
-        <div>
-          <button
-            onClick={() => setShowBodyParts(!showBodyParts)}
-            className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 hover:underline"
-          >
-            {showBodyParts ? "Hide" : "Show"} body part breakdown
-          </button>
-
-          {showBodyParts && (
-            <div className="bg-muted/20 mt-1.5 rounded-lg border px-3 py-2">
-              <table className="w-full text-[11px]">
-                <thead>
-                  <tr className="text-muted-foreground">
-                    <th className="py-1 text-left font-medium">Body Part</th>
-                    <th className="py-1 text-right font-medium">Damage</th>
-                    <th className="py-1 text-right font-medium">Hit %</th>
-                    <th className="py-1 text-right font-medium">Expected</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bodyParts.map((bp) => (
-                    <tr
-                      key={bp.name}
-                      className={
-                        bp.is_recommended ? "text-primary font-medium" : ""
-                      }
-                    >
-                      <td className="py-0.5">
-                        {bp.name}
-                        {bp.is_recommended && (
-                          <span className="text-primary ml-1 text-[9px]">
-                            recommended
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-0.5 text-right">
-                        {bp.estimated_damage}
-                      </td>
-                      <td
-                        className={cn(
-                          "py-0.5 text-right",
-                          bp.hit_chance >= 80
-                            ? "text-green-400"
-                            : bp.hit_chance >= 50
-                              ? "text-yellow-400"
-                              : "text-red-400"
-                        )}
-                      >
-                        {bp.hit_chance}%
-                      </td>
-                      <td className="py-0.5 text-right">
-                        {bp.expected_damage}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      <table className="w-full text-[11px]">
+        <thead>
+          <tr className="text-muted-foreground">
+            <th className="py-1 text-left font-medium">Target</th>
+            <th className="py-1 text-right font-medium">Damage</th>
+            <th className="py-1 text-right font-medium">Hit %</th>
+            <th className="py-1 text-right font-medium">Expected</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bodyParts.map((bp) => (
+            <tr
+              key={bp.name}
+              className={bp.is_recommended ? "text-primary font-medium" : ""}
+            >
+              <td className="py-0.5">
+                {bp.name}
+                {bp.is_recommended && (
+                  <span className="text-primary ml-1 text-[9px]">best</span>
+                )}
+              </td>
+              <td className="py-0.5 text-right">{bp.estimated_damage}</td>
+              <td
+                className={cn(
+                  "py-0.5 text-right",
+                  bp.hit_chance >= 80
+                    ? "text-green-400"
+                    : bp.hit_chance >= 50
+                      ? "text-yellow-400"
+                      : "text-red-400"
+                )}
+              >
+                {bp.hit_chance}%
+              </td>
+              <td className="py-0.5 text-right">{bp.expected_damage}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {recommended && targetReason && (
+        <p className="text-muted-foreground mt-1.5 border-t pt-1.5 text-[10px]">
+          {recommended.name} — {targetReason}
+        </p>
       )}
     </div>
   )
