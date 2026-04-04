@@ -131,31 +131,40 @@ function RootComponent() {
         <div className="relative z-10 flex min-w-0 flex-1 flex-col">
           <Outlet />
           <footer className="border-border/50 mt-auto border-t px-4 py-3">
-            <div className="text-muted-foreground flex items-center justify-between text-xs">
-              <p>
-                &copy; {new Date().getFullYear()} AG Technology Group LLC. All
-                rights reserved.
-              </p>
-              <div className="flex gap-4">
-                <a
-                  href="https://criticalbit.gg"
-                  className="hover:text-foreground transition-colors"
-                >
-                  criticalbit.gg
-                </a>
-                <a
-                  href="https://criticalbit.gg/privacy"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Privacy
-                </a>
-                <a
-                  href="https://criticalbit.gg/terms"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Terms
-                </a>
+            <div className="text-muted-foreground flex flex-col gap-2 text-xs">
+              <div className="flex items-center justify-between">
+                <p>
+                  &copy; {new Date().getFullYear()} AG Technology Group LLC. All
+                  rights reserved.
+                </p>
+                <div className="flex gap-4">
+                  <a
+                    href="https://criticalbit.gg"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    criticalbit.gg
+                  </a>
+                  <a
+                    href="https://criticalbit.gg/privacy"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Privacy
+                  </a>
+                  <a
+                    href="https://criticalbit.gg/terms"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Terms
+                  </a>
+                </div>
               </div>
+              <p>
+                Vagrant Story is a registered trademark of Square Enix Co., Ltd.
+                All game content, including names, images, and data, is the
+                property of Square Enix. This is an unofficial fan site and is
+                not affiliated with or endorsed by Square Enix. Game content is
+                used for informational and community reference purposes.
+              </p>
             </div>
           </footer>
         </div>
