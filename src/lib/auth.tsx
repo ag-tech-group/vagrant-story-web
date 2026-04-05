@@ -9,8 +9,6 @@ import {
 } from "react"
 import { api, setOnUnauthorized } from "@/api/api"
 
-const EMAIL_KEY = "app_auth_email"
-
 interface AuthContextValue {
   isAuthenticated: boolean
   isLoading: boolean
@@ -29,15 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [email, setEmail] = useState<string | null>(() =>
-    localStorage.getItem(EMAIL_KEY)
-  )
+  const [email, setEmail] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   const clearState = useCallback(() => {
-    localStorage.removeItem(EMAIL_KEY)
     setIsAuthenticated(false)
     setEmail(null)
     setUserId(null)
@@ -56,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearState])
 
   const login = useCallback((newEmail: string) => {
-    localStorage.setItem(EMAIL_KEY, newEmail)
     setEmail(newEmail)
     setIsAuthenticated(true)
   }, [])
@@ -74,7 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserId(user.id)
       setDisplayName(user.display_name)
       setAvatarUrl(user.avatar_url)
-      localStorage.setItem(EMAIL_KEY, user.email)
     } catch {
       clearState()
     } finally {
