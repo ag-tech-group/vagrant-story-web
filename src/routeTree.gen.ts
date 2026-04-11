@@ -77,7 +77,7 @@ import { Route as AreasIdRouteImport } from './routes/areas/$id'
 import { Route as AccessoriesIdRouteImport } from './routes/accessories/$id'
 import { Route as InventoryInventoryIdRouteRouteImport } from './routes/inventory/$inventoryId/route'
 import { Route as InventoryInventoryIdIndexRouteImport } from './routes/inventory/$inventoryId/index'
-import { Route as InventoryInventoryIdOptimizerRouteImport } from './routes/inventory/$inventoryId/optimizer'
+import { Route as InventoryInventoryIdWorkbenchRouteImport } from './routes/inventory/$inventoryId/workbench'
 import { Route as InventoryInventoryIdLoadoutRouteImport } from './routes/inventory/$inventoryId/loadout'
 import { Route as InventoryInventoryIdEquipmentRouteImport } from './routes/inventory/$inventoryId/equipment'
 
@@ -423,10 +423,10 @@ const InventoryInventoryIdIndexRoute =
     path: '/',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
-const InventoryInventoryIdOptimizerRoute =
-  InventoryInventoryIdOptimizerRouteImport.update({
-    id: '/optimizer',
-    path: '/optimizer',
+const InventoryInventoryIdWorkbenchRoute =
+  InventoryInventoryIdWorkbenchRouteImport.update({
+    id: '/workbench',
+    path: '/workbench',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
 const InventoryInventoryIdLoadoutRoute =
@@ -512,7 +512,7 @@ export interface FileRoutesByFullPath {
   '/workshops/': typeof WorkshopsIndexRoute
   '/inventory/$inventoryId/equipment': typeof InventoryInventoryIdEquipmentRoute
   '/inventory/$inventoryId/loadout': typeof InventoryInventoryIdLoadoutRoute
-  '/inventory/$inventoryId/optimizer': typeof InventoryInventoryIdOptimizerRoute
+  '/inventory/$inventoryId/workbench': typeof InventoryInventoryIdWorkbenchRoute
   '/inventory/$inventoryId/': typeof InventoryInventoryIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -563,7 +563,7 @@ export interface FileRoutesByTo {
   '/workshops': typeof WorkshopsIndexRoute
   '/inventory/$inventoryId/equipment': typeof InventoryInventoryIdEquipmentRoute
   '/inventory/$inventoryId/loadout': typeof InventoryInventoryIdLoadoutRoute
-  '/inventory/$inventoryId/optimizer': typeof InventoryInventoryIdOptimizerRoute
+  '/inventory/$inventoryId/workbench': typeof InventoryInventoryIdWorkbenchRoute
   '/inventory/$inventoryId': typeof InventoryInventoryIdIndexRoute
 }
 export interface FileRoutesById {
@@ -637,7 +637,7 @@ export interface FileRoutesById {
   '/workshops/': typeof WorkshopsIndexRoute
   '/inventory/$inventoryId/equipment': typeof InventoryInventoryIdEquipmentRoute
   '/inventory/$inventoryId/loadout': typeof InventoryInventoryIdLoadoutRoute
-  '/inventory/$inventoryId/optimizer': typeof InventoryInventoryIdOptimizerRoute
+  '/inventory/$inventoryId/workbench': typeof InventoryInventoryIdWorkbenchRoute
   '/inventory/$inventoryId/': typeof InventoryInventoryIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -712,7 +712,7 @@ export interface FileRouteTypes {
     | '/workshops/'
     | '/inventory/$inventoryId/equipment'
     | '/inventory/$inventoryId/loadout'
-    | '/inventory/$inventoryId/optimizer'
+    | '/inventory/$inventoryId/workbench'
     | '/inventory/$inventoryId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -763,7 +763,7 @@ export interface FileRouteTypes {
     | '/workshops'
     | '/inventory/$inventoryId/equipment'
     | '/inventory/$inventoryId/loadout'
-    | '/inventory/$inventoryId/optimizer'
+    | '/inventory/$inventoryId/workbench'
     | '/inventory/$inventoryId'
   id:
     | '__root__'
@@ -836,7 +836,7 @@ export interface FileRouteTypes {
     | '/workshops/'
     | '/inventory/$inventoryId/equipment'
     | '/inventory/$inventoryId/loadout'
-    | '/inventory/$inventoryId/optimizer'
+    | '/inventory/$inventoryId/workbench'
     | '/inventory/$inventoryId/'
   fileRoutesById: FileRoutesById
 }
@@ -1346,11 +1346,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InventoryInventoryIdIndexRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
-    '/inventory/$inventoryId/optimizer': {
-      id: '/inventory/$inventoryId/optimizer'
-      path: '/optimizer'
-      fullPath: '/inventory/$inventoryId/optimizer'
-      preLoaderRoute: typeof InventoryInventoryIdOptimizerRouteImport
+    '/inventory/$inventoryId/workbench': {
+      id: '/inventory/$inventoryId/workbench'
+      path: '/workbench'
+      fullPath: '/inventory/$inventoryId/workbench'
+      preLoaderRoute: typeof InventoryInventoryIdWorkbenchRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
     '/inventory/$inventoryId/loadout': {
@@ -1564,7 +1564,7 @@ const GripsRouteRouteWithChildren = GripsRouteRoute._addFileChildren(
 interface InventoryInventoryIdRouteRouteChildren {
   InventoryInventoryIdEquipmentRoute: typeof InventoryInventoryIdEquipmentRoute
   InventoryInventoryIdLoadoutRoute: typeof InventoryInventoryIdLoadoutRoute
-  InventoryInventoryIdOptimizerRoute: typeof InventoryInventoryIdOptimizerRoute
+  InventoryInventoryIdWorkbenchRoute: typeof InventoryInventoryIdWorkbenchRoute
   InventoryInventoryIdIndexRoute: typeof InventoryInventoryIdIndexRoute
 }
 
@@ -1572,7 +1572,7 @@ const InventoryInventoryIdRouteRouteChildren: InventoryInventoryIdRouteRouteChil
   {
     InventoryInventoryIdEquipmentRoute: InventoryInventoryIdEquipmentRoute,
     InventoryInventoryIdLoadoutRoute: InventoryInventoryIdLoadoutRoute,
-    InventoryInventoryIdOptimizerRoute: InventoryInventoryIdOptimizerRoute,
+    InventoryInventoryIdWorkbenchRoute: InventoryInventoryIdWorkbenchRoute,
     InventoryInventoryIdIndexRoute: InventoryInventoryIdIndexRoute,
   }
 
