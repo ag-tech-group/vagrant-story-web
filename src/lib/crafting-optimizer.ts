@@ -212,6 +212,29 @@ export function inventoryToCraftables(
 
 let syntheticIdCounter = -1
 
+/**
+ * Remove steps whose results are never consumed by a later step.
+ * Keeps only the connected chain leading to the final result.
+ */
+function pruneUnchainedSteps(steps: CraftingStep[]): CraftingStep[] {
+  if (steps.length <= 1) return steps
+
+  // Walk backwards: collect IDs that are needed as inputs
+  const needed = new Set<number>()
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const step = steps[i]
+    // The final step is always kept; earlier steps are kept only if
+    // their result ID is needed as an input by a later step.
+    if (i < steps.length - 1 && !needed.has(step.result.id)) continue
+    needed.add(step.input1.id)
+    needed.add(step.input2.id)
+  }
+
+  return steps.filter(
+    (step, i) => i === steps.length - 1 || needed.has(step.result.id)
+  )
+}
+
 export function findCraftingPaths(
   target: { name: string; material: string | null },
   craftables: CraftableItem[],
@@ -326,11 +349,12 @@ export function findCraftingPaths(
               !target.material || resultItem.material === target.material
 
             if (nameMatch && materialMatch) {
+              const chained = pruneUnchainedSteps(newSteps)
               paths.push({
-                steps: newSteps,
+                steps: chained,
                 result: resultItem,
                 consumedItems: newConsumed,
-                score: scorePath(newSteps, newConsumed, resultItem),
+                score: scorePath(chained, newConsumed, resultItem),
               })
               continue
             }
@@ -394,11 +418,12 @@ export function findCraftingPaths(
                   !target.material || swapResult.material === target.material
 
                 if (swapNameMatch && swapMatMatch) {
+                  const chained = pruneUnchainedSteps(swapSteps)
                   paths.push({
-                    steps: swapSteps,
+                    steps: chained,
                     result: swapResult,
                     consumedItems: swapConsumed,
-                    score: scorePath(swapSteps, swapConsumed, swapResult),
+                    score: scorePath(chained, swapConsumed, swapResult),
                   })
                 }
               }
