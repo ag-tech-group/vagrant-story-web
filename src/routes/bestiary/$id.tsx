@@ -357,12 +357,8 @@ function EnemyDetail() {
 }
 
 function groupDrops(drops: EnemyDrop[]) {
-  const equipment = drops.filter(
-    (d) => d.body_part !== "Misc" && d.body_part !== "Chest"
-  )
-  const consumables = drops.filter(
-    (d) => d.body_part === "Misc" || d.body_part === "Chest"
-  )
+  const equipment = drops.filter((d) => d.body_part !== "Misc")
+  const consumables = drops.filter((d) => d.body_part === "Misc")
   const groups: { label: string; items: EnemyDrop[] }[] = []
   if (equipment.length > 0)
     groups.push({ label: "Equipment", items: equipment })
