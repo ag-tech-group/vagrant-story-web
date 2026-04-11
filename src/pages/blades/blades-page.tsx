@@ -18,6 +18,7 @@ const columns: ColumnDef<Blade>[] = [
     ),
   },
   { accessorKey: "blade_type", header: "Type", filterFn: "equals" },
+  { accessorKey: "hands", header: "Hands" },
   {
     accessorKey: "damage_type",
     header: "Damage",
