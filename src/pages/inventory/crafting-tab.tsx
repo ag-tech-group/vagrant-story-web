@@ -116,16 +116,37 @@ interface CraftingTabProps {
   items: InventoryItem[]
   blades: Blade[]
   armor: Armor[]
+  searchParams: {
+    wcat?: string
+    target?: string
+    tmat?: string
+    depth?: number
+  }
+  updateSearch: (updates: Record<string, string | number | undefined>) => void
 }
 
 // ── Main component ────────────────────────────────────────────────────
 
-export function CraftingTab({ items, blades, armor }: CraftingTabProps) {
-  // Controls
-  const [forwardCategory, setForwardCategory] = useState<Category | null>(null)
-  const [targetItem, setTargetItem] = useState<string | null>(null)
-  const [targetMaterial, setTargetMaterial] = useState<string | null>(null)
-  const [searchDepth, setSearchDepth] = useState<number>(1)
+export function CraftingTab({
+  items,
+  blades,
+  armor,
+  searchParams,
+  updateSearch,
+}: CraftingTabProps) {
+  // Controls — backed by URL search params
+  const forwardCategory = (searchParams.wcat as Category) ?? null
+  const setForwardCategory = (v: Category | null) =>
+    updateSearch({ wcat: v ?? undefined, target: undefined, tmat: undefined })
+  const targetItem = searchParams.target ?? null
+  const setTargetItem = (v: string | null) =>
+    updateSearch({ target: v ?? undefined, wcat: undefined })
+  const targetMaterial = searchParams.tmat ?? null
+  const setTargetMaterial = (v: string | null) =>
+    updateSearch({ tmat: v ?? undefined })
+  const searchDepth = searchParams.depth ?? 1
+  const setSearchDepth = (v: number) =>
+    updateSearch({ depth: v === 1 ? undefined : v })
   const [includeEquipped, setIncludeEquipped] = useState(true)
   const [includeBag, setIncludeBag] = useState(true)
   const [includeContainer, setIncludeContainer] = useState(true)

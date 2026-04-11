@@ -11,7 +11,12 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link, useMatchRoute, useParams } from "@tanstack/react-router"
+import {
+  getRouteApi,
+  Link,
+  useMatchRoute,
+  useParams,
+} from "@tanstack/react-router"
 import {
   ArrowDownAZ,
   ArrowDownWideNarrow,
@@ -139,9 +144,28 @@ export function InventoryDetailPage() {
 
 type BagSort = "equipped" | "added" | "name"
 
+const inventoryRouteApi = getRouteApi("/inventory/$inventoryId")
+
 function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
   const matchRoute = useMatchRoute()
+  const search = inventoryRouteApi.useSearch()
+  const navigate = inventoryRouteApi.useNavigate()
+  const updateSearch = useCallback(
+    (updates: Record<string, string | number | undefined>) =>
+      navigate({
+        search: (prev: Record<string, unknown>) => {
+          const next = { ...prev, ...updates }
+          for (const key of Object.keys(next)) {
+            if (next[key] === undefined || next[key] === "") delete next[key]
+          }
+          return next
+        },
+        replace: true,
+        resetScroll: false,
+      }),
+    [navigate]
+  )
   const activeTab = matchRoute({
     to: "/inventory/$inventoryId/loadout",
     params: { inventoryId: String(inventoryId) },
@@ -156,8 +180,12 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
   const [bagSearch, setBagSearch] = useState("")
-  const [bagSort, setBagSort] = useState<BagSort>("equipped")
-  const [bagCategory, setBagCategory] = useState("all")
+  const bagSort = (search.sort as BagSort) ?? "equipped"
+  const setBagSort = (v: BagSort) =>
+    updateSearch({ sort: v === "equipped" ? undefined : v })
+  const bagCategory = search.cat ?? "all"
+  const setBagCategory = (v: string) =>
+    updateSearch({ cat: v === "all" ? undefined : v })
 
   const { data: inventory, isLoading } = useQuery({
     queryKey: ["inventory", inventoryId],
@@ -921,7 +949,13 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
 
       {/* Workbench Tab */}
       {activeTab === "workbench" && (
-        <CraftingTab items={allItems} blades={blades} armor={armor} />
+        <CraftingTab
+          items={allItems}
+          blades={blades}
+          armor={armor}
+          searchParams={search}
+          updateSearch={updateSearch}
+        />
       )}
 
       {/* Loadout Tab */}
@@ -940,6 +974,8 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 }
               : undefined
           }
+          searchParams={search}
+          updateSearch={updateSearch}
         />
       )}
 
@@ -1000,10 +1036,10 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 size="sm"
                 className="shrink-0"
                 onClick={() =>
-                  setBagSort((s) =>
-                    s === "equipped"
+                  setBagSort(
+                    bagSort === "equipped"
                       ? "added"
-                      : s === "added"
+                      : bagSort === "added"
                         ? "name"
                         : "equipped"
                   )

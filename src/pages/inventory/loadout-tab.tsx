@@ -43,13 +43,28 @@ interface LoadoutTabProps {
   items: InventoryItem[]
   inventoryId: number
   baseStats?: BaseStats
+  searchParams: {
+    enemy?: string
+    lmode?: string
+  }
+  updateSearch: (updates: Record<string, string | number | undefined>) => void
 }
 
 // ── Main component ──────────────────────────────────────────────────
 
-export function LoadoutTab({ items, inventoryId, baseStats }: LoadoutTabProps) {
-  const [selectedEnemy, setSelectedEnemy] = useState<string | null>(null)
-  const [mode, setMode] = useState<Mode>("full")
+export function LoadoutTab({
+  items,
+  inventoryId,
+  baseStats,
+  searchParams,
+  updateSearch,
+}: LoadoutTabProps) {
+  const selectedEnemy = searchParams.enemy ?? null
+  const setSelectedEnemy = (v: string | null) =>
+    updateSearch({ enemy: v ?? undefined })
+  const mode: Mode = (searchParams.lmode as Mode) ?? "full"
+  const setMode = (v: Mode) =>
+    updateSearch({ lmode: v === "full" ? undefined : v })
   const [includeEquipped, setIncludeEquipped] = useState(true)
   const [includeBag, setIncludeBag] = useState(true)
   const [includeContainer, setIncludeContainer] = useState(true)
