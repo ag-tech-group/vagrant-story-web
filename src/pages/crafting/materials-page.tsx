@@ -212,8 +212,8 @@ export function CraftingMaterialsPage() {
         <Card>
           <CardContent className="space-y-4 pt-6">
             {category !== "Shields" && (
-              <div className="flex items-end justify-center gap-3">
-                <div className="w-48">
+              <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <div className="w-full sm:w-48">
                   <span className="text-muted-foreground mb-1 block text-xs font-medium">
                     Slot 1
                   </span>
@@ -223,7 +223,7 @@ export function CraftingMaterialsPage() {
                       updateSearch({ t1: v === types[0] ? undefined : v })
                     }
                   >
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -244,7 +244,7 @@ export function CraftingMaterialsPage() {
                 >
                   ⇄
                 </Button>
-                <div className="w-48">
+                <div className="w-full sm:w-48">
                   <span className="text-muted-foreground mb-1 block text-xs font-medium">
                     Slot 2
                   </span>
@@ -254,7 +254,7 @@ export function CraftingMaterialsPage() {
                       updateSearch({ t2: v === types[0] ? undefined : v })
                     }
                   >
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -366,7 +366,7 @@ function MaterialGrid({
             >
               <div className="text-xs">Slot 2</div>
               {type2Label && (
-                <div className="text-xs font-medium opacity-60">
+                <div className="hidden text-xs font-medium opacity-60 sm:block">
                   {type2Label}
                 </div>
               )}
@@ -375,12 +375,12 @@ function MaterialGrid({
           <tr>
             <th colSpan={2} />
             {materials.map((m) => (
-              <th key={m} className="p-1.5">
+              <th key={m} className="p-1 sm:p-1.5">
                 <div className="flex flex-col items-center gap-1">
                   <span
                     className={cn("size-2.5 rounded-full", DOT_COLORS[m])}
                   />
-                  <span className="text-muted-foreground text-[11px] font-medium">
+                  <span className="text-muted-foreground text-[10px] font-medium sm:text-[11px]">
                     {MAT_SHORT[m]}
                   </span>
                 </div>
@@ -394,19 +394,26 @@ function MaterialGrid({
               {i === 0 && (
                 <td
                   rowSpan={materials.length}
-                  className="text-muted-foreground pr-2 align-middle font-normal"
+                  className="text-muted-foreground pr-1 align-middle font-normal sm:pr-2"
                 >
-                  <div className="text-xs">Slot 1</div>
-                  {type1Label && (
-                    <div className="text-xs font-medium opacity-60">
-                      {type1Label}
-                    </div>
-                  )}
+                  <div
+                    className="flex flex-col items-center gap-1 sm:block"
+                    style={{ writingMode: "vertical-lr" }}
+                  >
+                    <span className="text-xs sm:[writing-mode:horizontal-tb]">
+                      Slot 1
+                    </span>
+                    {type1Label && (
+                      <span className="hidden text-xs font-medium opacity-60 sm:block sm:[writing-mode:horizontal-tb]">
+                        {type1Label}
+                      </span>
+                    )}
+                  </div>
                 </td>
               )}
-              <td className="p-1.5">
-                <div className="flex items-center justify-end gap-1.5">
-                  <span className="text-muted-foreground text-[11px] font-medium">
+              <td className="p-1 sm:p-1.5">
+                <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                  <span className="text-muted-foreground text-[10px] font-medium sm:text-[11px]">
                     {MAT_SHORT[mat1]}
                   </span>
                   <span
@@ -418,8 +425,8 @@ function MaterialGrid({
                 const cell = grid[mat1]?.[mat2]
                 if (!cell) {
                   return (
-                    <td key={mat2} className="p-1">
-                      <div className="bg-muted/30 mx-auto flex size-10 items-center justify-center rounded-md text-xs">
+                    <td key={mat2} className="p-0.5 sm:p-1">
+                      <div className="bg-muted/30 mx-auto flex size-8 items-center justify-center rounded-md text-xs sm:size-10">
                         —
                       </div>
                     </td>
@@ -437,10 +444,10 @@ function MaterialGrid({
                 const nonComm = rev != null && rev.result !== result
 
                 return (
-                  <td key={mat2} className="p-1">
+                  <td key={mat2} className="p-0.5 sm:p-1">
                     <div
                       className={cn(
-                        "relative mx-auto flex size-10 items-center justify-center rounded-md text-xs font-bold ring-2 ring-inset",
+                        "relative mx-auto flex size-8 items-center justify-center rounded-md text-xs font-bold ring-2 ring-inset sm:size-10",
                         CELL_COLORS[result] ?? "bg-muted",
                         upgrade
                           ? "ring-green-400"

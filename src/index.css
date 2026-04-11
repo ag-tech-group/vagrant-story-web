@@ -146,3 +146,20 @@
     font-family: var(--font-pixel);
   }
 }
+
+/* Visible scrollbar for overflow containers */
+.scrollbar-visible::-webkit-scrollbar {
+  height: 6px;
+}
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 3px;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.scrollbar-visible {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--muted);
+}

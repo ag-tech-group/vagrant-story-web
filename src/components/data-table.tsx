@@ -148,7 +148,7 @@ export function DataTable<T>({
           </Select>
         ))}
       </div>
-      <div className="overflow-x-auto">
+      <div className="scrollbar-visible overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
