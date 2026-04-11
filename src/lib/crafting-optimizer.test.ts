@@ -244,6 +244,54 @@ describe("findCraftingPaths (forward search)", () => {
     expect(paths).toHaveLength(0)
   })
 
+  it("prunes unchained steps from multi-step paths", () => {
+    // Add a Sword recipe so we can create a disconnected path scenario
+    const extraRecipes: CraftingRecipe[] = [
+      ...recipes,
+      {
+        id: 10,
+        category: "blade",
+        sub_category: "Axe_Axe",
+        input_1: "Francisca",
+        input_2: "Francisca",
+        result: "Tabarzin",
+        tier_change: 1,
+        has_swap: false,
+      },
+    ]
+    const index = buildRecipeIndex(extraRecipes, materialRecipes)
+
+    // Inventory has 2 pairs that can each make a Francisca, plus an extra
+    // Hand Axe that can combine with Francisca to make Tabarzin.
+    // The BFS might find: step 1: HandAxe(3)+BattleAxe(4)→Francisca,
+    // step 2: HandAxe(1)+BattleAxe(2)→Francisca, then Francisca+HandAxe→Tabarzin
+    // But the disconnected step should be pruned.
+    const items: CraftableItem[] = [
+      makeItem(1, "Hand Axe", "Axe / Mace", "Iron"),
+      makeItem(2, "Battle Axe", "Axe / Mace", "Iron"),
+      makeItem(3, "Hand Axe", "Axe / Mace", "Iron"),
+      makeItem(4, "Battle Axe", "Axe / Mace", "Iron"),
+    ]
+
+    const paths = findCraftingPaths(
+      { name: "Tabarzin", material: null },
+      items,
+      index
+    )
+
+    // All paths should have only chained steps — no step's result should
+    // be unused by a later step
+    for (const path of paths) {
+      for (let i = 0; i < path.steps.length - 1; i++) {
+        const resultId = path.steps[i].result.id
+        const usedLater = path.steps
+          .slice(i + 1)
+          .some((s) => s.input1.id === resultId || s.input2.id === resultId)
+        expect(usedLater).toBe(true)
+      }
+    }
+  })
+
   it("ranks shorter paths higher", () => {
     const index = buildRecipeIndex(recipes, materialRecipes)
     const items: CraftableItem[] = [
