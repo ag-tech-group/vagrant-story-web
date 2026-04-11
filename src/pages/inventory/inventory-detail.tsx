@@ -148,10 +148,10 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   })
     ? "loadout"
     : matchRoute({
-          to: "/inventory/$inventoryId/optimizer",
+          to: "/inventory/$inventoryId/workbench",
           params: { inventoryId: String(inventoryId) },
         })
-      ? "optimizer"
+      ? "workbench"
       : "equipment"
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
@@ -872,11 +872,11 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
           )}
         </Link>
         <Link
-          to="/inventory/$inventoryId/optimizer"
+          to="/inventory/$inventoryId/workbench"
           params={{ inventoryId: String(inventoryId) }}
           className={cn(
             "relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
-            activeTab === "optimizer"
+            activeTab === "workbench"
               ? "text-foreground"
               : "text-muted-foreground hover:text-foreground"
           )}
@@ -889,8 +889,8 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
                 "url(/images/icons/HammerPick.svg) center / contain no-repeat",
             }}
           />
-          Optimizer
-          {activeTab === "optimizer" && (
+          Workbench
+          {activeTab === "workbench" && (
             <span className="bg-primary absolute bottom-0 left-0 h-0.5 w-full rounded-full" />
           )}
         </Link>
@@ -919,8 +919,8 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         </Link>
       </div>
 
-      {/* Optimizer Tab */}
-      {activeTab === "optimizer" && (
+      {/* Workbench Tab */}
+      {activeTab === "workbench" && (
         <CraftingTab items={allItems} blades={blades} armor={armor} />
       )}
 

@@ -29,7 +29,7 @@ Routes live in `src/routes/`. The route tree is auto-generated (`src/routeTree.g
 
 **Route components import page components from `src/pages/`** — routes are thin wrappers.
 
-**Inventory uses subroutes** for tab persistence: `$inventoryId/equipment.tsx` and `$inventoryId/optimizer.tsx`. Tab selection is URL-driven, not React state.
+**Inventory uses subroutes** for tab persistence: `$inventoryId/equipment.tsx` and `$inventoryId/workbench.tsx`. Tab selection is URL-driven, not React state.
 
 ### Navigation
 
