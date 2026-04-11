@@ -213,6 +213,132 @@ export function HomePage() {
       </section>
 
       <div className="mx-auto w-full max-w-6xl space-y-12 px-6 pb-16">
+        {/* Tools */}
+        <section>
+          <h2 className="mb-6 text-2xl tracking-wide">Tools</h2>
+          <div className="flex flex-col gap-6">
+            {/* Inventory — hero card */}
+            <Link to="/inventory">
+              <Card className="border-primary/30 hover:border-primary/50 transition-colors">
+                <CardContent className="flex flex-col gap-4 pt-6">
+                  <div className="flex items-start gap-3">
+                    <ItemIcon type="Inventory" size="sm" />
+                    <div>
+                      <h3 className="font-sans text-lg font-medium">
+                        Inventory
+                      </h3>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Import your save file to unlock powerful crafting and
+                        loadout tools for your equipment.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="bg-muted/30 flex items-start gap-3 rounded-lg p-3">
+                      <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+                        <img
+                          src="/images/icons/Swords.svg"
+                          alt="Equipment"
+                          className="size-5"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Equipment</p>
+                        <p className="text-muted-foreground text-xs">
+                          Manage gear and see combined stats across all equipped
+                          pieces.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-muted/30 flex items-start gap-3 rounded-lg p-3">
+                      <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+                        <img
+                          src="/images/icons/HammerPick.svg"
+                          alt="Workbench"
+                          className="size-5"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Workbench</p>
+                        <p className="text-muted-foreground text-xs">
+                          Find optimal crafting paths for your inventory items
+                          and discover upgrades.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-muted/30 flex items-start gap-3 rounded-lg p-3">
+                      <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
+                        <img
+                          src="/images/icons/Loadout.svg"
+                          alt="Loadout"
+                          className="size-5"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Loadout</p>
+                        <p className="text-muted-foreground text-xs">
+                          Build and compare equipment loadouts to optimize your
+                          setup.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Other tools */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <Link to="/forge">
+                <Card className="hover:border-primary/40 h-full transition-colors">
+                  <CardContent className="flex items-start gap-3 pt-6">
+                    <ItemIcon type="Forge" size="sm" />
+                    <div>
+                      <h3 className="font-sans text-lg font-medium">Forge</h3>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Equipment builder. Select a blade, armor, or shield with
+                        a material and grip to see combined stats.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/crafting">
+                <Card className="hover:border-primary/40 h-full transition-colors">
+                  <CardContent className="flex items-start gap-3 pt-6">
+                    <ItemIcon type="Crafting" size="sm" />
+                    <div>
+                      <h3 className="font-sans text-lg font-medium">
+                        Crafting Calculator
+                      </h3>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Combine items and see results. Includes reverse lookup
+                        to find recipes for any item.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/material-grid">
+                <Card className="hover:border-primary/40 h-full transition-colors">
+                  <CardContent className="flex items-start gap-3 pt-6">
+                    <ItemIcon type="Grid" size="sm" />
+                    <div>
+                      <h3 className="font-sans text-lg font-medium">
+                        Material Grid
+                      </h3>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Compact grid reference for blade, armor, and shield
+                        material combination tables.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Game Database */}
         <section>
           <h2 className="mb-6 text-2xl tracking-wide">Game Database</h2>
@@ -233,73 +359,6 @@ export function HomePage() {
                 </Card>
               </Link>
             ))}
-          </div>
-        </section>
-
-        {/* Tools */}
-        <section>
-          <h2 className="mb-6 text-2xl tracking-wide">Tools</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <Link to="/forge">
-              <Card className="hover:border-primary/40 h-full transition-colors">
-                <CardContent className="flex items-start gap-3 pt-6">
-                  <ItemIcon type="Forge" size="sm" />
-                  <div>
-                    <h3 className="font-sans text-lg font-medium">Forge</h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Equipment builder. Select a blade, armor, or shield with a
-                      material and grip to see combined stats.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/crafting">
-              <Card className="hover:border-primary/40 h-full transition-colors">
-                <CardContent className="flex items-start gap-3 pt-6">
-                  <ItemIcon type="Crafting" size="sm" />
-                  <div>
-                    <h3 className="font-sans text-lg font-medium">
-                      Crafting Calculator
-                    </h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Combine items and see results. Includes reverse lookup to
-                      find recipes for any item.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/material-grid">
-              <Card className="hover:border-primary/40 h-full transition-colors">
-                <CardContent className="flex items-start gap-3 pt-6">
-                  <ItemIcon type="Grid" size="sm" />
-                  <div>
-                    <h3 className="font-sans text-lg font-medium">
-                      Material Grid
-                    </h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Compact grid reference for blade, armor, and shield
-                      material combination tables.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/inventory">
-              <Card className="hover:border-primary/40 h-full transition-colors">
-                <CardContent className="flex items-start gap-3 pt-6">
-                  <ItemIcon type="Inventory" size="sm" />
-                  <div>
-                    <h3 className="font-sans text-lg font-medium">Inventory</h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Create equipment loadouts and track your gear. See
-                      combined stats across all equipped pieces.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
           </div>
         </section>
 
