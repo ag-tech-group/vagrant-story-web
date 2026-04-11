@@ -11,6 +11,7 @@ interface NavItem {
   to: string
   label: string
   icon: string
+  featured?: boolean
 }
 
 interface NavSection {
@@ -22,10 +23,15 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Tools",
     items: [
+      {
+        to: "/inventory",
+        label: "Inventory",
+        icon: "Inventory",
+        featured: true,
+      },
       { to: "/forge", label: "Forge", icon: "Forge" },
       { to: "/crafting", label: "Recipes", icon: "Crafting" },
       { to: "/material-grid", label: "Material Grid", icon: "Grid" },
-      { to: "/inventory", label: "Inventory", icon: "Inventory" },
     ],
   },
   {
@@ -161,7 +167,9 @@ export function SidebarNav() {
                         "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
                         isActive
                           ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                          : item.featured
+                            ? "text-primary/80 bg-primary/5 hover:bg-primary/10 hover:text-primary font-medium"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                       )}
                     >
                       <ItemIcon type={item.icon} size="sm" />
