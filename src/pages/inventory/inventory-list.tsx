@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ItemIcon } from "@/components/item-icon"
 import { useAuth } from "@/lib/auth"
 import { loginUrl } from "@/lib/config"
@@ -34,11 +35,7 @@ export function InventoryListPage() {
   const auth = useAuth()
 
   if (auth.isLoading) {
-    return (
-      <div className="text-muted-foreground py-20 text-center text-sm">
-        Loading...
-      </div>
-    )
+    return <InventoryListSkeleton />
   }
 
   if (!auth.isAuthenticated) {
@@ -55,6 +52,25 @@ export function InventoryListPage() {
   }
 
   return <InventoryList />
+}
+
+function InventoryListSkeleton() {
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-5 w-28" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function InventoryList() {
@@ -116,11 +132,7 @@ function InventoryList() {
   }, [inventories, search, sortKey])
 
   if (isLoading) {
-    return (
-      <div className="text-muted-foreground py-10 text-center text-sm">
-        Loading inventories...
-      </div>
-    )
+    return <InventoryListSkeleton />
   }
 
   if (error) {

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { ItemIcon } from "@/components/item-icon"
 import { MaterialBadge } from "@/components/stat-display"
+import { Skeleton } from "@/components/ui/skeleton"
 import { gameApi, type Material } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
 
@@ -47,7 +48,11 @@ export function MaterialsPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground py-8 text-center">Loading...</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full" />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {materials.map((m) => (

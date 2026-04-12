@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import { gameApi, type MaterialRecipe } from "@/lib/game-api"
 import { cn } from "@/lib/utils"
 
@@ -272,9 +273,7 @@ export function CraftingMaterialsPage() {
               Cell = result material from combining Slot 1 and Slot 2
             </p>
             {isLoading ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                Loading...
-              </p>
+              <Skeleton className="h-64 w-full" />
             ) : grid ? (
               <MaterialGrid
                 grid={grid}

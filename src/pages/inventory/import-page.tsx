@@ -17,6 +17,7 @@ import { useAnalytics } from "@/lib/analytics"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -110,8 +111,10 @@ export function ImportPage() {
 
   if (auth.isLoading) {
     return (
-      <div className="text-muted-foreground py-20 text-center text-sm">
-        Loading...
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 py-8">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+        <Skeleton className="h-40 w-full" />
       </div>
     )
   }
