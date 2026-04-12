@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react"
 import { toast } from "sonner"
+import { useAnalytics } from "@/lib/analytics"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -58,6 +59,7 @@ export function InventoryListPage() {
 
 function InventoryList() {
   const queryClient = useQueryClient()
+  const analytics = useAnalytics()
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<InventoryListItem | null>(
@@ -81,6 +83,7 @@ function InventoryList() {
       queryClient.invalidateQueries({ queryKey: ["inventories"] })
       setShowCreate(false)
       setNewName("")
+      analytics.track("inventory_created")
       toast.success("Inventory created")
     },
     onError: (err) => toast.error(String(err)),

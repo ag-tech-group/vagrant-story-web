@@ -13,6 +13,7 @@ import {
   Upload,
 } from "lucide-react"
 import { toast } from "sonner"
+import { useAnalytics } from "@/lib/analytics"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -134,6 +135,7 @@ export function ImportPage() {
 function ImportFlow() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const analytics = useAnalytics()
   const [phase, setPhase] = useState<Phase>("upload")
   const [slots, setSlots] = useState<SlotState[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -248,6 +250,7 @@ function ImportFlow() {
         setImportProgress(i + 1)
       }
 
+      analytics.track("save_file_imported", { count: createdIds.length })
       toast.success(
         `Imported ${createdIds.length} ${createdIds.length === 1 ? "inventory" : "inventories"}`
       )
@@ -270,7 +273,7 @@ function ImportFlow() {
       )
       setPhase("preview")
     }
-  }, [slots, navigate, queryClient])
+  }, [slots, navigate, queryClient, analytics])
 
   // ── Build preview items for expanded slots ──────────────────────────
 
