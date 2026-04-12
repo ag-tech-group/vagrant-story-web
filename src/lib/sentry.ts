@@ -15,9 +15,10 @@ export function initSentry(router: SentryRouter) {
     environment: import.meta.env.MODE,
     release: __APP_VERSION__,
 
-    // Kept false until a public privacy policy ships — consistent with the
-    // cookie-free PostHog posture. Flip to true once a privacy page is live.
-    sendDefaultPii: false,
+    // Privacy policy at criticalbit.gg/privacy discloses the data
+    // collected here (IP, headers, URL). Enabled for debuggability now
+    // that users have been given notice.
+    sendDefaultPii: true,
 
     integrations: [
       Sentry.tanstackRouterBrowserTracingIntegration(router),
