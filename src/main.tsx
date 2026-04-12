@@ -6,6 +6,7 @@ import {
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
+import { reactErrorHandler } from "@sentry/react"
 import { toast } from "sonner"
 // @ts-expect-error -- fontsource CSS-only imports have no type declarations
 import "@fontsource-variable/geist"
@@ -16,6 +17,7 @@ import { RootErrorComponent } from "./components/error-boundary"
 import { NotFound } from "./components/not-found"
 import { AuthProvider, useAuth } from "./lib/auth"
 import { AnalyticsProvider, createAnalyticsBackend } from "./lib/analytics"
+import { initSentry } from "./lib/sentry"
 import { Skeleton } from "./components/ui/skeleton"
 import { routeTree } from "./routeTree.gen"
 
@@ -48,6 +50,8 @@ const router = createRouter({
   defaultErrorComponent: RootErrorComponent,
   defaultNotFoundComponent: NotFound,
 })
+
+initSentry(router)
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -105,7 +109,11 @@ function App() {
 
 const analyticsBackend = createAnalyticsBackend()
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById("root")!, {
+  onCaughtError: reactErrorHandler(),
+  onUncaughtError: reactErrorHandler(),
+  onRecoverableError: reactErrorHandler(),
+}).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="criticalbit_theme">
