@@ -28,6 +28,7 @@
     "@fontsource-variable/geist": "^5.2.8",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.1.0",
+    "@sentry/react": "^10.48.0",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-router": "^1.167.1",
     "@tanstack/react-table": "^8.21.3",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@sentry/vite-plugin": "^5.2.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query-devtools": "^5.90.0",
     "@tanstack/react-router-devtools": "^1.156.0",
@@ -82,5 +84,10 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli"
+    ]
   }
 }
