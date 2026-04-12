@@ -165,6 +165,27 @@ function RootComponent() {
                 not affiliated with or endorsed by Square Enix. Game content is
                 used for informational and community reference purposes.
               </p>
+              <p>
+                Icons by{" "}
+                <a
+                  href="https://game-icons.net"
+                  className="hover:text-foreground transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  game-icons.net
+                </a>{" "}
+                contributors, licensed under{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by/3.0/"
+                  className="hover:text-foreground transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  CC BY 3.0
+                </a>
+                .
+              </p>
             </div>
           </footer>
         </div>

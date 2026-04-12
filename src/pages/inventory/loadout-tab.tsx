@@ -24,6 +24,7 @@ import {
   type LoadoutResult,
 } from "@/lib/inventory-api"
 import { cn } from "@/lib/utils"
+import { useAnalytics } from "@/lib/analytics"
 
 // ── Slot display order ──────────────────────────────────────────────
 
@@ -59,6 +60,7 @@ export function LoadoutTab({
   searchParams,
   updateSearch,
 }: LoadoutTabProps) {
+  const analytics = useAnalytics()
   const selectedEnemy = searchParams.enemy ?? null
   const setSelectedEnemy = (v: string | null) =>
     updateSearch({ enemy: v ?? undefined })
@@ -95,7 +97,10 @@ export function LoadoutTab({
 
   const analyzeMutation = useMutation({
     mutationFn: (req: LoadoutRequest) => loadoutApi.optimize(req),
-    onSuccess: (data) => setResult(data),
+    onSuccess: (data) => {
+      setResult(data)
+      analytics.track("loadout_analyzed", { mode, enemy: selectedEnemy })
+    },
   })
 
   const handleReset = () => {

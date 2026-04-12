@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Playwright MCP session logs
+.playwright-mcp/
+
+# Local review artifacts (mobile/tablet screenshots, etc.)
+/mobile-*.png
+/tablet-*.png
+
 # Editor directories and files
 .claude
 .vscode/*

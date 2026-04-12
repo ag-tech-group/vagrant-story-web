@@ -15,6 +15,7 @@ import { getErrorMessage } from "./lib/api-errors"
 import { RootErrorComponent } from "./components/error-boundary"
 import { NotFound } from "./components/not-found"
 import { AuthProvider, useAuth } from "./lib/auth"
+import { AnalyticsProvider, createAnalyticsBackend } from "./lib/analytics"
 import { routeTree } from "./routeTree.gen"
 
 const queryClient = new QueryClient({
@@ -67,13 +68,17 @@ function App() {
   return <RouterProvider router={router} context={{ auth }} />
 }
 
+const analyticsBackend = createAnalyticsBackend()
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="criticalbit_theme">
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <AnalyticsProvider backend={analyticsBackend}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </AnalyticsProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>
