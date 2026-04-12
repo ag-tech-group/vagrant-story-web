@@ -1,10 +1,1 @@
-# Require review for auth-related code
-/src/lib/config.ts @amrtgaber
-/src/api/ @amrtgaber
-
-# Require review for CI/CD and build config
-/.github/ @amrtgaber
-/index.html @amrtgaber
-
-# Require review for security-sensitive files
-/src/lib/analytics.tsx @amrtgaber
+* @amrtgaber
