@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
+import { gameApi } from "@/lib/game-api"
 import {
   AlertTriangle,
   ArrowLeft,
@@ -76,16 +77,7 @@ function generateSlotName(slot: ParsedSaveSlot): string {
   return parts.join(" — ")
 }
 
-// ── Display helpers using ITEMNAME_MAP ───────────────────────────────
-
-/** Item type category for display grouping. Maps item_type to a UI category. */
-const ITEM_TYPE_CATEGORY: Record<string, string> = {
-  blade: "Blade",
-  grip: "Grip",
-  armor: "Armor",
-  gem: "Gem",
-  consumable: "Consumable",
-}
+// ── Display helpers ──────────────────────────────────────────────────
 
 /** Reverse lookup: field_name → display name, built once from ITEMNAME_MAP. */
 const FIELD_NAME_TO_DISPLAY = new Map<string, string>()
@@ -100,9 +92,7 @@ function getDisplayName(item: GameSaveImportItem): string {
   )
 }
 
-function getDisplayType(item: GameSaveImportItem): string {
-  return ITEM_TYPE_CATEGORY[item.item_type] ?? item.item_type
-}
+type GetDisplayType = (item: GameSaveImportItem) => string
 
 // ── Main export ──────────────────────────────────────────────────────
 
@@ -144,6 +134,39 @@ function ImportFlow() {
   const [error, setError] = useState<string | null>(null)
   const [importProgress, setImportProgress] = useState(0)
   const [importTotal, setImportTotal] = useState(0)
+
+  // Game data — shared React Query cache with the rest of the app.
+  // Needed so preview icons can resolve specific subtypes (Sword, Helm, …)
+  // instead of the generic buckets ItemIcon has no key for.
+  const { data: blades = [] } = useQuery({
+    queryKey: ["blades"],
+    queryFn: gameApi.blades,
+  })
+  const { data: armor = [] } = useQuery({
+    queryKey: ["armor"],
+    queryFn: gameApi.armor,
+  })
+  const { data: grips = [] } = useQuery({
+    queryKey: ["grips"],
+    queryFn: gameApi.grips,
+  })
+
+  const getDisplayType = useMemo<GetDisplayType>(() => {
+    const bladeType = new Map(blades.map((b) => [b.field_name, b.blade_type]))
+    const armorType = new Map(armor.map((a) => [a.field_name, a.armor_type]))
+    const gripType = new Map(grips.map((g) => [g.field_name, g.grip_type]))
+    return (item) => {
+      if (item.item_type === "blade")
+        return bladeType.get(item.field_name) ?? "Blade"
+      if (item.item_type === "armor")
+        return armorType.get(item.field_name) ?? "Armor"
+      if (item.item_type === "grip")
+        return gripType.get(item.field_name) ?? "Grip"
+      if (item.item_type === "gem") return "Gem"
+      if (item.item_type === "consumable") return "Consumable"
+      return item.item_type
+    }
+  }, [blades, armor, grips])
 
   // ── File handling ───────────────────────────────────────────────────
 
@@ -319,6 +342,7 @@ function ImportFlow() {
           }}
           selectedCount={selectedSlots.length}
           buildPreviewItems={buildPreviewItems}
+          getDisplayType={getDisplayType}
         />
       )}
 
@@ -423,6 +447,7 @@ function PreviewPhase({
   onBack,
   selectedCount,
   buildPreviewItems,
+  getDisplayType,
 }: {
   slots: SlotState[]
   onToggleSelected: (index: number) => void
@@ -432,6 +457,7 @@ function PreviewPhase({
   onBack: () => void
   selectedCount: number
   buildPreviewItems: (slot: ParsedSaveSlot) => GameSaveImportItem[]
+  getDisplayType: GetDisplayType
 }) {
   return (
     <div className="space-y-4">
@@ -449,6 +475,7 @@ function PreviewPhase({
           onToggleExpanded={onToggleExpanded}
           onUpdateName={onUpdateName}
           buildPreviewItems={buildPreviewItems}
+          getDisplayType={getDisplayType}
         />
       ))}
 
@@ -582,6 +609,7 @@ function SlotCard({
   onToggleExpanded,
   onUpdateName,
   buildPreviewItems,
+  getDisplayType,
 }: {
   state: SlotState
   index: number
@@ -589,6 +617,7 @@ function SlotCard({
   onToggleExpanded: (index: number) => void
   onUpdateName: (index: number, name: string) => void
   buildPreviewItems: (slot: ParsedSaveSlot) => GameSaveImportItem[]
+  getDisplayType: GetDisplayType
 }) {
   const { slot, name, selected, expanded } = state
   const disabled = !slot.checksumValid
@@ -607,29 +636,32 @@ function SlotCard({
   const equippedItems = bagItems.filter((i) => i.equip_slot)
 
   // Build category counts
-  const getCategoryCounts = useCallback((items: GameSaveImportItem[]) => {
-    const counts = new Map<string, number>()
-    for (const item of items) {
-      const category =
-        DISPLAY_TYPE_TO_CATEGORY[getDisplayType(item)] ?? getDisplayType(item)
-      counts.set(category, (counts.get(category) ?? 0) + 1)
-    }
-    const order = [
-      "Blade",
-      "Grip",
-      "Shield",
-      "Helm",
-      "Body",
-      "Leg",
-      "Arm",
-      "Accessory",
-      "Gem",
-      "Consumable",
-    ]
-    return order
-      .filter((c) => counts.has(c))
-      .map((c) => ({ label: c, count: counts.get(c)! }))
-  }, [])
+  const getCategoryCounts = useCallback(
+    (items: GameSaveImportItem[]) => {
+      const counts = new Map<string, number>()
+      for (const item of items) {
+        const category =
+          DISPLAY_TYPE_TO_CATEGORY[getDisplayType(item)] ?? getDisplayType(item)
+        counts.set(category, (counts.get(category) ?? 0) + 1)
+      }
+      const order = [
+        "Blade",
+        "Grip",
+        "Shield",
+        "Helm",
+        "Body",
+        "Leg",
+        "Arm",
+        "Accessory",
+        "Gem",
+        "Consumable",
+      ]
+      return order
+        .filter((c) => counts.has(c))
+        .map((c) => ({ label: c, count: counts.get(c)! }))
+    },
+    [getDisplayType]
+  )
 
   const bagCategories = useMemo(
     () => getCategoryCounts(bagItems),
@@ -649,7 +681,7 @@ function SlotCard({
         return cat === category
       })
     },
-    []
+    [getDisplayType]
   )
 
   const hpPct = slot.maxHp > 0 ? (slot.hp / slot.maxHp) * 100 : 0
