@@ -15,6 +15,7 @@ import {
   getRouteApi,
   Link,
   useMatchRoute,
+  useNavigate,
   useParams,
 } from "@tanstack/react-router"
 import {
@@ -150,22 +151,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
   const queryClient = useQueryClient()
   const matchRoute = useMatchRoute()
   const search = inventoryRouteApi.useSearch()
-  const navigate = inventoryRouteApi.useNavigate()
-  const updateSearch = useCallback(
-    (updates: Record<string, string | number | undefined>) =>
-      navigate({
-        search: (prev: Record<string, unknown>) => {
-          const next = { ...prev, ...updates }
-          for (const key of Object.keys(next)) {
-            if (next[key] === undefined || next[key] === "") delete next[key]
-          }
-          return next
-        },
-        replace: true,
-        resetScroll: false,
-      }),
-    [navigate]
-  )
+  const navigate = useNavigate()
   const activeTab = matchRoute({
     to: "/inventory/$inventoryId/loadout",
     params: { inventoryId: String(inventoryId) },
@@ -177,6 +163,33 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         })
       ? "workbench"
       : "equipment"
+  // Route search-param updates back to the active subroute explicitly.
+  // A route-bound navigate on the parent would resolve to /inventory/$inventoryId,
+  // whose index redirects to /equipment — silently kicking users off workbench/loadout.
+  const updateSearch = useCallback(
+    (updates: Record<string, string | number | undefined>) => {
+      const to =
+        activeTab === "loadout"
+          ? "/inventory/$inventoryId/loadout"
+          : activeTab === "workbench"
+            ? "/inventory/$inventoryId/workbench"
+            : "/inventory/$inventoryId/equipment"
+      navigate({
+        to,
+        params: { inventoryId: String(inventoryId) },
+        search: (prev) => {
+          const next: Record<string, unknown> = { ...prev, ...updates }
+          for (const key of Object.keys(next)) {
+            if (next[key] === undefined || next[key] === "") delete next[key]
+          }
+          return next
+        },
+        replace: true,
+        resetScroll: false,
+      })
+    },
+    [navigate, activeTab, inventoryId]
+  )
   const [editingSlot, setEditingSlot] = useState<SlotConfig | null>(null)
   const [editingBagItem, setEditingBagItem] = useState(false)
   const [bagSearch, setBagSearch] = useState("")
