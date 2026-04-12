@@ -140,7 +140,7 @@ export function CraftingTab({
     updateSearch({ wcat: v ?? undefined, target: undefined, tmat: undefined })
   const targetItem = searchParams.target ?? null
   const setTargetItem = (v: string | null) =>
-    updateSearch({ target: v ?? undefined, wcat: undefined })
+    updateSearch({ target: v ?? undefined, wcat: undefined, tmat: undefined })
   const targetMaterial = searchParams.tmat ?? null
   const setTargetMaterial = (v: string | null) =>
     updateSearch({ tmat: v ?? undefined })
@@ -545,9 +545,10 @@ export function CraftingTab({
           <Select
             value={forwardCategory ?? ""}
             onValueChange={(v) => {
+              // setForwardCategory already clears target+tmat in a single URL
+              // write — calling the other setters here would queue additional
+              // navigate()s that race and wipe wcat.
               setForwardCategory(v as Category)
-              setTargetItem(null)
-              setTargetMaterial(null)
               setDiscoverSearched(false)
               setReverseSearched(false)
             }}
@@ -580,9 +581,8 @@ export function CraftingTab({
             items={allPickerItems}
             value={targetItem}
             onSelect={(name) => {
+              // setTargetItem already clears wcat+tmat in a single URL write.
               setTargetItem(name)
-              setForwardCategory(null)
-              setTargetMaterial(null)
               setDiscoverSearched(false)
               setReverseSearched(false)
             }}
