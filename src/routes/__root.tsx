@@ -21,6 +21,7 @@ import { SidebarNav } from "@/components/sidebar-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserAvatar } from "@/components/user-avatar"
 import { useAuth } from "@/lib/auth"
+import type { ConsentsResponse } from "@/lib/consent"
 import { loginUrl, profileUrl } from "@/lib/config"
 
 const TanStackRouterDevtools = import.meta.env.PROD
@@ -48,6 +49,7 @@ interface RouterContext {
     userId: string | null
     displayName: string | null
     avatarUrl: string | null
+    consents: ConsentsResponse | null
     login: (email: string) => void
     logout: () => Promise<void>
     checkAuth: () => Promise<void>

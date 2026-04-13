@@ -8,6 +8,13 @@ import {
   useState,
 } from "react"
 import { api, setOnUnauthorized } from "@/api/api"
+import { resetAnalytics } from "@/lib/analytics"
+import {
+  clearCachedConsents,
+  fetchConsents,
+  writeCachedConsents,
+  type ConsentsResponse,
+} from "@/lib/consent"
 
 interface AuthContextValue {
   isAuthenticated: boolean
@@ -16,6 +23,7 @@ interface AuthContextValue {
   userId: string | null
   displayName: string | null
   avatarUrl: string | null
+  consents: ConsentsResponse | null
   login: (email: string) => void
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
@@ -31,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [consents, setConsents] = useState<ConsentsResponse | null>(null)
 
   const clearState = useCallback(() => {
     setIsAuthenticated(false)
@@ -38,6 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserId(null)
     setDisplayName(null)
     setAvatarUrl(null)
+    setConsents(null)
+    clearCachedConsents()
     queryClient.clear()
   }, [queryClient])
 
@@ -47,6 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Clear state regardless of fetch success
     }
+    // Wipe PostHog cookies and distinct id alongside the auth session so
+    // a subsequent anonymous visit (or a different user on this device)
+    // does not inherit the previous identity.
+    resetAnalytics()
     clearState()
   }, [clearState])
 
@@ -68,6 +83,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserId(user.id)
       setDisplayName(user.display_name)
       setAvatarUrl(user.avatar_url)
+      // Consent hydration must not block auth — if the endpoint is down
+      // the user stays logged in and PostHog/Sentry continue using
+      // whatever was cached from the previous successful fetch.
+      try {
+        const response = await fetchConsents()
+        setConsents(response)
+        writeCachedConsents(response)
+      } catch {
+        // Swallow — the cache from a prior session remains authoritative.
+      }
     } catch {
       clearState()
     } finally {
@@ -93,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userId,
       displayName,
       avatarUrl,
+      consents,
       login,
       logout,
       checkAuth,
@@ -104,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userId,
       displayName,
       avatarUrl,
+      consents,
       login,
       logout,
       checkAuth,
