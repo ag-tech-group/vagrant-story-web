@@ -97,7 +97,7 @@ export interface ParsedShield {
   /** Slot index within the shield table */
   index: number
   isEquipped: boolean
-  /** ITEMNAME.BIN index (128-142) */
+  /** ITEMNAME.BIN index (127-142) */
   id: number
   subId: number
   category: number
@@ -183,7 +183,12 @@ export interface ParsedArmor {
   affinities: number[]
   materialId: number
   material: string
-  /** Body part slot: 0=Shield, 1=Helm, 2=Body, 3=Arms, 4=Legs, 5=Accessory */
+  /**
+   * Body part slot: 0=not equipped (in bag), 1/2=arms, 3=head, 4=body, 5=legs,
+   * 6/7=accessory. Arms split into two distinct slots so the player can wear
+   * two bracers; accessories likewise support two rings/necklaces. Consumed by
+   * `save-import-mapper.ts` via its slotMap.
+   */
   bodyPart: number
   /** Slot index within the armor table */
   index: number
