@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import { AnalyticsProvider } from "@/lib/analytics"
 import { AuthProvider } from "@/lib/auth"
+import type { ConsentsResponse } from "@/lib/consent"
 import { FeatureFlagProvider } from "@/lib/feature-flags"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
@@ -23,6 +24,7 @@ interface RenderWithFileRoutesOptions extends Omit<RenderOptions, "wrapper"> {
       userId: string | null
       displayName: string | null
       avatarUrl: string | null
+      consents: ConsentsResponse | null
       login: (email: string) => void
       logout: () => Promise<void>
       checkAuth: () => Promise<void>
@@ -37,6 +39,7 @@ const defaultAuth = {
   userId: "test-user-id",
   displayName: "Test User",
   avatarUrl: null,
+  consents: null,
   login: () => {},
   logout: async () => {},
   checkAuth: async () => {},

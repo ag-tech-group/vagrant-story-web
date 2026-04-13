@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react"
+import { readCachedConsent } from "@/lib/consent"
 
 type SentryRouter = Parameters<
   typeof Sentry.tanstackRouterBrowserTracingIntegration
@@ -9,6 +10,12 @@ let initialized = false
 export function initSentry(router: SentryRouter) {
   const dsn = import.meta.env.VITE_SENTRY_DSN
   if (!dsn) return
+
+  // Session replay is gated on explicit user consent. When consent is
+  // absent the integration is still installed so error-driven replays
+  // keep working (low quota footprint, high debug value per event);
+  // full session sampling only turns on when the user has opted in.
+  const sessionReplayConsented = readCachedConsent("session_replay")
 
   Sentry.init({
     dsn,
@@ -34,11 +41,13 @@ export function initSentry(router: SentryRouter) {
       /^https:\/\/vagrant-story-api\.criticalbit\.gg/,
     ],
 
-    // Project-specific deviation from Sentry's default 0.1 recommendation:
-    // Sentry free tier includes 50 replays/month. Session-rate sampling at 10%
-    // would blow the quota during any traffic burst. Error-only replay gives
-    // the most debuggable signal per replay consumed.
-    replaysSessionSampleRate: 0,
+    // Error-only replay runs for everyone as a legitimate-interest
+    // debugging tool (covered by the existing privacy policy). Full
+    // session replay only activates for users who explicitly opted in
+    // via the Privacy and data toggles in criticalbit-auth-web's
+    // profile page. The 0.1 sample rate keeps us inside Sentry's free
+    // tier quota even under consented traffic bursts.
+    replaysSessionSampleRate: sessionReplayConsented ? 0.1 : 0,
     replaysOnErrorSampleRate: 1.0,
 
     enableLogs: true,
