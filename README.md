@@ -4,189 +4,103 @@
   <img alt="AG Technology Group" src=".github/assets/logo-light.png" width="200">
 </picture>
 
-# React Stack Template
+# vagrant-story-web
 
-[![CI](https://github.com/ag-tech-group/web-template/actions/workflows/ci.yml/badge.svg)](https://github.com/ag-tech-group/web-template/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D24-brightgreen.svg)](https://nodejs.org/)
 
-A production-ready React starter template built with Vite, TanStack Router, TanStack Query, shadcn/ui, and Tailwind CSS v4. Includes cookie-based auth, dark mode, toast notifications, and security hardening.
+Community game database and crafting tools for [Vagrant Story](https://en.wikipedia.org/wiki/Vagrant_Story) (PS1, 2000). Part of the [criticalbit.gg](https://criticalbit.gg) gaming tools platform.
 
-Designed to pair with [api-template](https://github.com/ag-tech-group/api-template) (FastAPI backend with cookie JWT auth and refresh tokens), but can work with any backend.
+Browse weapons, armor, gems, grips, materials, consumables, and enemies. Build inventories, plan equipment loadouts, and run a crafting workbench that finds optimal multi-step combine paths against your current inventory and selected workshop. Import save data straight from a PS1 emulator memory card.
+
+Pairs with [vagrant-story-api](../vagrant-story-api).
 
 ## Tech Stack
 
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **TanStack Router** - Type-safe file-based routing
-- **TanStack Query** - Server state management
-- **shadcn/ui** - Composable component library (Button, Card, Input, Label)
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **Zod v4** - TypeScript-first schema validation
-- **ky** - HTTP client with automatic token refresh
-- **orval** - OpenAPI client generator (React Query hooks, TypeScript types, Zod schemas, MSW mocks)
-- **MSW** - API mocking for tests and development
-- **Husky** - Pre-commit hooks (lint, test, build)
-
-## Features
-
-- Type-safe file-based routing with TanStack Router
-- Cookie-based auth with automatic token refresh and request coalescing
-- Dark/light/system theme with localStorage persistence
-- Global mutation error handling with toast notifications
-- Content Security Policy headers
-- 404 not-found page and root error boundary with retry
-- Auth context available in router for route guards
-- Structured logging (console in dev, JSON in prod)
-- Analytics provider with route tracking
-- Feature flags (fetched from API, env-var fallback)
-- Auto-generated API client from OpenAPI specs via orval
-- Test utilities with configurable auth state
+- **React 19** + **TypeScript** + **Vite**
+- **TanStack Router** — type-safe file-based routing
+- **TanStack Query** — server state and caching
+- **shadcn/ui** + **Tailwind CSS v4** (OKLCH theme, dark mode default)
+- **Zod v4** — schema validation
+- **ky** — HTTP client with automatic token refresh
+- **orval** — generates React Query hooks, TS types, Zod schemas, and MSW mocks from the API's OpenAPI spec
+- **MSW** — API mocking for tests
+- **Vitest** — unit/component tests
+- **Husky** — pre-commit hooks (lint, test, build)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 24+
-- pnpm (recommended, but any Node package manager should work)
+- pnpm
 
-### Installation
+### Install and run
 
 ```bash
-# Clone the repository
-cd web-template
-
-# Install dependencies
 pnpm install
-
-# (Optional) Generate API client
-# Requires a running backend with an OpenAPI spec; you can skip this for now
-# and run it later once your backend is up (see "API Client Generation" section).
-pnpm generate-api
+pnpm dev          # http://localhost:5173 (proxies /api to production API)
 ```
 
-### Development
+Set `VITE_API_URL=http://localhost:8000` in `.env` to point at a local backend instead of the production API.
+
+### Common commands
 
 ```bash
-pnpm dev
+pnpm dev           # Dev server
+pnpm build         # Type check + generate routes + bundle
+pnpm lint          # ESLint
+pnpm test          # Vitest watch mode
+pnpm test:run      # Vitest single run
+pnpm format        # Prettier
+pnpm generate-api  # Regenerate API client from backend OpenAPI spec
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Pre-commit runs lint-staged → eslint → vitest → full build. All must pass.
 
-Set `VITE_API_URL=http://localhost:8000` in a `.env` file to connect to a local backend.
+## Architecture
 
-### Build
+Routes live in `src/routes/` (file-based, auto-generated `routeTree.gen.ts`). Route components are thin wrappers that import page components from `src/pages/`. Shared components are in `src/components/`, business logic in `src/lib/`, and the API client + types in `src/lib/game-api.ts`.
 
-```bash
-pnpm build
-```
-
-## Customizing for Your App
-
-After creating a project from this template, update the following:
-
-- **App name** — Replace `React Modern Stack` with your app name in:
-  - `index.html` (page title)
-  - `src/pages/home/home-page.tsx` (heading and description)
-  - `src/pages/home/home-page.test.tsx` (test assertion)
-- **Package name** — Update `name` in `package.json`
-- **Content Security Policy** — In `index.html`, update the CSP meta tag:
-  - Add your production API domain to `connect-src` (e.g. `https://api.yourapp.com`)
-  - Remove `http://localhost:*` for production builds, or use environment-specific CSP
-  - Consider replacing `'unsafe-inline'` with nonce-based CSP via a Vite plugin like `vite-plugin-csp` for stricter security
-- **localStorage keys** (optional) — Rename the key prefixes if you want app-specific isolation:
-  - `app_theme` in `src/components/theme-provider.tsx`
-  - `app_auth_email` in `src/lib/auth.tsx`
-- **Environment variables** — See [Environment Variables](#environment-variables) for `VITE_API_URL` and `OPENAPI_URL`
+See [`CLAUDE.md`](./CLAUDE.md) for routing conventions, the pattern for adding a new item type, and styling rules.
 
 ## Authentication
 
-The template includes a complete auth setup designed to work with the companion [api-template](https://github.com/ag-tech-group/api-template):
+Cookie-based auth designed to work with the companion API:
 
-- **AuthProvider** (`src/lib/auth.tsx`) — React context tracking `isAuthenticated`, `isLoading`, `email`, and `userId`
+- **AuthProvider** (`src/lib/auth.tsx`) — React context tracking `isAuthenticated`, `isLoading`, `email`, `userId`
 - **Automatic token refresh** (`src/api/api.ts`) — 401 responses trigger a refresh attempt; concurrent requests are coalesced into a single refresh call
 - **Session check on load** — `GET /auth/me` validates the session on mount
-- **Auth in router context** — `auth` is available in route `beforeLoad` for route guards
+- **Auth in router context** — `auth` is available in route `beforeLoad` for guards
 
-### How it works
-
-1. Backend sets httpOnly cookies (`app_access` + `app_refresh`) on login
-2. All API requests include cookies via `credentials: "include"`
-3. On 401, the client POSTs to `/auth/refresh` to rotate tokens
-4. If refresh succeeds, the original request is retried transparently
-5. If refresh fails, `onUnauthorized` fires and auth state is cleared
-
-## Theming
-
-Dark/light/system theme support via `ThemeProvider`:
-
-- `useTheme()` hook for reading/setting the theme
-- `ThemeToggle` component for cycling between modes
-- Persists to localStorage (key: `app_theme`)
-- Applies `.dark` / `.light` class to `<html>` for Tailwind dark mode
-
-## Error Handling
-
-- **Global mutation errors** — `MutationCache` in `QueryClient` catches errors from all mutations and shows a toast via sonner
-- **Per-mutation opt-out** — Set `meta: { skipGlobalError: true }` on a mutation to handle errors locally
-- **`getErrorMessage()`** (`src/lib/api-errors.ts`) — Extracts human-readable messages from FastAPI error responses (supports `detail` as string, array, or object)
+Flow: backend sets httpOnly `app_access` + `app_refresh` cookies on login → all requests use `credentials: "include"` → on 401 the client POSTs `/auth/refresh` → original request retries transparently → on refresh failure `onUnauthorized` clears auth state.
 
 ## API Client Generation
 
-This template uses [orval](https://orval.dev/) to generate type-safe React Query hooks from your backend's OpenAPI specification.
-
-### Generate API Client
+[orval](https://orval.dev/) generates type-safe React Query hooks, TypeScript types, Zod schemas, and MSW handlers from the backend's OpenAPI spec.
 
 ```bash
-# Start your backend server first, then:
 pnpm generate-api
 ```
 
-This generates:
+Generates into `src/api/generated/`:
 
-- React Query hooks (`useQuery`/`useMutation`) in `src/api/generated/hooks/` — with integrated Zod validation
-- TypeScript types for all request/response schemas in `src/api/generated/types/`
-- Standalone Zod schemas in `src/api/generated/zod/` (for form validation, manual use)
-- MSW mock handlers for testing in `src/api/generated/mocks/`
+- `hooks/` — `useQuery`/`useMutation` wrappers with integrated Zod validation
+- `types/` — TypeScript types for all request/response schemas
+- `zod/` — standalone Zod schemas (form validation, manual use)
+- `mocks/` — MSW mock handlers for tests
 
-### Configuration
+Configuration in `orval.config.ts`. Defaults to `http://localhost:8000/openapi.json`. CI sets `OPENAPI_URL` to verify generated types stay in sync.
 
-The orval configuration is in `orval.config.ts`. By default, it fetches the OpenAPI spec from `http://localhost:8000/openapi.json`.
+## Theming
 
-For CI/CD, set the `OPENAPI_URL` repository variable to point to your staging/dev backend. The CI workflow will verify that generated types are up-to-date.
+`ThemeProvider` supports `dark`/`light`/`system`. `useTheme()` reads/sets, `ThemeToggle` cycles modes. Persists to `localStorage` (`app_theme`) and applies `.dark` / `.light` to `<html>` for Tailwind dark mode. Theme: ice blue primary, dark mode default. Headings use Geist Pixel Line; body uses Geist Variable.
 
-### Usage
+## Error Handling
 
-After generating, import hooks and schemas from `src/api/generated/`. The generated code is organized by API tags.
-
-**React Query hooks (with automatic Zod validation):**
-
-```typescript
-import { useGetNotes, useCreateNote } from "@/api/generated/hooks/notes/notes"
-
-function NoteList() {
-  const { data, isLoading, error } = useGetNotes()
-
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
-
-  return <pre>{JSON.stringify(data, null, 2)}</pre>
-}
-```
-
-**Standalone Zod schemas (for form validation, etc.):**
-
-```typescript
-import { NoteCreate } from "@/api/generated/zod/notes/notes"
-
-const result = NoteCreate.safeParse(formData)
-if (!result.success) {
-  console.error(result.error.issues)
-}
-```
-
-> **Note:** The exact imports and response structures depend on your backend's OpenAPI specification. Check the generated files in `src/api/generated/` after running `pnpm generate-api`.
+- **Global mutation errors** — `MutationCache` in `QueryClient` catches all mutation errors and toasts via sonner
+- **Per-mutation opt-out** — set `meta: { skipGlobalError: true }` to handle locally
+- **`getErrorMessage()`** (`src/lib/api-errors.ts`) — extracts human-readable messages from FastAPI error shapes (`detail` as string, array, or object)
 
 ## Testing
 
@@ -196,8 +110,6 @@ pnpm test:run      # Single run
 pnpm test:coverage # With coverage
 pnpm test:ui       # Visual UI
 ```
-
-### Test Utilities
 
 `renderWithFileRoutes()` (`src/test/renderers.tsx`) renders the full router with providers and configurable auth state:
 
@@ -224,71 +136,13 @@ await renderWithFileRoutes(<div />, {
 })
 ```
 
-MSW handlers are configured in `src/api/handlers.ts`. A default handler for `/auth/me` (returns 401) is included to suppress warnings during tests.
-
-## Project Structure
-
-```
-src/
-├── api/
-│   ├── api.ts              # Ky client with token refresh
-│   ├── orval-client.ts     # Custom adapter for orval (uses ky)
-│   ├── handlers.ts         # MSW handlers aggregator
-│   └── generated/          # Auto-generated (do not edit)
-│       ├── hooks/          # React Query hooks
-│       ├── types/          # TypeScript types
-│       ├── zod/            # Zod schemas
-│       └── mocks/          # MSW mock handlers
-├── components/
-│   ├── ui/                 # shadcn/ui components (Button, Card, Input, Label)
-│   ├── theme-provider.tsx  # Dark/light/system theme context
-│   ├── theme-toggle.tsx    # Theme cycle button
-│   ├── error-boundary.tsx  # Root error component with retry
-│   └── not-found.tsx       # 404 page
-├── lib/
-│   ├── analytics.tsx       # AnalyticsProvider + useAnalytics hook
-│   ├── auth.tsx            # AuthProvider + useAuth hook
-│   ├── api-errors.ts       # Error message extraction
-│   ├── feature-flags.tsx   # FeatureFlagProvider + useFeatureFlag hook
-│   ├── logger.ts           # Structured logging abstraction
-│   └── utils.ts            # cn() class merge helper
-├── pages/                  # Page components
-├── routes/                 # TanStack Router file-based routes
-│   ├── __root.tsx          # Root layout (Toaster, devtools, error/404, route tracking)
-│   └── index.tsx           # Home page route
-├── test/
-│   ├── setup.ts            # Vitest + MSW setup
-│   └── renderers.tsx       # renderWithFileRoutes() test utility
-└── main.tsx                # Entry point (providers, router, mutation cache)
-```
-
-## Adding Components
-
-This template uses shadcn/ui. To add new components:
-
-```bash
-npx shadcn-ui@latest add dialog
-npx shadcn-ui@latest add select
-# etc.
-```
+MSW handlers are aggregated in `src/api/handlers.ts`. A default `/auth/me` handler (returns 401) suppresses warnings during tests.
 
 ## Logging, Analytics & Feature Flags
 
-### Logger
-
-`src/lib/logger.ts` provides `logger.debug()`, `logger.info()`, `logger.warn()`, and `logger.error()` methods. In development, it writes to the browser console with level filtering. In production, it outputs structured JSON strings (ready to forward to any reporting service).
-
-Set `VITE_LOG_LEVEL` to control the minimum level (default: `debug` in dev, `warn` in prod).
-
-### Analytics
-
-`AnalyticsProvider` wraps the app and exposes a `useAnalytics()` hook with `track()`, `identify()`, and `page()` methods. Route changes are tracked automatically. The default implementation logs to the logger — pass a custom `backend` prop to `AnalyticsProvider` to send events to a real service.
-
-### Feature Flags
-
-`FeatureFlagProvider` fetches flags from the API's `GET /flags` endpoint (cached via TanStack Query, refetches on window focus). If the API call fails, it falls back to `VITE_FEATURE_*` env vars.
-
-Use the `useFeatureFlag("flag_name")` hook or the `<Feature flag="flag_name">` component for conditional rendering.
+- **Logger** (`src/lib/logger.ts`) — `debug`/`info`/`warn`/`error`. Console in dev, structured JSON in prod. `VITE_LOG_LEVEL` controls the minimum level.
+- **Analytics** (`src/lib/analytics.tsx`) — `AnalyticsProvider` + `useAnalytics()` hook with `track`/`identify`/`page`. Route changes are tracked automatically.
+- **Feature flags** (`src/lib/feature-flags.tsx`) — `FeatureFlagProvider` fetches from the API's `GET /flags` endpoint (TanStack Query, refetch on focus). Falls back to `VITE_FEATURE_*` env vars on failure. Use `useFeatureFlag("name")` or `<Feature flag="name">`.
 
 ## Environment Variables
 
@@ -299,20 +153,15 @@ Use the `useFeatureFlag("flag_name")` hook or the `<Feature flag="flag_name">` c
 | `VITE_FEATURE_*` | Feature flag overrides (e.g. `VITE_FEATURE_NEW_DASHBOARD=true`) | (none)                               |
 | `OPENAPI_URL`    | OpenAPI spec URL (for code generation)                          | `http://localhost:8000/openapi.json` |
 
-`OPENAPI_URL` is only used during development for `pnpm generate-api`. It is not needed in production — the generated files are committed to the repo.
+`OPENAPI_URL` is only used during development for `pnpm generate-api`. The generated files are committed.
 
 ## License
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
+Apache 2.0 — see [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-- [Vite](https://vitejs.dev/)
-- [TanStack Router](https://tanstack.com/router)
-- [TanStack Query](https://tanstack.com/query)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Zod](https://zod.dev/)
-- [ky](https://github.com/sindresorhus/ky)
-- [orval](https://orval.dev/)
-- [MSW](https://mswjs.io/)
+- [Vite](https://vitejs.dev/) · [TanStack Router](https://tanstack.com/router) · [TanStack Query](https://tanstack.com/query)
+- [shadcn/ui](https://ui.shadcn.com/) · [Tailwind CSS](https://tailwindcss.com/)
+- [Zod](https://zod.dev/) · [ky](https://github.com/sindresorhus/ky) · [orval](https://orval.dev/) · [MSW](https://mswjs.io/)
+- Game icons by [game-icons.net](https://game-icons.net) contributors, licensed under [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/)
