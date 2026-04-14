@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { getRouteApi, Link } from "@tanstack/react-router"
 import {
   ArrowDownAZ,
   ArrowDownWideNarrow,
@@ -73,9 +73,12 @@ function InventoryListSkeleton() {
   )
 }
 
+const inventoryListRouteApi = getRouteApi("/inventory/")
+
 function InventoryList() {
   const queryClient = useQueryClient()
   const analytics = useAnalytics()
+  const { tab } = inventoryListRouteApi.useSearch()
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<InventoryListItem | null>(
@@ -224,6 +227,7 @@ function InventoryList() {
           <InventoryCard
             key={inv.id}
             inventory={inv}
+            tab={tab}
             onDelete={() => setDeleteTarget(inv)}
           />
         ))}
@@ -299,15 +303,18 @@ function InventoryList() {
 
 function InventoryCard({
   inventory,
+  tab,
   onDelete,
 }: {
   inventory: InventoryListItem
+  tab?: "equipment" | "workbench" | "loadout"
   onDelete: () => void
 }) {
   return (
     <Link
       to="/inventory/$inventoryId"
       params={{ inventoryId: String(inventory.id) }}
+      search={tab ? { tab } : {}}
     >
       <Card className="hover:border-foreground/20 cursor-pointer transition-colors">
         <CardContent className="flex items-center justify-between">

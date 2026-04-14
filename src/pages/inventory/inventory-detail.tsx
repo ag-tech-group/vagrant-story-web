@@ -163,6 +163,31 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         })
       ? "workbench"
       : "equipment"
+
+  // When arriving with ?tab=workbench or ?tab=loadout (e.g. from home page),
+  // the path-based activeTab defaults to "equipment". Redirect to the
+  // requested sub-route and strip the tab param so it's a one-time action.
+  const requestedTab = search.tab
+  if (
+    requestedTab &&
+    requestedTab !== activeTab &&
+    (requestedTab === "workbench" || requestedTab === "loadout")
+  ) {
+    const tabRoute =
+      requestedTab === "workbench"
+        ? "/inventory/$inventoryId/workbench"
+        : "/inventory/$inventoryId/loadout"
+    navigate({
+      to: tabRoute,
+      params: { inventoryId: String(inventoryId) },
+      search: (prev) => {
+        const next = { ...prev }
+        delete (next as Record<string, unknown>).tab
+        return next
+      },
+      replace: true,
+    })
+  }
   // Route search-param updates back to the active subroute explicitly.
   // A route-bound navigate on the parent would resolve to /inventory/$inventoryId,
   // whose index redirects to /equipment — silently kicking users off workbench/loadout.

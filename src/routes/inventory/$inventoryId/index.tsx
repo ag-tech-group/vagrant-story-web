@@ -1,16 +1,21 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router"
+import { createFileRoute, Navigate, getRouteApi } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/inventory/$inventoryId/")({
-  component: RedirectToEquipment,
+  component: RedirectToTab,
 })
 
-function RedirectToEquipment() {
+const parentRoute = getRouteApi("/inventory/$inventoryId")
+
+function RedirectToTab() {
   const { inventoryId } = Route.useParams()
-  return (
-    <Navigate
-      to="/inventory/$inventoryId/equipment"
-      params={{ inventoryId }}
-      replace
-    />
-  )
+  const { tab } = parentRoute.useSearch()
+
+  const target =
+    tab === "workbench"
+      ? "/inventory/$inventoryId/workbench"
+      : tab === "loadout"
+        ? "/inventory/$inventoryId/loadout"
+        : "/inventory/$inventoryId/equipment"
+
+  return <Navigate to={target} params={{ inventoryId }} replace />
 }
