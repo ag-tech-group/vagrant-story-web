@@ -9,6 +9,15 @@
  * 2. Material recipe: type_1(mat_A) + type_2(mat_B) → result_material (from MaterialRecipe)
  *
  * Both inputs are destroyed; one new item is created with no history.
+ *
+ * Design decisions worth preserving:
+ * - Workshop selection is required (no "ignore restrictions" mode). Available
+ *   material outcomes are locked by workshop; users wanting unrestricted
+ *   options select Godhands, which has every material.
+ * - Equipped items are included in the searchable pool by default. High-tier
+ *   gear is rare and frequently re-workshopped, so opting them out by default
+ *   would hide the most useful inputs. Users can mark specific items as
+ *   protected to exclude them.
  */
 
 import type {
