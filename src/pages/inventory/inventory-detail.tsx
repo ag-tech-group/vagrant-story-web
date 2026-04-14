@@ -163,6 +163,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
         })
       ? "workbench"
       : "equipment"
+
   // Route search-param updates back to the active subroute explicitly.
   // A route-bound navigate on the parent would resolve to /inventory/$inventoryId,
   // whose index redirects to /equipment — silently kicking users off workbench/loadout.

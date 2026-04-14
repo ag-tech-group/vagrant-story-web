@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
-import { ArrowRight } from "lucide-react"
 import { ItemIcon } from "@/components/item-icon"
 import { Card, CardContent } from "@/components/ui/card"
 import { gameApi } from "@/lib/game-api"
+import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
+import { ArrowRight } from "lucide-react"
 
 export function HomePage() {
   const { data: blades = [] } = useQuery({
@@ -218,39 +218,25 @@ export function HomePage() {
           <h2 className="mb-6 text-2xl tracking-wide">Tools</h2>
           <div className="flex flex-col gap-6">
             {/* Inventory — hero card */}
-            <Link to="/inventory">
-              <Card className="border-primary/30 hover:border-primary/50 transition-colors">
-                <CardContent className="flex flex-col gap-4 pt-6">
-                  <div className="flex items-start gap-3">
-                    <ItemIcon type="Inventory" size="sm" />
-                    <div>
-                      <h3 className="font-sans text-lg font-medium">
-                        Inventory
-                      </h3>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        Import your save file to unlock powerful crafting and
-                        loadout tools for your equipment.
-                      </p>
-                    </div>
+            <Card className="border-primary/30 hover:border-primary/50 transition-colors">
+              <CardContent className="flex flex-col gap-4 pt-6">
+                <Link to="/inventory" className="flex items-start gap-3">
+                  <ItemIcon type="Inventory" size="sm" />
+                  <div>
+                    <h3 className="font-sans text-lg font-medium">Inventory</h3>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Import your save file to unlock powerful crafting and
+                      loadout tools for your equipment.
+                    </p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="bg-muted/30 flex items-start gap-3 rounded-lg p-3">
-                      <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
-                        <img
-                          src="/images/icons/Swords.svg"
-                          alt="Equipment"
-                          className="size-5"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Equipment</p>
-                        <p className="text-muted-foreground text-xs">
-                          Manage gear and see combined stats across all equipped
-                          pieces.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-muted/30 flex items-start gap-3 rounded-lg p-3">
+                </Link>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Link
+                    to="/inventory"
+                    search={{ tab: "workbench" }}
+                    className="border-border hover:border-primary/40 hover:bg-muted/50 flex flex-col gap-3 rounded-lg border p-4 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
                       <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
                         <img
                           src="/images/icons/HammerPick.svg"
@@ -258,15 +244,20 @@ export function HomePage() {
                           className="size-5"
                         />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">Workbench</p>
-                        <p className="text-muted-foreground text-xs">
-                          Find optimal crafting paths for your inventory items
-                          and discover upgrades.
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium">Workbench</p>
                     </div>
-                    <div className="bg-muted/30 flex items-start gap-3 rounded-lg p-3">
+                    <ul className="text-muted-foreground space-y-1 text-xs">
+                      <li>• Discover every item you can craft right now</li>
+                      <li>• Multi-step paths to reach any target item</li>
+                      <li>• Filter by workshop and material tier</li>
+                    </ul>
+                  </Link>
+                  <Link
+                    to="/inventory"
+                    search={{ tab: "loadout" }}
+                    className="border-border hover:border-primary/40 hover:bg-muted/50 flex flex-col gap-3 rounded-lg border p-4 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
                       <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
                         <img
                           src="/images/icons/Loadout.svg"
@@ -274,18 +265,22 @@ export function HomePage() {
                           className="size-5"
                         />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">Loadout</p>
-                        <p className="text-muted-foreground text-xs">
-                          Build and compare equipment loadouts to optimize your
-                          setup.
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium">Loadout</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                    <ul className="text-muted-foreground space-y-1 text-xs">
+                      <li>• Get optimal equipment picks for any enemy</li>
+                      <li>
+                        • Offense, defense, or balanced optimization modes
+                      </li>
+                      <li>
+                        • Scored using the actual VS damage formula, including
+                        elements and affinities
+                      </li>
+                    </ul>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Other tools */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
