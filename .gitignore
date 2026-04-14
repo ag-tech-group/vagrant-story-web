@@ -15,6 +15,9 @@ dist-ssr
 # Playwright MCP session logs
 .playwright-mcp/
 
+# Local HTTPS dev certs (mkcert)
+.certs/
+
 # Local review artifacts (mobile/tablet screenshots, etc.)
 /mobile-*.png
 /tablet-*.png

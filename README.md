@@ -39,10 +39,24 @@ Pairs with [vagrant-story-api](../vagrant-story-api).
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:5173 (proxies /api to production API)
+pnpm dev          # https://localhost:5173 (proxies /api to production API)
 ```
 
 Set `VITE_API_URL=http://localhost:8000` in `.env` to point at a local backend instead of the production API.
+
+### Local auth (optional)
+
+Auth cookies are issued for `.criticalbit.gg` and marked `Secure`, so testing signed-in flows locally requires HTTPS on a `.criticalbit.gg` subdomain. One-time setup:
+
+1. Add `127.0.0.1 local.criticalbit.gg` to `/etc/hosts` (or the Windows equivalent).
+2. Install [mkcert](https://github.com/FiloSottile/mkcert) and trust the local CA: `mkcert -install`.
+3. Generate the dev cert into `.certs/` (gitignored):
+   ```bash
+   mkdir -p .certs
+   mkcert -key-file .certs/key.pem -cert-file .certs/cert.pem local.criticalbit.gg localhost 127.0.0.1 ::1
+   ```
+
+`pnpm dev` picks up the cert automatically when it exists and falls back to plain HTTP otherwise. Visit `https://local.criticalbit.gg:5173` (not `localhost`) so the browser can see the `.criticalbit.gg` auth cookies after sign-in.
 
 ### Common commands
 
