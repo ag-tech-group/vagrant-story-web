@@ -17,5 +17,16 @@ function RedirectToTab() {
         ? "/inventory/$inventoryId/loadout"
         : "/inventory/$inventoryId/equipment"
 
-  return <Navigate to={target} params={{ inventoryId }} replace />
+  return (
+    <Navigate
+      to={target}
+      params={{ inventoryId }}
+      search={(prev) => {
+        const next = { ...prev }
+        delete (next as Record<string, unknown>).tab
+        return next
+      }}
+      replace
+    />
+  )
 }
