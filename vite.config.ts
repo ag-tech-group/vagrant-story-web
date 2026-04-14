@@ -1,10 +1,18 @@
+import fs from "fs"
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
 import { sentryVitePlugin } from "@sentry/vite-plugin"
-import basicSsl from "@vitejs/plugin-basic-ssl"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
+
+const certDir = path.resolve(__dirname, ".certs")
+const certFile = path.join(certDir, "cert.pem")
+const keyFile = path.join(certDir, "key.pem")
+const httpsConfig =
+  fs.existsSync(certFile) && fs.existsSync(keyFile)
+    ? { cert: fs.readFileSync(certFile), key: fs.readFileSync(keyFile) }
+    : undefined
 
 const API_TARGET =
   process.env.NODE_ENV === "development"
@@ -34,7 +42,6 @@ export default defineConfig({
     }),
     react(),
     tailwindcss(),
-    basicSsl(),
     sentryAuthToken && sentryOrg && sentryProject
       ? sentryVitePlugin({
           authToken: sentryAuthToken,
@@ -50,6 +57,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    https: httpsConfig,
     allowedHosts: ["local.criticalbit.gg"],
     proxy: {
       "/api": {
