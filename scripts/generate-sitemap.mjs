@@ -139,8 +139,7 @@ function renderSitemap(entries) {
     if (entry.lastmod) lines.push(`    <lastmod>${entry.lastmod}</lastmod>`)
     if (entry.changefreq)
       lines.push(`    <changefreq>${entry.changefreq}</changefreq>`)
-    if (entry.priority)
-      lines.push(`    <priority>${entry.priority}</priority>`)
+    if (entry.priority) lines.push(`    <priority>${entry.priority}</priority>`)
     lines.push("  </url>")
   }
   lines.push("</urlset>")
