@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vagrant-story.criticalbit.gg/sitemap.xml

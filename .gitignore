@@ -36,3 +36,6 @@ dist-ssr
 
 # TypeScript
 *.tsbuildinfo
+
+# Generated at build time by scripts/generate-sitemap.mjs
+/public/sitemap.xml

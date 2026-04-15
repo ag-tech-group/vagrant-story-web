@@ -8,8 +8,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "pnpm run generate-routes && tsc -b && vite build",
+    "build": "pnpm run generate-routes && pnpm run generate-sitemap && tsc -b && vite build",
     "generate-api": "orval",
+    "generate-sitemap": "node scripts/generate-sitemap.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
