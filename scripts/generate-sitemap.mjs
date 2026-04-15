@@ -52,7 +52,7 @@ const STATIC_ROUTES = [
 ]
 
 async function fetchList(path) {
-  const url = `${API_URL}${path}`
+  const url = `${API_URL}/v1${path}`
   const res = await fetch(url)
   if (!res.ok) {
     throw new Error(`GET ${url} → ${res.status} ${res.statusText}`)
