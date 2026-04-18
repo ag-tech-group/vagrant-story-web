@@ -141,7 +141,7 @@ function InventoryList() {
   if (error) {
     return (
       <div className="text-destructive py-10 text-center text-sm">
-        Failed to load inventories. Make sure you are signed in.
+        Something went wrong loading your inventories. Please try again.
       </div>
     )
   }
