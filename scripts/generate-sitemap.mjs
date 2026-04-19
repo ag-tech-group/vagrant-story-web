@@ -15,6 +15,21 @@ const API_URL = (
   process.env.SITEMAP_API_URL || "https://vagrant-story-api.criticalbit.gg"
 ).replace(/\/+$/, "")
 
+// Netlify sets CONTEXT to "production", "deploy-preview", or "branch-deploy".
+// Only production deploys are indexed by search engines, so detail-URL
+// fetching is pointless on previews — and hitting the prod API with a
+// burst of parallel requests per preview build is what drove the
+// 2026-04-18 Postgres connection storm.
+const NETLIFY_CONTEXT = process.env.CONTEXT
+const FETCH_DETAIL_URLS =
+  NETLIFY_CONTEXT === undefined || NETLIFY_CONTEXT === "production"
+
+// Cap parallel requests to the prod API. Cloud SQL's max_connections is
+// currently 25 (db-f1-micro tier); firing all detail-list endpoints at
+// once was enough to exhaust the pool. 3 is well within budget and adds
+// only a couple of seconds to build time.
+const FETCH_CONCURRENCY = 3
+
 const __filename = fileURLToPath(import.meta.url)
 const OUT_PATH = resolve(__filename, "../../public/sitemap.xml")
 
@@ -87,18 +102,38 @@ const ENTITY_ENDPOINTS = [
   { prefix: "/rankings", api: "/rankings?limit=200" },
 ]
 
+// Lightweight Promise.allSettled with a concurrency cap. Each task is an
+// async thunk so work doesn't start until a worker picks it up.
+async function allSettledWithConcurrency(taskFns, limit) {
+  const results = new Array(taskFns.length)
+  let nextIndex = 0
+  const worker = async () => {
+    while (true) {
+      const i = nextIndex++
+      if (i >= taskFns.length) return
+      try {
+        results[i] = { status: "fulfilled", value: await taskFns[i]() }
+      } catch (reason) {
+        results[i] = { status: "rejected", reason }
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: limit }, worker))
+  return results
+}
+
 async function collectDetailUrls() {
   const urls = []
 
-  const tasks = [
-    ...ENTITY_ENDPOINTS.map(async ({ prefix, api }) => {
+  const taskFns = [
+    ...ENTITY_ENDPOINTS.map(({ prefix, api }) => async () => {
       const rows = await fetchList(api)
       return rows.map((row) => `${prefix}/${row.id}`)
     }),
     // Armor and accessories share the same underlying /armor endpoint.
     // Split by armor_type so the sitemap emits each item exactly once
     // under its canonical route.
-    (async () => {
+    async () => {
       const rows = await fetchList("/armor?limit=200")
       const armorPaths = []
       for (const row of rows) {
@@ -109,14 +144,14 @@ async function collectDetailUrls() {
         }
       }
       return armorPaths
-    })(),
+    },
   ]
 
   // allSettled so one flaky endpoint doesn't fail the whole build and
   // block unrelated deploys. Missing URLs repopulate on the next
   // successful build; robots.txt still points at a valid (if partial)
   // sitemap, and crawlers tolerate list churn between fetches.
-  const results = await Promise.allSettled(tasks)
+  const results = await allSettledWithConcurrency(taskFns, FETCH_CONCURRENCY)
   let failed = 0
   for (const result of results) {
     if (result.status === "fulfilled") {
@@ -174,17 +209,23 @@ async function main() {
     priority: route.priority,
   }))
 
-  console.log(`[sitemap] Fetching detail URLs from ${API_URL}`)
-  const detailPaths = await collectDetailUrls()
-  console.log(`[sitemap] Collected ${detailPaths.length} detail URLs`)
+  if (FETCH_DETAIL_URLS) {
+    console.log(`[sitemap] Fetching detail URLs from ${API_URL}`)
+    const detailPaths = await collectDetailUrls()
+    console.log(`[sitemap] Collected ${detailPaths.length} detail URLs`)
 
-  for (const path of detailPaths) {
-    entries.push({
-      loc: `${SITE_URL}${path}`,
-      lastmod: today,
-      changefreq: "monthly",
-      priority: "0.6",
-    })
+    for (const path of detailPaths) {
+      entries.push({
+        loc: `${SITE_URL}${path}`,
+        lastmod: today,
+        changefreq: "monthly",
+        priority: "0.6",
+      })
+    }
+  } else {
+    console.log(
+      `[sitemap] Skipping detail-URL fetch (CONTEXT=${NETLIFY_CONTEXT}) — preview/branch builds emit static-only sitemap`
+    )
   }
 
   const xml = renderSitemap(entries)
