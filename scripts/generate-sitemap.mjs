@@ -90,7 +90,7 @@ const ENTITY_ENDPOINTS = [
 async function collectDetailUrls() {
   const urls = []
 
-  const results = await Promise.all([
+  const tasks = [
     ...ENTITY_ENDPOINTS.map(async ({ prefix, api }) => {
       const rows = await fetchList(api)
       return rows.map((row) => `${prefix}/${row.id}`)
@@ -110,10 +110,27 @@ async function collectDetailUrls() {
       }
       return armorPaths
     })(),
-  ])
+  ]
 
-  for (const batch of results) {
-    urls.push(...batch)
+  // allSettled so one flaky endpoint doesn't fail the whole build and
+  // block unrelated deploys. Missing URLs repopulate on the next
+  // successful build; robots.txt still points at a valid (if partial)
+  // sitemap, and crawlers tolerate list churn between fetches.
+  const results = await Promise.allSettled(tasks)
+  let failed = 0
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      urls.push(...result.value)
+    } else {
+      failed++
+      console.warn(`[sitemap] endpoint failed: ${result.reason.message}`)
+    }
+  }
+
+  if (failed > 0) {
+    console.warn(
+      `[sitemap] ${failed}/${results.length} endpoint(s) failed — sitemap will be partial`
+    )
   }
 
   return urls

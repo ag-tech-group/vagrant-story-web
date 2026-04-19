@@ -72,7 +72,7 @@ export interface UpdateInventoryItem {
 }
 
 async function fetchAuth<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API_URL}/v1${path}`, {
     credentials: "include",
     ...options,
   })
