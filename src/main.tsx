@@ -13,7 +13,7 @@ import "@fontsource-variable/geist"
 import { ThemeProvider } from "./components/theme-provider"
 import "./index.css"
 import { getErrorMessage } from "./lib/api-errors"
-import { RootErrorComponent } from "./components/error-boundary"
+import { ErrorBoundary } from "./components/error-boundary"
 import { NotFound } from "./components/not-found"
 import { AuthProvider, useAuth } from "./lib/auth"
 import { AnalyticsProvider, createAnalyticsBackend } from "./lib/analytics"
@@ -47,7 +47,7 @@ const router = createRouter({
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,
-  defaultErrorComponent: RootErrorComponent,
+  defaultErrorComponent: ErrorBoundary,
   defaultNotFoundComponent: NotFound,
 })
 
