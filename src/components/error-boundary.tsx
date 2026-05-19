@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { logger } from "@/lib/logger"
 import { captureException } from "@/lib/sentry"
 
-export function RootErrorComponent({ error, reset }: ErrorComponentProps) {
+export function ErrorBoundary({ error, reset }: ErrorComponentProps) {
   logger.error("Uncaught error in route component", {
     message: error.message,
     stack: error.stack,

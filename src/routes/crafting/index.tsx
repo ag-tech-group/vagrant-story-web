@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { RootErrorComponent } from "@/components/error-boundary"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { CraftingPage } from "@/pages/crafting/crafting-page"
 
 export type CraftingSearch = {
@@ -15,7 +15,7 @@ export type CraftingSearch = {
 
 export const Route = createFileRoute("/crafting/")({
   component: CraftingPage,
-  errorComponent: RootErrorComponent,
+  errorComponent: ErrorBoundary,
   validateSearch: (search: Record<string, unknown>): CraftingSearch => ({
     s1: typeof search.s1 === "string" ? search.s1 : undefined,
     s2: typeof search.s2 === "string" ? search.s2 : undefined,

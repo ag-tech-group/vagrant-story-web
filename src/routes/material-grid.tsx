@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { RootErrorComponent } from "@/components/error-boundary"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { CraftingMaterialsPage } from "@/pages/crafting/materials-page"
 
 export type MaterialsSearch = {
@@ -10,7 +10,7 @@ export type MaterialsSearch = {
 
 export const Route = createFileRoute("/material-grid")({
   component: CraftingMaterialsPage,
-  errorComponent: RootErrorComponent,
+  errorComponent: ErrorBoundary,
   validateSearch: (search: Record<string, unknown>): MaterialsSearch => ({
     cat: typeof search.cat === "string" ? search.cat : undefined,
     t1: typeof search.t1 === "string" ? search.t1 : undefined,
