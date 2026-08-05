@@ -1,13 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api"
 
 export type EquipSlot =
-  | "right_hand"
-  | "left_hand"
-  | "head"
-  | "body"
-  | "legs"
-  | "arms"
-  | "accessory"
+  "right_hand" | "left_hand" | "head" | "body" | "legs" | "arms" | "accessory"
 
 export interface InventoryListItem {
   id: number
