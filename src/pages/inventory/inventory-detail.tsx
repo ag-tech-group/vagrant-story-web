@@ -678,10 +678,7 @@ function InventoryDetail({ inventoryId }: { inventoryId: number }) {
 
       const itemId = active.data.current?.itemId as number | undefined
       const source = active.data.current?.source as
-        | "bag"
-        | "equip"
-        | "container"
-        | undefined
+        "bag" | "equip" | "container" | undefined
       if (!itemId || !source) return
 
       const item = allItems.find((i) => i.id === itemId)

@@ -8,7 +8,6 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { reactErrorHandler } from "@sentry/react"
 import { toast } from "sonner"
-// @ts-expect-error -- fontsource CSS-only imports have no type declarations
 import "@fontsource-variable/geist"
 import { ThemeProvider } from "./components/theme-provider"
 import "./index.css"

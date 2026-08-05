@@ -9,186 +9,81 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MaterialsRouteImport } from './routes/materials'
-import { Route as MaterialGridRouteImport } from './routes/material-grid'
-import { Route as WorkshopsRouteRouteImport } from './routes/workshops/route'
-import { Route as TitlesRouteRouteImport } from './routes/titles/route'
-import { Route as SpellsRouteRouteImport } from './routes/spells/route'
-import { Route as SigilsRouteRouteImport } from './routes/sigils/route'
-import { Route as RankingsRouteRouteImport } from './routes/rankings/route'
-import { Route as KeysRouteRouteImport } from './routes/keys/route'
-import { Route as InventoryRouteRouteImport } from './routes/inventory/route'
-import { Route as GripsRouteRouteImport } from './routes/grips/route'
-import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
-import { Route as GemsRouteRouteImport } from './routes/gems/route'
-import { Route as ForgeRouteRouteImport } from './routes/forge/route'
-import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
-import { Route as ChestsRouteRouteImport } from './routes/chests/route'
-import { Route as CharactersRouteRouteImport } from './routes/characters/route'
-import { Route as BreakArtsRouteRouteImport } from './routes/break-arts/route'
-import { Route as BladesRouteRouteImport } from './routes/blades/route'
-import { Route as BestiaryRouteRouteImport } from './routes/bestiary/route'
-import { Route as BattleAbilitiesRouteRouteImport } from './routes/battle-abilities/route'
-import { Route as ArmorRouteRouteImport } from './routes/armor/route'
-import { Route as AreasRouteRouteImport } from './routes/areas/route'
-import { Route as AccessoriesRouteRouteImport } from './routes/accessories/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as WorkshopsIndexRouteImport } from './routes/workshops/index'
-import { Route as TitlesIndexRouteImport } from './routes/titles/index'
-import { Route as SpellsIndexRouteImport } from './routes/spells/index'
-import { Route as SigilsIndexRouteImport } from './routes/sigils/index'
-import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
-import { Route as KeysIndexRouteImport } from './routes/keys/index'
-import { Route as InventoryIndexRouteImport } from './routes/inventory/index'
-import { Route as GripsIndexRouteImport } from './routes/grips/index'
-import { Route as GrimoiresIndexRouteImport } from './routes/grimoires/index'
-import { Route as GemsIndexRouteImport } from './routes/gems/index'
-import { Route as ForgeIndexRouteImport } from './routes/forge/index'
-import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
-import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
-import { Route as ChestsIndexRouteImport } from './routes/chests/index'
-import { Route as CharactersIndexRouteImport } from './routes/characters/index'
-import { Route as BreakArtsIndexRouteImport } from './routes/break-arts/index'
-import { Route as BladesIndexRouteImport } from './routes/blades/index'
-import { Route as BestiaryIndexRouteImport } from './routes/bestiary/index'
-import { Route as BattleAbilitiesIndexRouteImport } from './routes/battle-abilities/index'
-import { Route as ArmorIndexRouteImport } from './routes/armor/index'
-import { Route as AreasIndexRouteImport } from './routes/areas/index'
+import { Route as AccessoriesRouteRouteImport } from './routes/accessories/route'
+import { Route as AreasRouteRouteImport } from './routes/areas/route'
+import { Route as ArmorRouteRouteImport } from './routes/armor/route'
+import { Route as BattleAbilitiesRouteRouteImport } from './routes/battle-abilities/route'
+import { Route as BestiaryRouteRouteImport } from './routes/bestiary/route'
+import { Route as BladesRouteRouteImport } from './routes/blades/route'
+import { Route as BreakArtsRouteRouteImport } from './routes/break-arts/route'
+import { Route as CharactersRouteRouteImport } from './routes/characters/route'
+import { Route as ChestsRouteRouteImport } from './routes/chests/route'
+import { Route as ConsumablesRouteRouteImport } from './routes/consumables/route'
+import { Route as ForgeRouteRouteImport } from './routes/forge/route'
+import { Route as GemsRouteRouteImport } from './routes/gems/route'
+import { Route as GrimoiresRouteRouteImport } from './routes/grimoires/route'
+import { Route as GripsRouteRouteImport } from './routes/grips/route'
+import { Route as InventoryRouteRouteImport } from './routes/inventory/route'
+import { Route as KeysRouteRouteImport } from './routes/keys/route'
+import { Route as MaterialGridRouteImport } from './routes/material-grid'
+import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as RankingsRouteRouteImport } from './routes/rankings/route'
+import { Route as SigilsRouteRouteImport } from './routes/sigils/route'
+import { Route as SpellsRouteRouteImport } from './routes/spells/route'
+import { Route as TitlesRouteRouteImport } from './routes/titles/route'
+import { Route as WorkshopsRouteRouteImport } from './routes/workshops/route'
 import { Route as AccessoriesIndexRouteImport } from './routes/accessories/index'
-import { Route as WorkshopsIdRouteImport } from './routes/workshops/$id'
-import { Route as TitlesIdRouteImport } from './routes/titles/$id'
-import { Route as SpellsIdRouteImport } from './routes/spells/$id'
-import { Route as SigilsIdRouteImport } from './routes/sigils/$id'
-import { Route as RankingsIdRouteImport } from './routes/rankings/$id'
-import { Route as KeysIdRouteImport } from './routes/keys/$id'
-import { Route as InventoryImportRouteImport } from './routes/inventory/import'
-import { Route as GripsIdRouteImport } from './routes/grips/$id'
-import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
-import { Route as GemsIdRouteImport } from './routes/gems/$id'
-import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
-import { Route as ChestsIdRouteImport } from './routes/chests/$id'
-import { Route as CharactersIdRouteImport } from './routes/characters/$id'
-import { Route as BreakArtsIdRouteImport } from './routes/break-arts/$id'
-import { Route as BladesIdRouteImport } from './routes/blades/$id'
-import { Route as BestiaryIdRouteImport } from './routes/bestiary/$id'
-import { Route as BattleAbilitiesIdRouteImport } from './routes/battle-abilities/$id'
-import { Route as ArmorIdRouteImport } from './routes/armor/$id'
-import { Route as AreasIdRouteImport } from './routes/areas/$id'
 import { Route as AccessoriesIdRouteImport } from './routes/accessories/$id'
+import { Route as AreasIndexRouteImport } from './routes/areas/index'
+import { Route as AreasIdRouteImport } from './routes/areas/$id'
+import { Route as ArmorIndexRouteImport } from './routes/armor/index'
+import { Route as ArmorIdRouteImport } from './routes/armor/$id'
+import { Route as BattleAbilitiesIndexRouteImport } from './routes/battle-abilities/index'
+import { Route as BattleAbilitiesIdRouteImport } from './routes/battle-abilities/$id'
+import { Route as BestiaryIndexRouteImport } from './routes/bestiary/index'
+import { Route as BestiaryIdRouteImport } from './routes/bestiary/$id'
+import { Route as BladesIndexRouteImport } from './routes/blades/index'
+import { Route as BladesIdRouteImport } from './routes/blades/$id'
+import { Route as BreakArtsIndexRouteImport } from './routes/break-arts/index'
+import { Route as BreakArtsIdRouteImport } from './routes/break-arts/$id'
+import { Route as CharactersIndexRouteImport } from './routes/characters/index'
+import { Route as CharactersIdRouteImport } from './routes/characters/$id'
+import { Route as ChestsIndexRouteImport } from './routes/chests/index'
+import { Route as ChestsIdRouteImport } from './routes/chests/$id'
+import { Route as ConsumablesIndexRouteImport } from './routes/consumables/index'
+import { Route as ConsumablesIdRouteImport } from './routes/consumables/$id'
+import { Route as CraftingIndexRouteImport } from './routes/crafting/index'
+import { Route as ForgeIndexRouteImport } from './routes/forge/index'
+import { Route as GemsIndexRouteImport } from './routes/gems/index'
+import { Route as GemsIdRouteImport } from './routes/gems/$id'
+import { Route as GrimoiresIndexRouteImport } from './routes/grimoires/index'
+import { Route as GrimoiresIdRouteImport } from './routes/grimoires/$id'
+import { Route as GripsIndexRouteImport } from './routes/grips/index'
+import { Route as GripsIdRouteImport } from './routes/grips/$id'
+import { Route as InventoryIndexRouteImport } from './routes/inventory/index'
 import { Route as InventoryInventoryIdRouteRouteImport } from './routes/inventory/$inventoryId/route'
+import { Route as InventoryImportRouteImport } from './routes/inventory/import'
+import { Route as KeysIndexRouteImport } from './routes/keys/index'
+import { Route as KeysIdRouteImport } from './routes/keys/$id'
+import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
+import { Route as RankingsIdRouteImport } from './routes/rankings/$id'
+import { Route as SigilsIndexRouteImport } from './routes/sigils/index'
+import { Route as SigilsIdRouteImport } from './routes/sigils/$id'
+import { Route as SpellsIndexRouteImport } from './routes/spells/index'
+import { Route as SpellsIdRouteImport } from './routes/spells/$id'
+import { Route as TitlesIndexRouteImport } from './routes/titles/index'
+import { Route as TitlesIdRouteImport } from './routes/titles/$id'
+import { Route as WorkshopsIndexRouteImport } from './routes/workshops/index'
+import { Route as WorkshopsIdRouteImport } from './routes/workshops/$id'
 import { Route as InventoryInventoryIdIndexRouteImport } from './routes/inventory/$inventoryId/index'
-import { Route as InventoryInventoryIdWorkbenchRouteImport } from './routes/inventory/$inventoryId/workbench'
-import { Route as InventoryInventoryIdLoadoutRouteImport } from './routes/inventory/$inventoryId/loadout'
 import { Route as InventoryInventoryIdEquipmentRouteImport } from './routes/inventory/$inventoryId/equipment'
+import { Route as InventoryInventoryIdLoadoutRouteImport } from './routes/inventory/$inventoryId/loadout'
+import { Route as InventoryInventoryIdWorkbenchRouteImport } from './routes/inventory/$inventoryId/workbench'
 
-const MaterialsRoute = MaterialsRouteImport.update({
-  id: '/materials',
-  path: '/materials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MaterialGridRoute = MaterialGridRouteImport.update({
-  id: '/material-grid',
-  path: '/material-grid',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WorkshopsRouteRoute = WorkshopsRouteRouteImport.update({
-  id: '/workshops',
-  path: '/workshops',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TitlesRouteRoute = TitlesRouteRouteImport.update({
-  id: '/titles',
-  path: '/titles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SpellsRouteRoute = SpellsRouteRouteImport.update({
-  id: '/spells',
-  path: '/spells',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SigilsRouteRoute = SigilsRouteRouteImport.update({
-  id: '/sigils',
-  path: '/sigils',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RankingsRouteRoute = RankingsRouteRouteImport.update({
-  id: '/rankings',
-  path: '/rankings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KeysRouteRoute = KeysRouteRouteImport.update({
-  id: '/keys',
-  path: '/keys',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InventoryRouteRoute = InventoryRouteRouteImport.update({
-  id: '/inventory',
-  path: '/inventory',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GripsRouteRoute = GripsRouteRouteImport.update({
-  id: '/grips',
-  path: '/grips',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GrimoiresRouteRoute = GrimoiresRouteRouteImport.update({
-  id: '/grimoires',
-  path: '/grimoires',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GemsRouteRoute = GemsRouteRouteImport.update({
-  id: '/gems',
-  path: '/gems',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgeRouteRoute = ForgeRouteRouteImport.update({
-  id: '/forge',
-  path: '/forge',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
-  id: '/consumables',
-  path: '/consumables',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChestsRouteRoute = ChestsRouteRouteImport.update({
-  id: '/chests',
-  path: '/chests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CharactersRouteRoute = CharactersRouteRouteImport.update({
-  id: '/characters',
-  path: '/characters',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BreakArtsRouteRoute = BreakArtsRouteRouteImport.update({
-  id: '/break-arts',
-  path: '/break-arts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BladesRouteRoute = BladesRouteRouteImport.update({
-  id: '/blades',
-  path: '/blades',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BestiaryRouteRoute = BestiaryRouteRouteImport.update({
-  id: '/bestiary',
-  path: '/bestiary',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BattleAbilitiesRouteRoute = BattleAbilitiesRouteRouteImport.update({
-  id: '/battle-abilities',
-  path: '/battle-abilities',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArmorRouteRoute = ArmorRouteRouteImport.update({
-  id: '/armor',
-  path: '/armor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AreasRouteRoute = AreasRouteRouteImport.update({
-  id: '/areas',
-  path: '/areas',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccessoriesRouteRoute = AccessoriesRouteRouteImport.update({
@@ -196,220 +91,260 @@ const AccessoriesRouteRoute = AccessoriesRouteRouteImport.update({
   path: '/accessories',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AreasRouteRoute = AreasRouteRouteImport.update({
+  id: '/areas',
+  path: '/areas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WorkshopsIndexRoute = WorkshopsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => WorkshopsRouteRoute,
-} as any)
-const TitlesIndexRoute = TitlesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => TitlesRouteRoute,
-} as any)
-const SpellsIndexRoute = SpellsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SpellsRouteRoute,
-} as any)
-const SigilsIndexRoute = SigilsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SigilsRouteRoute,
-} as any)
-const RankingsIndexRoute = RankingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => RankingsRouteRoute,
-} as any)
-const KeysIndexRoute = KeysIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => KeysRouteRoute,
-} as any)
-const InventoryIndexRoute = InventoryIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => InventoryRouteRoute,
-} as any)
-const GripsIndexRoute = GripsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GripsRouteRoute,
-} as any)
-const GrimoiresIndexRoute = GrimoiresIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GrimoiresRouteRoute,
-} as any)
-const GemsIndexRoute = GemsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GemsRouteRoute,
-} as any)
-const ForgeIndexRoute = ForgeIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ForgeRouteRoute,
-} as any)
-const CraftingIndexRoute = CraftingIndexRouteImport.update({
-  id: '/crafting/',
-  path: '/crafting/',
+const ArmorRouteRoute = ArmorRouteRouteImport.update({
+  id: '/armor',
+  path: '/armor',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConsumablesIndexRoute = ConsumablesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ConsumablesRouteRoute,
+const BattleAbilitiesRouteRoute = BattleAbilitiesRouteRouteImport.update({
+  id: '/battle-abilities',
+  path: '/battle-abilities',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ChestsIndexRoute = ChestsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ChestsRouteRoute,
+const BestiaryRouteRoute = BestiaryRouteRouteImport.update({
+  id: '/bestiary',
+  path: '/bestiary',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CharactersIndexRoute = CharactersIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CharactersRouteRoute,
+const BladesRouteRoute = BladesRouteRouteImport.update({
+  id: '/blades',
+  path: '/blades',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BreakArtsIndexRoute = BreakArtsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BreakArtsRouteRoute,
+const BreakArtsRouteRoute = BreakArtsRouteRouteImport.update({
+  id: '/break-arts',
+  path: '/break-arts',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BladesIndexRoute = BladesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BladesRouteRoute,
+const CharactersRouteRoute = CharactersRouteRouteImport.update({
+  id: '/characters',
+  path: '/characters',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BestiaryIndexRoute = BestiaryIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BestiaryRouteRoute,
+const ChestsRouteRoute = ChestsRouteRouteImport.update({
+  id: '/chests',
+  path: '/chests',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BattleAbilitiesIndexRoute = BattleAbilitiesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BattleAbilitiesRouteRoute,
+const ConsumablesRouteRoute = ConsumablesRouteRouteImport.update({
+  id: '/consumables',
+  path: '/consumables',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ArmorIndexRoute = ArmorIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ArmorRouteRoute,
+const ForgeRouteRoute = ForgeRouteRouteImport.update({
+  id: '/forge',
+  path: '/forge',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AreasIndexRoute = AreasIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AreasRouteRoute,
+const GemsRouteRoute = GemsRouteRouteImport.update({
+  id: '/gems',
+  path: '/gems',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrimoiresRouteRoute = GrimoiresRouteRouteImport.update({
+  id: '/grimoires',
+  path: '/grimoires',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GripsRouteRoute = GripsRouteRouteImport.update({
+  id: '/grips',
+  path: '/grips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventoryRouteRoute = InventoryRouteRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KeysRouteRoute = KeysRouteRouteImport.update({
+  id: '/keys',
+  path: '/keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialGridRoute = MaterialGridRouteImport.update({
+  id: '/material-grid',
+  path: '/material-grid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialsRoute = MaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingsRouteRoute = RankingsRouteRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigilsRouteRoute = SigilsRouteRouteImport.update({
+  id: '/sigils',
+  path: '/sigils',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpellsRouteRoute = SpellsRouteRouteImport.update({
+  id: '/spells',
+  path: '/spells',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TitlesRouteRoute = TitlesRouteRouteImport.update({
+  id: '/titles',
+  path: '/titles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkshopsRouteRoute = WorkshopsRouteRouteImport.update({
+  id: '/workshops',
+  path: '/workshops',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccessoriesIndexRoute = AccessoriesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AccessoriesRouteRoute,
 } as any)
-const WorkshopsIdRoute = WorkshopsIdRouteImport.update({
+const AccessoriesIdRoute = AccessoriesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => WorkshopsRouteRoute,
+  getParentRoute: () => AccessoriesRouteRoute,
 } as any)
-const TitlesIdRoute = TitlesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => TitlesRouteRoute,
-} as any)
-const SpellsIdRoute = SpellsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => SpellsRouteRoute,
-} as any)
-const SigilsIdRoute = SigilsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => SigilsRouteRoute,
-} as any)
-const RankingsIdRoute = RankingsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => RankingsRouteRoute,
-} as any)
-const KeysIdRoute = KeysIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => KeysRouteRoute,
-} as any)
-const InventoryImportRoute = InventoryImportRouteImport.update({
-  id: '/import',
-  path: '/import',
-  getParentRoute: () => InventoryRouteRoute,
-} as any)
-const GripsIdRoute = GripsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => GripsRouteRoute,
-} as any)
-const GrimoiresIdRoute = GrimoiresIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => GrimoiresRouteRoute,
-} as any)
-const GemsIdRoute = GemsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => GemsRouteRoute,
-} as any)
-const ConsumablesIdRoute = ConsumablesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ConsumablesRouteRoute,
-} as any)
-const ChestsIdRoute = ChestsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ChestsRouteRoute,
-} as any)
-const CharactersIdRoute = CharactersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CharactersRouteRoute,
-} as any)
-const BreakArtsIdRoute = BreakArtsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => BreakArtsRouteRoute,
-} as any)
-const BladesIdRoute = BladesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => BladesRouteRoute,
-} as any)
-const BestiaryIdRoute = BestiaryIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => BestiaryRouteRoute,
-} as any)
-const BattleAbilitiesIdRoute = BattleAbilitiesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => BattleAbilitiesRouteRoute,
-} as any)
-const ArmorIdRoute = ArmorIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ArmorRouteRoute,
+const AreasIndexRoute = AreasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AreasRouteRoute,
 } as any)
 const AreasIdRoute = AreasIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AreasRouteRoute,
 } as any)
-const AccessoriesIdRoute = AccessoriesIdRouteImport.update({
+const ArmorIndexRoute = ArmorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ArmorRouteRoute,
+} as any)
+const ArmorIdRoute = ArmorIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => AccessoriesRouteRoute,
+  getParentRoute: () => ArmorRouteRoute,
+} as any)
+const BattleAbilitiesIndexRoute = BattleAbilitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BattleAbilitiesRouteRoute,
+} as any)
+const BattleAbilitiesIdRoute = BattleAbilitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BattleAbilitiesRouteRoute,
+} as any)
+const BestiaryIndexRoute = BestiaryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BestiaryRouteRoute,
+} as any)
+const BestiaryIdRoute = BestiaryIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BestiaryRouteRoute,
+} as any)
+const BladesIndexRoute = BladesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BladesRouteRoute,
+} as any)
+const BladesIdRoute = BladesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BladesRouteRoute,
+} as any)
+const BreakArtsIndexRoute = BreakArtsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BreakArtsRouteRoute,
+} as any)
+const BreakArtsIdRoute = BreakArtsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BreakArtsRouteRoute,
+} as any)
+const CharactersIndexRoute = CharactersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CharactersRouteRoute,
+} as any)
+const CharactersIdRoute = CharactersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CharactersRouteRoute,
+} as any)
+const ChestsIndexRoute = ChestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChestsRouteRoute,
+} as any)
+const ChestsIdRoute = ChestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ChestsRouteRoute,
+} as any)
+const ConsumablesIndexRoute = ConsumablesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsumablesRouteRoute,
+} as any)
+const ConsumablesIdRoute = ConsumablesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ConsumablesRouteRoute,
+} as any)
+const CraftingIndexRoute = CraftingIndexRouteImport.update({
+  id: '/crafting/',
+  path: '/crafting/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgeIndexRoute = ForgeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ForgeRouteRoute,
+} as any)
+const GemsIndexRoute = GemsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GemsRouteRoute,
+} as any)
+const GemsIdRoute = GemsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GemsRouteRoute,
+} as any)
+const GrimoiresIndexRoute = GrimoiresIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GrimoiresRouteRoute,
+} as any)
+const GrimoiresIdRoute = GrimoiresIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GrimoiresRouteRoute,
+} as any)
+const GripsIndexRoute = GripsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GripsRouteRoute,
+} as any)
+const GripsIdRoute = GripsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GripsRouteRoute,
+} as any)
+const InventoryIndexRoute = InventoryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InventoryRouteRoute,
 } as any)
 const InventoryInventoryIdRouteRoute =
   InventoryInventoryIdRouteRouteImport.update({
@@ -417,16 +352,81 @@ const InventoryInventoryIdRouteRoute =
     path: '/$inventoryId',
     getParentRoute: () => InventoryRouteRoute,
   } as any)
+const InventoryImportRoute = InventoryImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => InventoryRouteRoute,
+} as any)
+const KeysIndexRoute = KeysIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KeysRouteRoute,
+} as any)
+const KeysIdRoute = KeysIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => KeysRouteRoute,
+} as any)
+const RankingsIndexRoute = RankingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RankingsRouteRoute,
+} as any)
+const RankingsIdRoute = RankingsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RankingsRouteRoute,
+} as any)
+const SigilsIndexRoute = SigilsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SigilsRouteRoute,
+} as any)
+const SigilsIdRoute = SigilsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SigilsRouteRoute,
+} as any)
+const SpellsIndexRoute = SpellsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SpellsRouteRoute,
+} as any)
+const SpellsIdRoute = SpellsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SpellsRouteRoute,
+} as any)
+const TitlesIndexRoute = TitlesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TitlesRouteRoute,
+} as any)
+const TitlesIdRoute = TitlesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TitlesRouteRoute,
+} as any)
+const WorkshopsIndexRoute = WorkshopsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WorkshopsRouteRoute,
+} as any)
+const WorkshopsIdRoute = WorkshopsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => WorkshopsRouteRoute,
+} as any)
 const InventoryInventoryIdIndexRoute =
   InventoryInventoryIdIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
-const InventoryInventoryIdWorkbenchRoute =
-  InventoryInventoryIdWorkbenchRouteImport.update({
-    id: '/workbench',
-    path: '/workbench',
+const InventoryInventoryIdEquipmentRoute =
+  InventoryInventoryIdEquipmentRouteImport.update({
+    id: '/equipment',
+    path: '/equipment',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
 const InventoryInventoryIdLoadoutRoute =
@@ -435,10 +435,10 @@ const InventoryInventoryIdLoadoutRoute =
     path: '/loadout',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
-const InventoryInventoryIdEquipmentRoute =
-  InventoryInventoryIdEquipmentRouteImport.update({
-    id: '/equipment',
-    path: '/equipment',
+const InventoryInventoryIdWorkbenchRoute =
+  InventoryInventoryIdWorkbenchRouteImport.update({
+    id: '/workbench',
+    path: '/workbench',
     getParentRoute: () => InventoryInventoryIdRouteRoute,
   } as any)
 
@@ -870,158 +870,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/materials': {
-      id: '/materials'
-      path: '/materials'
-      fullPath: '/materials'
-      preLoaderRoute: typeof MaterialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/material-grid': {
-      id: '/material-grid'
-      path: '/material-grid'
-      fullPath: '/material-grid'
-      preLoaderRoute: typeof MaterialGridRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/workshops': {
-      id: '/workshops'
-      path: '/workshops'
-      fullPath: '/workshops'
-      preLoaderRoute: typeof WorkshopsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/titles': {
-      id: '/titles'
-      path: '/titles'
-      fullPath: '/titles'
-      preLoaderRoute: typeof TitlesRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/spells': {
-      id: '/spells'
-      path: '/spells'
-      fullPath: '/spells'
-      preLoaderRoute: typeof SpellsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sigils': {
-      id: '/sigils'
-      path: '/sigils'
-      fullPath: '/sigils'
-      preLoaderRoute: typeof SigilsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rankings': {
-      id: '/rankings'
-      path: '/rankings'
-      fullPath: '/rankings'
-      preLoaderRoute: typeof RankingsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/keys': {
-      id: '/keys'
-      path: '/keys'
-      fullPath: '/keys'
-      preLoaderRoute: typeof KeysRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inventory': {
-      id: '/inventory'
-      path: '/inventory'
-      fullPath: '/inventory'
-      preLoaderRoute: typeof InventoryRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/grips': {
-      id: '/grips'
-      path: '/grips'
-      fullPath: '/grips'
-      preLoaderRoute: typeof GripsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/grimoires': {
-      id: '/grimoires'
-      path: '/grimoires'
-      fullPath: '/grimoires'
-      preLoaderRoute: typeof GrimoiresRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gems': {
-      id: '/gems'
-      path: '/gems'
-      fullPath: '/gems'
-      preLoaderRoute: typeof GemsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forge': {
-      id: '/forge'
-      path: '/forge'
-      fullPath: '/forge'
-      preLoaderRoute: typeof ForgeRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/consumables': {
-      id: '/consumables'
-      path: '/consumables'
-      fullPath: '/consumables'
-      preLoaderRoute: typeof ConsumablesRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chests': {
-      id: '/chests'
-      path: '/chests'
-      fullPath: '/chests'
-      preLoaderRoute: typeof ChestsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/characters': {
-      id: '/characters'
-      path: '/characters'
-      fullPath: '/characters'
-      preLoaderRoute: typeof CharactersRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/break-arts': {
-      id: '/break-arts'
-      path: '/break-arts'
-      fullPath: '/break-arts'
-      preLoaderRoute: typeof BreakArtsRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blades': {
-      id: '/blades'
-      path: '/blades'
-      fullPath: '/blades'
-      preLoaderRoute: typeof BladesRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bestiary': {
-      id: '/bestiary'
-      path: '/bestiary'
-      fullPath: '/bestiary'
-      preLoaderRoute: typeof BestiaryRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/battle-abilities': {
-      id: '/battle-abilities'
-      path: '/battle-abilities'
-      fullPath: '/battle-abilities'
-      preLoaderRoute: typeof BattleAbilitiesRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/armor': {
-      id: '/armor'
-      path: '/armor'
-      fullPath: '/armor'
-      preLoaderRoute: typeof ArmorRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/areas': {
-      id: '/areas'
-      path: '/areas'
-      fullPath: '/areas'
-      preLoaderRoute: typeof AreasRouteRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accessories': {
@@ -1031,159 +884,159 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccessoriesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/areas': {
+      id: '/areas'
+      path: '/areas'
+      fullPath: '/areas'
+      preLoaderRoute: typeof AreasRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/workshops/': {
-      id: '/workshops/'
-      path: '/'
-      fullPath: '/workshops/'
-      preLoaderRoute: typeof WorkshopsIndexRouteImport
-      parentRoute: typeof WorkshopsRouteRoute
-    }
-    '/titles/': {
-      id: '/titles/'
-      path: '/'
-      fullPath: '/titles/'
-      preLoaderRoute: typeof TitlesIndexRouteImport
-      parentRoute: typeof TitlesRouteRoute
-    }
-    '/spells/': {
-      id: '/spells/'
-      path: '/'
-      fullPath: '/spells/'
-      preLoaderRoute: typeof SpellsIndexRouteImport
-      parentRoute: typeof SpellsRouteRoute
-    }
-    '/sigils/': {
-      id: '/sigils/'
-      path: '/'
-      fullPath: '/sigils/'
-      preLoaderRoute: typeof SigilsIndexRouteImport
-      parentRoute: typeof SigilsRouteRoute
-    }
-    '/rankings/': {
-      id: '/rankings/'
-      path: '/'
-      fullPath: '/rankings/'
-      preLoaderRoute: typeof RankingsIndexRouteImport
-      parentRoute: typeof RankingsRouteRoute
-    }
-    '/keys/': {
-      id: '/keys/'
-      path: '/'
-      fullPath: '/keys/'
-      preLoaderRoute: typeof KeysIndexRouteImport
-      parentRoute: typeof KeysRouteRoute
-    }
-    '/inventory/': {
-      id: '/inventory/'
-      path: '/'
-      fullPath: '/inventory/'
-      preLoaderRoute: typeof InventoryIndexRouteImport
-      parentRoute: typeof InventoryRouteRoute
-    }
-    '/grips/': {
-      id: '/grips/'
-      path: '/'
-      fullPath: '/grips/'
-      preLoaderRoute: typeof GripsIndexRouteImport
-      parentRoute: typeof GripsRouteRoute
-    }
-    '/grimoires/': {
-      id: '/grimoires/'
-      path: '/'
-      fullPath: '/grimoires/'
-      preLoaderRoute: typeof GrimoiresIndexRouteImport
-      parentRoute: typeof GrimoiresRouteRoute
-    }
-    '/gems/': {
-      id: '/gems/'
-      path: '/'
-      fullPath: '/gems/'
-      preLoaderRoute: typeof GemsIndexRouteImport
-      parentRoute: typeof GemsRouteRoute
-    }
-    '/forge/': {
-      id: '/forge/'
-      path: '/'
-      fullPath: '/forge/'
-      preLoaderRoute: typeof ForgeIndexRouteImport
-      parentRoute: typeof ForgeRouteRoute
-    }
-    '/crafting/': {
-      id: '/crafting/'
-      path: '/crafting'
-      fullPath: '/crafting/'
-      preLoaderRoute: typeof CraftingIndexRouteImport
+    '/armor': {
+      id: '/armor'
+      path: '/armor'
+      fullPath: '/armor'
+      preLoaderRoute: typeof ArmorRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/consumables/': {
-      id: '/consumables/'
-      path: '/'
-      fullPath: '/consumables/'
-      preLoaderRoute: typeof ConsumablesIndexRouteImport
-      parentRoute: typeof ConsumablesRouteRoute
+    '/battle-abilities': {
+      id: '/battle-abilities'
+      path: '/battle-abilities'
+      fullPath: '/battle-abilities'
+      preLoaderRoute: typeof BattleAbilitiesRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/chests/': {
-      id: '/chests/'
-      path: '/'
-      fullPath: '/chests/'
-      preLoaderRoute: typeof ChestsIndexRouteImport
-      parentRoute: typeof ChestsRouteRoute
+    '/bestiary': {
+      id: '/bestiary'
+      path: '/bestiary'
+      fullPath: '/bestiary'
+      preLoaderRoute: typeof BestiaryRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/characters/': {
-      id: '/characters/'
-      path: '/'
-      fullPath: '/characters/'
-      preLoaderRoute: typeof CharactersIndexRouteImport
-      parentRoute: typeof CharactersRouteRoute
+    '/blades': {
+      id: '/blades'
+      path: '/blades'
+      fullPath: '/blades'
+      preLoaderRoute: typeof BladesRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/break-arts/': {
-      id: '/break-arts/'
-      path: '/'
-      fullPath: '/break-arts/'
-      preLoaderRoute: typeof BreakArtsIndexRouteImport
-      parentRoute: typeof BreakArtsRouteRoute
+    '/break-arts': {
+      id: '/break-arts'
+      path: '/break-arts'
+      fullPath: '/break-arts'
+      preLoaderRoute: typeof BreakArtsRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/blades/': {
-      id: '/blades/'
-      path: '/'
-      fullPath: '/blades/'
-      preLoaderRoute: typeof BladesIndexRouteImport
-      parentRoute: typeof BladesRouteRoute
+    '/characters': {
+      id: '/characters'
+      path: '/characters'
+      fullPath: '/characters'
+      preLoaderRoute: typeof CharactersRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/bestiary/': {
-      id: '/bestiary/'
-      path: '/'
-      fullPath: '/bestiary/'
-      preLoaderRoute: typeof BestiaryIndexRouteImport
-      parentRoute: typeof BestiaryRouteRoute
+    '/chests': {
+      id: '/chests'
+      path: '/chests'
+      fullPath: '/chests'
+      preLoaderRoute: typeof ChestsRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/battle-abilities/': {
-      id: '/battle-abilities/'
-      path: '/'
-      fullPath: '/battle-abilities/'
-      preLoaderRoute: typeof BattleAbilitiesIndexRouteImport
-      parentRoute: typeof BattleAbilitiesRouteRoute
+    '/consumables': {
+      id: '/consumables'
+      path: '/consumables'
+      fullPath: '/consumables'
+      preLoaderRoute: typeof ConsumablesRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/armor/': {
-      id: '/armor/'
-      path: '/'
-      fullPath: '/armor/'
-      preLoaderRoute: typeof ArmorIndexRouteImport
-      parentRoute: typeof ArmorRouteRoute
+    '/forge': {
+      id: '/forge'
+      path: '/forge'
+      fullPath: '/forge'
+      preLoaderRoute: typeof ForgeRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/areas/': {
-      id: '/areas/'
-      path: '/'
-      fullPath: '/areas/'
-      preLoaderRoute: typeof AreasIndexRouteImport
-      parentRoute: typeof AreasRouteRoute
+    '/gems': {
+      id: '/gems'
+      path: '/gems'
+      fullPath: '/gems'
+      preLoaderRoute: typeof GemsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grimoires': {
+      id: '/grimoires'
+      path: '/grimoires'
+      fullPath: '/grimoires'
+      preLoaderRoute: typeof GrimoiresRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grips': {
+      id: '/grips'
+      path: '/grips'
+      fullPath: '/grips'
+      preLoaderRoute: typeof GripsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventory': {
+      id: '/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof InventoryRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/keys': {
+      id: '/keys'
+      path: '/keys'
+      fullPath: '/keys'
+      preLoaderRoute: typeof KeysRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/material-grid': {
+      id: '/material-grid'
+      path: '/material-grid'
+      fullPath: '/material-grid'
+      preLoaderRoute: typeof MaterialGridRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materials': {
+      id: '/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof MaterialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rankings': {
+      id: '/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof RankingsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sigils': {
+      id: '/sigils'
+      path: '/sigils'
+      fullPath: '/sigils'
+      preLoaderRoute: typeof SigilsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spells': {
+      id: '/spells'
+      path: '/spells'
+      fullPath: '/spells'
+      preLoaderRoute: typeof SpellsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/titles': {
+      id: '/titles'
+      path: '/titles'
+      fullPath: '/titles'
+      preLoaderRoute: typeof TitlesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workshops': {
+      id: '/workshops'
+      path: '/workshops'
+      fullPath: '/workshops'
+      preLoaderRoute: typeof WorkshopsRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/accessories/': {
       id: '/accessories/'
@@ -1192,131 +1045,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccessoriesIndexRouteImport
       parentRoute: typeof AccessoriesRouteRoute
     }
-    '/workshops/$id': {
-      id: '/workshops/$id'
+    '/accessories/$id': {
+      id: '/accessories/$id'
       path: '/$id'
-      fullPath: '/workshops/$id'
-      preLoaderRoute: typeof WorkshopsIdRouteImport
-      parentRoute: typeof WorkshopsRouteRoute
+      fullPath: '/accessories/$id'
+      preLoaderRoute: typeof AccessoriesIdRouteImport
+      parentRoute: typeof AccessoriesRouteRoute
     }
-    '/titles/$id': {
-      id: '/titles/$id'
-      path: '/$id'
-      fullPath: '/titles/$id'
-      preLoaderRoute: typeof TitlesIdRouteImport
-      parentRoute: typeof TitlesRouteRoute
-    }
-    '/spells/$id': {
-      id: '/spells/$id'
-      path: '/$id'
-      fullPath: '/spells/$id'
-      preLoaderRoute: typeof SpellsIdRouteImport
-      parentRoute: typeof SpellsRouteRoute
-    }
-    '/sigils/$id': {
-      id: '/sigils/$id'
-      path: '/$id'
-      fullPath: '/sigils/$id'
-      preLoaderRoute: typeof SigilsIdRouteImport
-      parentRoute: typeof SigilsRouteRoute
-    }
-    '/rankings/$id': {
-      id: '/rankings/$id'
-      path: '/$id'
-      fullPath: '/rankings/$id'
-      preLoaderRoute: typeof RankingsIdRouteImport
-      parentRoute: typeof RankingsRouteRoute
-    }
-    '/keys/$id': {
-      id: '/keys/$id'
-      path: '/$id'
-      fullPath: '/keys/$id'
-      preLoaderRoute: typeof KeysIdRouteImport
-      parentRoute: typeof KeysRouteRoute
-    }
-    '/inventory/import': {
-      id: '/inventory/import'
-      path: '/import'
-      fullPath: '/inventory/import'
-      preLoaderRoute: typeof InventoryImportRouteImport
-      parentRoute: typeof InventoryRouteRoute
-    }
-    '/grips/$id': {
-      id: '/grips/$id'
-      path: '/$id'
-      fullPath: '/grips/$id'
-      preLoaderRoute: typeof GripsIdRouteImport
-      parentRoute: typeof GripsRouteRoute
-    }
-    '/grimoires/$id': {
-      id: '/grimoires/$id'
-      path: '/$id'
-      fullPath: '/grimoires/$id'
-      preLoaderRoute: typeof GrimoiresIdRouteImport
-      parentRoute: typeof GrimoiresRouteRoute
-    }
-    '/gems/$id': {
-      id: '/gems/$id'
-      path: '/$id'
-      fullPath: '/gems/$id'
-      preLoaderRoute: typeof GemsIdRouteImport
-      parentRoute: typeof GemsRouteRoute
-    }
-    '/consumables/$id': {
-      id: '/consumables/$id'
-      path: '/$id'
-      fullPath: '/consumables/$id'
-      preLoaderRoute: typeof ConsumablesIdRouteImport
-      parentRoute: typeof ConsumablesRouteRoute
-    }
-    '/chests/$id': {
-      id: '/chests/$id'
-      path: '/$id'
-      fullPath: '/chests/$id'
-      preLoaderRoute: typeof ChestsIdRouteImport
-      parentRoute: typeof ChestsRouteRoute
-    }
-    '/characters/$id': {
-      id: '/characters/$id'
-      path: '/$id'
-      fullPath: '/characters/$id'
-      preLoaderRoute: typeof CharactersIdRouteImport
-      parentRoute: typeof CharactersRouteRoute
-    }
-    '/break-arts/$id': {
-      id: '/break-arts/$id'
-      path: '/$id'
-      fullPath: '/break-arts/$id'
-      preLoaderRoute: typeof BreakArtsIdRouteImport
-      parentRoute: typeof BreakArtsRouteRoute
-    }
-    '/blades/$id': {
-      id: '/blades/$id'
-      path: '/$id'
-      fullPath: '/blades/$id'
-      preLoaderRoute: typeof BladesIdRouteImport
-      parentRoute: typeof BladesRouteRoute
-    }
-    '/bestiary/$id': {
-      id: '/bestiary/$id'
-      path: '/$id'
-      fullPath: '/bestiary/$id'
-      preLoaderRoute: typeof BestiaryIdRouteImport
-      parentRoute: typeof BestiaryRouteRoute
-    }
-    '/battle-abilities/$id': {
-      id: '/battle-abilities/$id'
-      path: '/$id'
-      fullPath: '/battle-abilities/$id'
-      preLoaderRoute: typeof BattleAbilitiesIdRouteImport
-      parentRoute: typeof BattleAbilitiesRouteRoute
-    }
-    '/armor/$id': {
-      id: '/armor/$id'
-      path: '/$id'
-      fullPath: '/armor/$id'
-      preLoaderRoute: typeof ArmorIdRouteImport
-      parentRoute: typeof ArmorRouteRoute
+    '/areas/': {
+      id: '/areas/'
+      path: '/'
+      fullPath: '/areas/'
+      preLoaderRoute: typeof AreasIndexRouteImport
+      parentRoute: typeof AreasRouteRoute
     }
     '/areas/$id': {
       id: '/areas/$id'
@@ -1325,12 +1066,180 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AreasIdRouteImport
       parentRoute: typeof AreasRouteRoute
     }
-    '/accessories/$id': {
-      id: '/accessories/$id'
+    '/armor/': {
+      id: '/armor/'
+      path: '/'
+      fullPath: '/armor/'
+      preLoaderRoute: typeof ArmorIndexRouteImport
+      parentRoute: typeof ArmorRouteRoute
+    }
+    '/armor/$id': {
+      id: '/armor/$id'
       path: '/$id'
-      fullPath: '/accessories/$id'
-      preLoaderRoute: typeof AccessoriesIdRouteImport
-      parentRoute: typeof AccessoriesRouteRoute
+      fullPath: '/armor/$id'
+      preLoaderRoute: typeof ArmorIdRouteImport
+      parentRoute: typeof ArmorRouteRoute
+    }
+    '/battle-abilities/': {
+      id: '/battle-abilities/'
+      path: '/'
+      fullPath: '/battle-abilities/'
+      preLoaderRoute: typeof BattleAbilitiesIndexRouteImport
+      parentRoute: typeof BattleAbilitiesRouteRoute
+    }
+    '/battle-abilities/$id': {
+      id: '/battle-abilities/$id'
+      path: '/$id'
+      fullPath: '/battle-abilities/$id'
+      preLoaderRoute: typeof BattleAbilitiesIdRouteImport
+      parentRoute: typeof BattleAbilitiesRouteRoute
+    }
+    '/bestiary/': {
+      id: '/bestiary/'
+      path: '/'
+      fullPath: '/bestiary/'
+      preLoaderRoute: typeof BestiaryIndexRouteImport
+      parentRoute: typeof BestiaryRouteRoute
+    }
+    '/bestiary/$id': {
+      id: '/bestiary/$id'
+      path: '/$id'
+      fullPath: '/bestiary/$id'
+      preLoaderRoute: typeof BestiaryIdRouteImport
+      parentRoute: typeof BestiaryRouteRoute
+    }
+    '/blades/': {
+      id: '/blades/'
+      path: '/'
+      fullPath: '/blades/'
+      preLoaderRoute: typeof BladesIndexRouteImport
+      parentRoute: typeof BladesRouteRoute
+    }
+    '/blades/$id': {
+      id: '/blades/$id'
+      path: '/$id'
+      fullPath: '/blades/$id'
+      preLoaderRoute: typeof BladesIdRouteImport
+      parentRoute: typeof BladesRouteRoute
+    }
+    '/break-arts/': {
+      id: '/break-arts/'
+      path: '/'
+      fullPath: '/break-arts/'
+      preLoaderRoute: typeof BreakArtsIndexRouteImport
+      parentRoute: typeof BreakArtsRouteRoute
+    }
+    '/break-arts/$id': {
+      id: '/break-arts/$id'
+      path: '/$id'
+      fullPath: '/break-arts/$id'
+      preLoaderRoute: typeof BreakArtsIdRouteImport
+      parentRoute: typeof BreakArtsRouteRoute
+    }
+    '/characters/': {
+      id: '/characters/'
+      path: '/'
+      fullPath: '/characters/'
+      preLoaderRoute: typeof CharactersIndexRouteImport
+      parentRoute: typeof CharactersRouteRoute
+    }
+    '/characters/$id': {
+      id: '/characters/$id'
+      path: '/$id'
+      fullPath: '/characters/$id'
+      preLoaderRoute: typeof CharactersIdRouteImport
+      parentRoute: typeof CharactersRouteRoute
+    }
+    '/chests/': {
+      id: '/chests/'
+      path: '/'
+      fullPath: '/chests/'
+      preLoaderRoute: typeof ChestsIndexRouteImport
+      parentRoute: typeof ChestsRouteRoute
+    }
+    '/chests/$id': {
+      id: '/chests/$id'
+      path: '/$id'
+      fullPath: '/chests/$id'
+      preLoaderRoute: typeof ChestsIdRouteImport
+      parentRoute: typeof ChestsRouteRoute
+    }
+    '/consumables/': {
+      id: '/consumables/'
+      path: '/'
+      fullPath: '/consumables/'
+      preLoaderRoute: typeof ConsumablesIndexRouteImport
+      parentRoute: typeof ConsumablesRouteRoute
+    }
+    '/consumables/$id': {
+      id: '/consumables/$id'
+      path: '/$id'
+      fullPath: '/consumables/$id'
+      preLoaderRoute: typeof ConsumablesIdRouteImport
+      parentRoute: typeof ConsumablesRouteRoute
+    }
+    '/crafting/': {
+      id: '/crafting/'
+      path: '/crafting'
+      fullPath: '/crafting/'
+      preLoaderRoute: typeof CraftingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forge/': {
+      id: '/forge/'
+      path: '/'
+      fullPath: '/forge/'
+      preLoaderRoute: typeof ForgeIndexRouteImport
+      parentRoute: typeof ForgeRouteRoute
+    }
+    '/gems/': {
+      id: '/gems/'
+      path: '/'
+      fullPath: '/gems/'
+      preLoaderRoute: typeof GemsIndexRouteImport
+      parentRoute: typeof GemsRouteRoute
+    }
+    '/gems/$id': {
+      id: '/gems/$id'
+      path: '/$id'
+      fullPath: '/gems/$id'
+      preLoaderRoute: typeof GemsIdRouteImport
+      parentRoute: typeof GemsRouteRoute
+    }
+    '/grimoires/': {
+      id: '/grimoires/'
+      path: '/'
+      fullPath: '/grimoires/'
+      preLoaderRoute: typeof GrimoiresIndexRouteImport
+      parentRoute: typeof GrimoiresRouteRoute
+    }
+    '/grimoires/$id': {
+      id: '/grimoires/$id'
+      path: '/$id'
+      fullPath: '/grimoires/$id'
+      preLoaderRoute: typeof GrimoiresIdRouteImport
+      parentRoute: typeof GrimoiresRouteRoute
+    }
+    '/grips/': {
+      id: '/grips/'
+      path: '/'
+      fullPath: '/grips/'
+      preLoaderRoute: typeof GripsIndexRouteImport
+      parentRoute: typeof GripsRouteRoute
+    }
+    '/grips/$id': {
+      id: '/grips/$id'
+      path: '/$id'
+      fullPath: '/grips/$id'
+      preLoaderRoute: typeof GripsIdRouteImport
+      parentRoute: typeof GripsRouteRoute
+    }
+    '/inventory/': {
+      id: '/inventory/'
+      path: '/'
+      fullPath: '/inventory/'
+      preLoaderRoute: typeof InventoryIndexRouteImport
+      parentRoute: typeof InventoryRouteRoute
     }
     '/inventory/$inventoryId': {
       id: '/inventory/$inventoryId'
@@ -1339,6 +1248,97 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InventoryInventoryIdRouteRouteImport
       parentRoute: typeof InventoryRouteRoute
     }
+    '/inventory/import': {
+      id: '/inventory/import'
+      path: '/import'
+      fullPath: '/inventory/import'
+      preLoaderRoute: typeof InventoryImportRouteImport
+      parentRoute: typeof InventoryRouteRoute
+    }
+    '/keys/': {
+      id: '/keys/'
+      path: '/'
+      fullPath: '/keys/'
+      preLoaderRoute: typeof KeysIndexRouteImport
+      parentRoute: typeof KeysRouteRoute
+    }
+    '/keys/$id': {
+      id: '/keys/$id'
+      path: '/$id'
+      fullPath: '/keys/$id'
+      preLoaderRoute: typeof KeysIdRouteImport
+      parentRoute: typeof KeysRouteRoute
+    }
+    '/rankings/': {
+      id: '/rankings/'
+      path: '/'
+      fullPath: '/rankings/'
+      preLoaderRoute: typeof RankingsIndexRouteImport
+      parentRoute: typeof RankingsRouteRoute
+    }
+    '/rankings/$id': {
+      id: '/rankings/$id'
+      path: '/$id'
+      fullPath: '/rankings/$id'
+      preLoaderRoute: typeof RankingsIdRouteImport
+      parentRoute: typeof RankingsRouteRoute
+    }
+    '/sigils/': {
+      id: '/sigils/'
+      path: '/'
+      fullPath: '/sigils/'
+      preLoaderRoute: typeof SigilsIndexRouteImport
+      parentRoute: typeof SigilsRouteRoute
+    }
+    '/sigils/$id': {
+      id: '/sigils/$id'
+      path: '/$id'
+      fullPath: '/sigils/$id'
+      preLoaderRoute: typeof SigilsIdRouteImport
+      parentRoute: typeof SigilsRouteRoute
+    }
+    '/spells/': {
+      id: '/spells/'
+      path: '/'
+      fullPath: '/spells/'
+      preLoaderRoute: typeof SpellsIndexRouteImport
+      parentRoute: typeof SpellsRouteRoute
+    }
+    '/spells/$id': {
+      id: '/spells/$id'
+      path: '/$id'
+      fullPath: '/spells/$id'
+      preLoaderRoute: typeof SpellsIdRouteImport
+      parentRoute: typeof SpellsRouteRoute
+    }
+    '/titles/': {
+      id: '/titles/'
+      path: '/'
+      fullPath: '/titles/'
+      preLoaderRoute: typeof TitlesIndexRouteImport
+      parentRoute: typeof TitlesRouteRoute
+    }
+    '/titles/$id': {
+      id: '/titles/$id'
+      path: '/$id'
+      fullPath: '/titles/$id'
+      preLoaderRoute: typeof TitlesIdRouteImport
+      parentRoute: typeof TitlesRouteRoute
+    }
+    '/workshops/': {
+      id: '/workshops/'
+      path: '/'
+      fullPath: '/workshops/'
+      preLoaderRoute: typeof WorkshopsIndexRouteImport
+      parentRoute: typeof WorkshopsRouteRoute
+    }
+    '/workshops/$id': {
+      id: '/workshops/$id'
+      path: '/$id'
+      fullPath: '/workshops/$id'
+      preLoaderRoute: typeof WorkshopsIdRouteImport
+      parentRoute: typeof WorkshopsRouteRoute
+    }
     '/inventory/$inventoryId/': {
       id: '/inventory/$inventoryId/'
       path: '/'
@@ -1346,11 +1346,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InventoryInventoryIdIndexRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
-    '/inventory/$inventoryId/workbench': {
-      id: '/inventory/$inventoryId/workbench'
-      path: '/workbench'
-      fullPath: '/inventory/$inventoryId/workbench'
-      preLoaderRoute: typeof InventoryInventoryIdWorkbenchRouteImport
+    '/inventory/$inventoryId/equipment': {
+      id: '/inventory/$inventoryId/equipment'
+      path: '/equipment'
+      fullPath: '/inventory/$inventoryId/equipment'
+      preLoaderRoute: typeof InventoryInventoryIdEquipmentRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
     '/inventory/$inventoryId/loadout': {
@@ -1360,11 +1360,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InventoryInventoryIdLoadoutRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
-    '/inventory/$inventoryId/equipment': {
-      id: '/inventory/$inventoryId/equipment'
-      path: '/equipment'
-      fullPath: '/inventory/$inventoryId/equipment'
-      preLoaderRoute: typeof InventoryInventoryIdEquipmentRouteImport
+    '/inventory/$inventoryId/workbench': {
+      id: '/inventory/$inventoryId/workbench'
+      path: '/workbench'
+      fullPath: '/inventory/$inventoryId/workbench'
+      preLoaderRoute: typeof InventoryInventoryIdWorkbenchRouteImport
       parentRoute: typeof InventoryInventoryIdRouteRoute
     }
   }
