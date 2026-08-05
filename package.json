@@ -12,6 +12,7 @@
     "generate-api": "orval",
     "generate-sitemap": "node scripts/generate-sitemap.mjs",
     "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
